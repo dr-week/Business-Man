@@ -1,45 +1,154 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowUpRight, BarChart3, Bell, Bookmark, BrainCircuit, ChevronDown, CircleHelp, Compass, FileSearch, Gauge, Gem, Globe2, Layers3, ListFilter, MoreHorizontal, Radar, Search, Settings2, ShieldCheck, Sparkles, X } from "lucide-react";
+import {
+  Archive, Bookmark, Compass, Crown, Filter, FlaskConical, Globe2,
+  Search, Shield, Sparkles, Telescope, X,
+} from "lucide-react";
 import { ResearchWorkbench } from "@/components/research-workbench";
 
-type Opportunity = { id: number; name: string; category: string; stage: string; demand: number; competition: number; score: number; suppliers: string; cost: string; timing: string; confidence: string; note: string; signals: string[]; };
+export type Opportunity = {
+  id: string;
+  name: string;
+  market: string;
+  stage: "Signal" | "Watch" | "Validate";
+  demand: number;
+  supply: number;
+  confidence: "Low" | "Medium";
+  thesis: string;
+  nextTest: string;
+  evidence: { claim: string; source: string; url: string; risk?: boolean }[];
+};
 
 const opportunities: Opportunity[] = [
-  { id: 1, name: "Industrial edge-AI inspection kits", category: "Hardware + software", stage: "IDEAL ENTRY", demand: 88, competition: 26, score: 8.7, suppliers: "~140", cost: "₹5k–₹25k", timing: "Now", confidence: "Medium", note: "Low-cost cameras and on-device models are making visual QA viable for small factories.", signals: ["New edge SDK releases", "Manual inspection pain", "Growing device availability"] },
-  { id: 2, name: "Electric two-wheeler service software", category: "B2B operations", stage: "EMERGING", demand: 76, competition: 19, score: 8.4, suppliers: "<100", cost: "₹0–₹5k", timing: "Early", confidence: "Medium", note: "Independent repair shops need diagnostics, parts and warranty workflows as EV fleets expand.", signals: ["Technician hiring", "Fragmented repair market", "New OEM APIs"] },
-  { id: 3, name: "Agent observability for regulated teams", category: "AI ecosystem", stage: "GROWTH", demand: 91, competition: 48, score: 8.1, suppliers: "~310", cost: "₹0–₹5k", timing: "Now", confidence: "High", note: "Teams deploying agents need auditable traces, permissions and human review paths.", signals: ["Compliance demand", "Agent framework growth", "Open-source gaps"] },
-  { id: 4, name: "Regional export compliance copilot", category: "Geographic arbitrage", stage: "EMERGING", demand: 72, competition: 23, score: 7.9, suppliers: "~80", cost: "₹0–₹5k", timing: "Early", confidence: "Low", note: "Small exporters still assemble documentation across scattered portals and spreadsheets.", signals: ["Repeated manual workflows", "Regulatory changes", "Poor local tooling"] },
-  { id: 5, name: "Smart-TV accessibility plugins", category: "Software ecosystem", stage: "EMERGING", demand: 64, competition: 16, score: 7.5, suppliers: "Unknown", cost: "₹0–₹5k", timing: "Early", confidence: "Low", note: "Accessibility features trail consumer device adoption across many TV platforms.", signals: ["App-store expansion", "Underserved users", "SDK updates"] },
-];
-const nav = [[Compass, "Discover"], [Bookmark, "Watchlist"], [FileSearch, "Deep research"], [Layers3, "Markets"], [Radar, "Signals"], [Gem, "Opportunities"]] as const;
-const evidenceItems = [
-  { source: "OEM partnership announcement", claim: "Three device integrations released this quarter", kind: "Supporting", tone: "text-emerald-200 bg-emerald-300/10 border-emerald-300/15" },
-  { source: "Community discussion sample", claim: "Teams still rely on manual visual inspection", kind: "Supporting", tone: "text-emerald-200 bg-emerald-300/10 border-emerald-300/15" },
-  { source: "Negative research query", claim: "Buyer budget and integration cycles are still unverified", kind: "Open risk", tone: "text-amber-200 bg-amber-300/10 border-amber-300/15" },
+  {
+    id: "agent-trust", name: "Agent trust registry", market: "Agent infrastructure",
+    stage: "Validate", demand: 81, supply: 28, confidence: "Medium",
+    thesis: "Teams need to find and approve safe agent capabilities.",
+    nextTest: "Interview 10 internal-agent teams.",
+    evidence: [
+      { claim: "ARD standardizes capability discovery and verification.", source: "Google · Jun 2026", url: "https://developers.googleblog.com/announcing-the-agentic-resource-discovery-specification/" },
+      { claim: "Budget ownership is unknown.", source: "Open question", url: "#", risk: true },
+    ],
+  },
+  {
+    id: "agent-commerce", name: "Agent commerce onboarding", market: "Commerce protocols",
+    stage: "Validate", demand: 78, supply: 34, confidence: "Medium",
+    thesis: "Merchants need agent-readable catalogs and checkout flows.",
+    nextTest: "Audit 20 Indian merchant catalogs.",
+    evidence: [
+      { claim: "UCP defines a shared commerce lifecycle.", source: "Google · Jan 2026", url: "https://developers.googleblog.com/developers-guide-to-ai-agent-protocols/" },
+      { claim: "Merchant urgency is unverified.", source: "Open question", url: "#", risk: true },
+    ],
+  },
+  {
+    id: "agent-audit", name: "Agent audit trails", market: "Regulated AI",
+    stage: "Watch", demand: 87, supply: 49, confidence: "Medium",
+    thesis: "Long-running agents need approvals, replay and evidence.",
+    nextTest: "Map one regulated workflow.",
+    evidence: [
+      { claim: "Agents now run across tools, files and sandboxes.", source: "OpenAI · Sep 2026", url: "https://openai.com/index/introducing-the-agents-api/" },
+      { claim: "Existing observability coverage may be sufficient.", source: "Open question", url: "#", risk: true },
+    ],
+  },
+  {
+    id: "aikosh-data", name: "AIKosh data readiness", market: "India AI",
+    stage: "Signal", demand: 68, supply: 22, confidence: "Low",
+    thesis: "Public datasets need cleaning, provenance and evaluation.",
+    nextTest: "Inspect 20 datasets for repeat gaps.",
+    evidence: [
+      { claim: "AIKosh hosts datasets, models and toolkits.", source: "IndiaAI · 2026", url: "https://aikosh.indiaai.gov.in/home/about-us/" },
+      { claim: "Commercial reuse terms need review.", source: "Open question", url: "#", risk: true },
+    ],
+  },
+  {
+    id: "india-adapters", name: "India protocol adapters", market: "Cross-border tools",
+    stage: "Signal", demand: 63, supply: 18, confidence: "Low",
+    thesis: "Indian workflows need bridges to global agent protocols.",
+    nextTest: "Test one export workflow manually.",
+    evidence: [
+      { claim: "Agent protocols now cover tools, agents and commerce.", source: "Google · Mar 2026", url: "https://developers.googleblog.com/developers-guide-to-ai-agent-protocols/" },
+      { claim: "Payment and logistics access may block entry.", source: "Open question", url: "#", risk: true },
+    ],
+  },
 ];
 
+const nav = [
+  [Compass, "Find"], [Bookmark, "Watch"], [Telescope, "Research"],
+  [Archive, "Sources"], [Shield, "Rejected"],
+] as const;
+
 export default function Home() {
-  const [query, setQuery] = useState("Find emerging business opportunities");
-  const [maxCompetition, setMaxCompetition] = useState(100);
-  const [watchlist, setWatchlist] = useState<number[]>([1]);
-  const [active, setActive] = useState(1);
+  const [activeId, setActiveId] = useState(opportunities[0].id);
+  const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [researchView, setResearchView] = useState<"evidence" | "risks">("evidence");
-  const visible = useMemo(() => opportunities.filter((o) => o.competition <= maxCompetition), [maxCompetition]);
-  const selected = opportunities.find((o) => o.id === active) ?? opportunities[0];
-  const toggleWatch = (id: number) => setWatchlist((items) => items.includes(id) ? items.filter((x) => x !== id) : [...items, id]);
-  return <main className="min-h-screen bg-[#07111f] text-slate-100 selection:bg-cyan-300 selection:text-slate-950">
-    <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 border-r border-white/8 bg-[#081523] p-5 lg:block"><div className="mb-10 flex items-center gap-3 px-2"><div className="grid h-9 w-9 place-items-center rounded-xl bg-cyan-300 text-slate-950"><Sparkles size={19}/></div><span className="text-lg font-semibold tracking-tight">BUSINESSMAN</span></div><nav className="space-y-1">{nav.map(([Icon, label]) => <button key={label} className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${label === "Discover" ? "bg-cyan-300/10 text-cyan-200" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}><Icon size={17}/>{label}</button>)}</nav><p className="mb-2 mt-8 px-3 text-[10px] font-bold tracking-[.16em] text-slate-600">INTELLIGENCE</p><nav className="space-y-1"><button className="side"><BarChart3 size={17}/>Trends</button><button className="side"><ShieldCheck size={17}/>Rejected</button><button className="side"><Globe2 size={17}/>Sources</button></nav><div className="absolute bottom-5 left-5 right-5 rounded-xl border border-white/8 bg-white/[.035] p-3"><div className="mb-2 flex items-center justify-between text-xs text-slate-400"><span>Research credits</span><span className="text-cyan-200">72%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full w-[72%] rounded-full bg-cyan-300"/></div><button className="mt-3 flex items-center gap-2 text-xs text-slate-400"><Settings2 size={14}/>Workspace settings</button></div></aside>
-    <section className="lg:ml-64"><header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-white/8 bg-[#07111f]/90 px-5 backdrop-blur-xl sm:px-8"><div className="flex items-center gap-3"><span className="text-sm font-semibold lg:hidden">BUSINESSMAN</span><span className="hidden text-sm text-slate-500 sm:block">Market inefficiency detector</span></div><div className="flex items-center gap-3"><button className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 text-slate-400"><Bell size={16}/></button><button className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 py-1.5 pl-2 pr-2.5 text-xs"><span className="grid h-6 w-6 place-items-center rounded-md bg-violet-400 font-bold text-slate-950">D</span>Disha<ChevronDown size={14} className="text-slate-500"/></button></div></header>
-    <div className="mx-auto max-w-[1480px] p-5 sm:p-8"><div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><p className="mb-2 text-xs font-medium text-cyan-300">DISCOVERY ENGINE <span className="ml-2 inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400 align-middle"/></p><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Find the gap before it becomes obvious.</h1><p className="mt-2 text-sm text-slate-400">Evidence-led opportunities where demand is outpacing capable supply.</p></div><div className="rounded-lg border border-white/8 bg-white/[.035] px-3 py-2 text-xs text-slate-400"><span className="mr-2 font-mono text-cyan-200">247</span>signals indexed today</div></div>
-    <form onSubmit={(e) => e.preventDefault()} className="mb-6 flex flex-col gap-2 rounded-xl border border-cyan-300/20 bg-gradient-to-r from-cyan-300/[.09] to-violet-400/[.05] p-2 shadow-[0_10px_40px_rgba(0,0,0,.18)] sm:flex-row"><div className="flex flex-1 items-center gap-3 px-3"><Search size={18} className="text-cyan-200"/><input value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Research query" className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none placeholder:text-slate-500"/><kbd className="hidden rounded border border-white/15 px-1.5 py-0.5 text-[10px] text-slate-500 sm:block">⌘ K</kbd></div><button className="rounded-lg bg-cyan-300 px-5 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-200">Research market <ArrowUpRight className="ml-1 inline" size={16}/></button></form>
-    <div className="mb-6 flex flex-wrap items-center gap-2"><button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[.035] px-3 py-2 text-xs text-slate-300"><ListFilter size={14}/>Filters {showFilters ? <X size={13}/> : null}</button>{["Stage: Emerging + Ideal", "Global", "AI-buildable"].map(x => <span key={x} className="rounded-lg border border-white/8 px-3 py-2 text-xs text-slate-400">{x}</span>)}<span className="ml-auto text-xs text-slate-500">Showing {visible.length} vetted leads</span></div>
-    {showFilters && <div className="mb-6 flex items-center gap-4 rounded-xl border border-white/8 bg-white/[.035] p-4"><label className="text-xs text-slate-300">Maximum competition <strong className="ml-1 text-cyan-200">{maxCompetition === 100 ? "Any" : `<${maxCompetition}`}</strong></label><input aria-label="Maximum competition" type="range" min="20" max="100" step="20" value={maxCompetition} onChange={(e) => setMaxCompetition(Number(e.target.value))} className="accent-cyan-300"/></div>}
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]"><div className="overflow-hidden rounded-xl border border-white/8 bg-[#0a1929]"><div className="flex items-center justify-between border-b border-white/8 px-5 py-4"><div><h2 className="font-semibold">Opportunity queue</h2><p className="mt-0.5 text-xs text-slate-500">Ranked by asymmetric upside, not hype.</p></div><MoreHorizontal size={18} className="text-slate-500"/></div><div className="divide-y divide-white/7">{visible.map((o) => <button onClick={() => setActive(o.id)} key={o.id} className={`grid w-full grid-cols-[minmax(0,1fr)_auto] gap-3 p-5 text-left transition hover:bg-white/[.025] ${active === o.id ? "bg-cyan-300/[.045]" : ""}`}><div className="min-w-0"><div className="mb-2 flex flex-wrap items-center gap-2"><span className="rounded bg-cyan-300/10 px-1.5 py-1 text-[10px] font-bold tracking-wide text-cyan-200">{o.stage}</span><span className="text-[11px] text-slate-500">{o.category}</span></div><h3 className="font-medium text-slate-100">{o.name}</h3><p className="mt-1 line-clamp-1 text-xs leading-5 text-slate-400">{o.note}</p><div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500"><span>Demand <b className="text-emerald-300">↑ {o.demand}</b></span><span>Competition <b className="text-amber-200">{o.competition}</b></span><span>Suppliers {o.suppliers}</span><span>{o.cost}</span></div></div><div className="flex flex-col items-end justify-between"><div className="grid h-11 w-11 place-items-center rounded-full border-2 border-cyan-300/70 text-sm font-semibold text-cyan-100">{o.score}</div><span className="text-[11px] text-slate-500">{o.confidence}</span></div></button>)}</div></div>
-    <aside className="rounded-xl border border-white/8 bg-[#0a1929] p-5"><div className="mb-4 flex items-center justify-between"><div><h2 className="font-semibold">Opportunity radar</h2><p className="mt-0.5 text-xs text-slate-500">Demand growth × competition</p></div><Gauge size={18} className="text-cyan-200"/></div><div className="relative h-64 overflow-hidden rounded-lg border border-white/8 bg-[radial-gradient(circle_at_center,rgba(34,211,238,.08),transparent_55%)]"><div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,.15)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.15)_1px,transparent_1px)] [background-size:25%_25%]"/><span className="absolute bottom-2 left-3 text-[10px] text-slate-500">LOW COMPETITION</span><span className="absolute right-3 top-2 text-[10px] text-slate-500">HIGH DEMAND</span>{visible.map((o, index) => <button key={o.id} onClick={() => setActive(o.id)} aria-label={o.name} className={`absolute grid place-items-center rounded-full border text-[10px] font-bold ${active === o.id ? "h-11 w-11 border-cyan-100 bg-cyan-300 text-slate-950" : "h-8 w-8 border-cyan-300/40 bg-cyan-300/15 text-cyan-100"}`} style={{left: `${o.competition + 5}%`, bottom: `${o.demand - 8}%`}}>{index + 1}</button>)}</div><div className="mt-4 grid grid-cols-2 gap-2 text-[11px]"><span className="flex items-center gap-1.5 text-slate-500"><i className="h-2 w-2 rounded-full bg-cyan-300"/>Best entry window</span><span className="text-right text-slate-500">Bubble = relative market</span></div></aside></div>
-    <section className="mt-5 rounded-xl border border-white/8 bg-[#0a1929] p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="mb-2 flex items-center gap-2"><span className="rounded bg-violet-400/15 px-2 py-1 text-[10px] font-bold text-violet-200">DEEP RESEARCH</span><span className="text-xs text-slate-500">Updated today</span></div><h2 className="text-lg font-semibold">{selected.name}</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-slate-400">{selected.note}</p></div><button onClick={() => toggleWatch(selected.id)} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${watchlist.includes(selected.id) ? "border-cyan-300/40 bg-cyan-300/10 text-cyan-100" : "border-white/10 text-slate-300"}`}><Bookmark size={14} fill={watchlist.includes(selected.id) ? "currentColor" : "none"}/>{watchlist.includes(selected.id) ? "Watching" : "Add to watchlist"}</button></div><div className="mt-5 grid gap-3 sm:grid-cols-3"><Metric label="Demand–supply gap" value={`${selected.demand} / ${selected.suppliers}`} hint="Estimated; evidence needed"/><Metric label="Entry profile" value={selected.cost} hint="AI-assisted build friendly"/><Metric label="Contrarian verdict" value="Investigate" hint="Run negative research next"/></div><div className="mt-5 flex flex-wrap gap-2">{selected.signals.map(s => <span key={s} className="rounded-md bg-white/[.05] px-2.5 py-1.5 text-xs text-slate-300"><BrainCircuit className="mr-1.5 inline text-cyan-200" size={13}/>{s}</span>)}</div></section>
-    <ResearchWorkbench view={researchView} setView={setResearchView}/></div></section></main>;
+  const [stage, setStage] = useState<"All" | Opportunity["stage"]>("All");
+  const [watched, setWatched] = useState<string[]>([opportunities[0].id]);
+
+  const visible = useMemo(() => opportunities.filter((item) => {
+    const matchesStage = stage === "All" || item.stage === stage;
+    const text = `${item.name} ${item.market}`.toLowerCase();
+    return matchesStage && text.includes(query.toLowerCase());
+  }), [query, stage]);
+  const active = opportunities.find((item) => item.id === activeId) ?? opportunities[0];
+
+  return <main className="min-h-screen">
+    <aside className="fixed inset-y-0 left-0 z-20 hidden w-56 border-r p-4 lg:flex lg:flex-col">
+      <div className="flex items-center gap-3 px-2 py-3">
+        <span className="royal-mark"><Crown size={17}/></span>
+        <span className="brand">BUSINESSMAN</span>
+      </div>
+      <nav className="mt-8 space-y-1">{nav.map(([Icon, label], index) => <button key={label} className={`nav-item ${index === 0 ? "nav-active" : ""}`}><Icon size={17}/><span>{label}</span></button>)}</nav>
+      <div className="mt-auto border-t border-[rgb(194_166_99/.15)] px-2 pt-4 text-xs text-stone-500">5 markets · 8 sources</div>
+    </aside>
+
+    <section className="lg:ml-56">
+      <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b px-5 backdrop-blur-xl sm:px-8">
+        <span className="brand lg:hidden">BUSINESSMAN</span>
+        <div className="hidden items-center gap-2 text-xs text-stone-500 lg:flex"><Sparkles size={14} className="text-[#c2a663]"/>Opportunity intelligence</div>
+        <button className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgb(194_166_99/.25)] text-sm text-[#e5d5aa]" aria-label="Account">D</button>
+      </header>
+
+      <div className="mx-auto max-w-[1400px] p-5 sm:p-8">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <div><p className="eyebrow">FIND</p><h1 className="text-3xl font-medium">Opportunity desk</h1></div>
+          <span className="hidden rounded-full border border-[rgb(194_166_99/.18)] px-3 py-1.5 text-xs text-stone-500 sm:block">Q4 · 2026</span>
+        </div>
+
+        <div className="mb-4 flex gap-2">
+          <label className="search-box"><Search size={17}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search markets" aria-label="Search markets"/></label>
+          <button onClick={() => setShowFilters((value) => !value)} className={`icon-button ${showFilters ? "is-active" : ""}`} aria-label="Filters">{showFilters ? <X size={17}/> : <Filter size={17}/>}</button>
+        </div>
+
+        {showFilters && <div className="mb-4 flex gap-2">{(["All", "Signal", "Watch", "Validate"] as const).map((value) => <button key={value} onClick={() => setStage(value)} className={`filter-chip ${stage === value ? "filter-active" : ""}`}>{value}</button>)}</div>}
+
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,.92fr)_minmax(420px,1.08fr)]">
+          <section className="panel overflow-hidden">
+            <div className="panel-title"><span>Markets</span><span>{visible.length}</span></div>
+            <div>{visible.map((item) => <button key={item.id} onClick={() => setActiveId(item.id)} className={`market-row ${active.id === item.id ? "market-active" : ""}`}>
+              <div className="min-w-0"><div className="mb-1.5 flex items-center gap-2"><span className={`stage stage-${item.stage.toLowerCase()}`}>{item.stage}</span><span className="truncate text-xs text-stone-500">{item.market}</span></div><h2 className="truncate text-base font-medium">{item.name}</h2></div>
+              <div className="score"><strong>{item.demand - item.supply}</strong><span>gap</span></div>
+            </button>)}</div>
+            {!visible.length && <div className="p-8 text-center text-sm text-stone-500">No matches</div>}
+          </section>
+
+          <section className="panel p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div><span className={`stage stage-${active.stage.toLowerCase()}`}>{active.stage}</span><h2 className="mt-3 text-2xl font-medium">{active.name}</h2><p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">{active.thesis}</p></div>
+              <button onClick={() => setWatched((items) => items.includes(active.id) ? items.filter((id) => id !== active.id) : [...items, active.id])} className={`icon-button shrink-0 ${watched.includes(active.id) ? "is-active" : ""}`} aria-label="Watch"><Bookmark size={17} fill={watched.includes(active.id) ? "currentColor" : "none"}/></button>
+            </div>
+            <div className="mt-6 grid grid-cols-3 gap-2">
+              <Stat label="Demand" value={active.demand}/><Stat label="Supply" value={active.supply}/><Stat label="Confidence" value={active.confidence}/>
+            </div>
+            <div className="next-test"><FlaskConical size={17}/><div><span>Next test</span><strong>{active.nextTest}</strong></div></div>
+            <ResearchWorkbench opportunity={active}/>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>;
 }
-function Metric({ label, value, hint }: { label: string; value: string; hint: string }) { return <div className="rounded-lg border border-white/8 bg-white/[.025] p-3"><p className="text-[11px] text-slate-500">{label}</p><p className="mt-1 font-semibold text-slate-100">{value}</p><p className="mt-1 text-[11px] text-slate-500"><CircleHelp className="mr-1 inline" size={11}/>{hint}</p></div>; }
+
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return <div className="stat"><span>{label}</span><strong>{value}</strong></div>;
+}
