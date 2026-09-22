@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../vendor/shadcn-tailwind-4.13.0.css";
+
+:root { --background: #171811; --foreground: #eee8d8; --font-sans: Arial, Helvetica, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: Arial, Helvetica, sans-serif; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+.side { display: flex; width: 100%; align-items: center; gap: .75rem; border-radius: .5rem; padding: .625rem .75rem; font-size: .875rem; color: #94a3b8; }
+.side:hover { background: rgb(255 255 255 / .05); color: white; }
+
+/* Estate dossier: a restrained English-country-house palette for long research sessions. */
+main { background: radial-gradient(circle at 86% 0%, #363a22 0%, #171811 34rem) !important; color: #eee8d8 !important; }
+main > aside { background: #202218 !important; border-color: rgb(194 166 99 / .18) !important; }
+main > section > header { background: rgb(23 24 17 / .9) !important; border-color: rgb(194 166 99 / .18) !important; }
+main .bg-\[\#0a1929\] { background: #28291e !important; border-color: rgb(194 166 99 / .16) !important; box-shadow: inset 0 1px 0 rgb(255 255 255 / .025); }
+main .bg-\[\#07111f\] { background: #171811 !important; }
+main .bg-cyan-300 { background: #c2a663 !important; }
+main .text-cyan-200, main .text-cyan-300 { color: #dfc985 !important; }
+main .border-cyan-300\/20, main .border-cyan-300\/40 { border-color: rgb(194 166 99 / .35) !important; }
+main .bg-cyan-300\/10, main .bg-cyan-300\/\[\.045\] { background: rgb(194 166 99 / .10) !important; }
+main h1, main h2, main h3 { font-family: Georgia, "Times New Roman", serif; letter-spacing: -.02em; }
+main h1 { color: #f4ecd8; }
+main input { color: #f4ecd8; }
+main .selection\:bg-cyan-300::selection { background: #c2a663; }
