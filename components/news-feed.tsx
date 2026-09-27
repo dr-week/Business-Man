@@ -107,7 +107,7 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
     const isStarred = stars.includes(item.id);
 
     return (
-      <article key={item.id} className="news-opp-card" aria-expanded={isExpanded}>
+      <article key={item.id} className={`news-opp-card${isExpanded ? " is-expanded" : ""}`}>
         <div className="news-opp-summary">
           <div className="news-opp-topline">
             <span className="news-opp-role-tag">

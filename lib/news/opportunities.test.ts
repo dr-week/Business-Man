@@ -1,8 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   qualifyPersonalizedNews,
-  VERIFIED_EVERYDAY_OPPORTUNITIES,
-  VERIFIED_DEMAND_NOW_SIGNALS,
   type UserPreferences,
 } from "./opportunities";
 import type { NewsItem } from "./feed";

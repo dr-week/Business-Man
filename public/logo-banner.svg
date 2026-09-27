@@ -1,0 +1,40 @@
+<svg width="800" height="240" viewBox="0 0 800 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="16" fill="#0D100C"/>
+  <rect x="0.5" y="0.5" width="799" height="239" rx="15.5" stroke="#252A20" stroke-width="1"/>
+  
+  <!-- Subtle architectural grid / ambient glow -->
+  <circle cx="120" cy="120" r="90" fill="#D4AF37" fill-opacity="0.035"/>
+  <line x1="20" y1="200" x2="780" y2="200" stroke="#1D2218" stroke-width="1" stroke-dasharray="4 4"/>
+  
+  <!-- Geometric Crest / Monogram -->
+  <g transform="translate(68, 64)">
+    <!-- Base plate ring -->
+    <rect x="0" y="0" width="112" height="112" rx="24" fill="#151912" stroke="#363C2E" stroke-width="1.5"/>
+    
+    <!-- Crown icon vectors (lucide style in high-finish gold) -->
+    <path d="M26 84H86M26 84L34 40L56 58L78 40L86 84H26Z" stroke="#E6C875" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="34" cy="38" r="4" fill="#E6C875"/>
+    <circle cx="56" cy="56" r="4" fill="#E6C875"/>
+    <circle cx="78" cy="38" r="4" fill="#E6C875"/>
+    
+    <!-- Fine accent spark -->
+    <circle cx="88" cy="24" r="2.5" fill="#D4AF37"/>
+  </g>
+
+  <!-- Typography & Brand Hierarchy -->
+  <text x="214" y="112" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="44" font-weight="700" letter-spacing="-0.02em" fill="#EDEDE8">BUSINESSMAN</text>
+  <text x="216" y="142" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" letter-spacing="0.14em" fill="#9BA28F" text-transform="uppercase">ENTERPRISE MARKET RESEARCH &amp; DEMAND DISCOVERY SUITE</text>
+  
+  <!-- Status Chip / Pill -->
+  <g transform="translate(216, 160)">
+    <rect width="138" height="24" rx="12" fill="#1C2117" stroke="#373F2E" stroke-width="1"/>
+    <circle cx="12" cy="12" r="3.5" fill="#52C41A"/>
+    <text x="22" y="16" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="600" letter-spacing="0.06em" fill="#C2C8B8">PRODUCTION READY</text>
+  </g>
+
+  <g transform="translate(364, 160)">
+    <rect width="128" height="24" rx="12" fill="#1C2117" stroke="#373F2E" stroke-width="1"/>
+    <circle cx="12" cy="12" r="3.5" fill="#E6C875"/>
+    <text x="22" y="16" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="600" letter-spacing="0.06em" fill="#C2C8B8">V2.4 INTEL ENGINE</text>
+  </g>
+</svg>

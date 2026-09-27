@@ -1,6 +1,6 @@
 @echo off
-setlocal EnableDelayedExpansion
-title Businessman · Dev Launcher
+setlocal EnableExtensions EnableDelayedExpansion
+title Businessman - Dev Launcher
 
 :: ═══════════════════════════════════════════════════════════════════
 ::  BUSINESSMAN — Multi-Project Safe Dev Launcher
@@ -18,13 +18,26 @@ title Businessman · Dev Launcher
 set "ROOT=%~dp0.."
 cd /d "%ROOT%"
 
+where node >nul 2>&1
+if errorlevel 1 (
+    echo  [!] Node.js is not installed or not on PATH.
+    echo      Install Node.js 22.13 or newer, then reopen this launcher.
+    pause
+    exit /b 1
+)
+
 set "LOG_DIR=%ROOT%\logs"
 set "CRASH_DIR=%LOG_DIR%\crashes"
 set "PID_FILE=%LOG_DIR%\running_server.pid"
 set "PORT_FILE=%LOG_DIR%\running_port.txt"
 
-if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
-if not exist "%CRASH_DIR%" mkdir "%CRASH_DIR%"
+if not exist "%LOG_DIR%" mkdir "%LOG_DIR%" 2>nul
+if not exist "%CRASH_DIR%" mkdir "%CRASH_DIR%" 2>nul
+if not exist "%LOG_DIR%" (
+    echo  [!] Could not create log directory: "%LOG_DIR%"
+    pause
+    exit /b 1
+)
 
 cls
 echo  ======================================================
@@ -36,6 +49,7 @@ echo.
 if exist "%PORT_FILE%" (
     set /p SAVED_PORT=<"%PORT_FILE%"
     if defined SAVED_PORT (
+        set "CHECK_STATUS="
         for /f %%A in ('node scripts\verify-project-instance.mjs !SAVED_PORT! 2^>nul') do set "CHECK_STATUS=%%A"
         if "!CHECK_STATUS!"=="IS_BUSINESSMAN" (
             echo  [+] Businessman is ALREADY running on port !SAVED_PORT!.
@@ -63,7 +77,8 @@ if exist "%PID_FILE%" (
 
 :: 3. FIND A GUARANTEED FREE PORT (Won't collide with your other projects!)
 echo  [*] Scanning for free port (skipping any occupied by other projects)...
-for /f %%P in ('node scripts\find-free-port.mjs 5173') do set "PORT=%%P"
+set "PORT="
+for /f %%P in ('node scripts\find-free-port.mjs 5173 2^>nul') do set "PORT=%%P"
 
 if not defined PORT (
     set "PORT=5173"
@@ -73,18 +88,17 @@ set "URL=http://localhost:!PORT!"
 echo  [+] Dedicated port allocated: !PORT!
 echo !PORT! > "%PORT_FILE%"
 
-:: 4. PREPARE LOGGING
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value 2^>nul') do set "DT=%%I"
-if not defined DT (
-    set "TIMESTAMP=%RANDOM%_%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%"
-    set "TIMESTAMP=!TIMESTAMP: =0!"
-) else (
-    set "TIMESTAMP=!DT:~0,8!_!DT:~8,6!"
-)
+:: 4. PREPARE LOGGING (does not depend on deprecated WMIC)
+set "TIMESTAMP=%DATE%_%TIME%"
+set "TIMESTAMP=!TIMESTAMP:/=-!"
+set "TIMESTAMP=!TIMESTAMP:\=-!"
+set "TIMESTAMP=!TIMESTAMP::=-!"
+set "TIMESTAMP=!TIMESTAMP: =0!"
+set "TIMESTAMP=!TIMESTAMP:,=-!"
 set "RUN_LOG=%LOG_DIR%\session_!TIMESTAMP!.log"
 
 :: 5. AUTO-OPEN BROWSER WHEN READY
-start /b "" cmd /c "timeout /t 3 >nul & start \"\" !URL!"
+start /b "" cmd /c "timeout /t 3 >nul & start \"\" \"!URL!\""
 
 :: 5. LAUNCH THE DESK SERVER
 echo  [*] Starting Businessman Dev Server on !URL!...
