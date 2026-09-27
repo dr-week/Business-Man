@@ -9,10 +9,31 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".vinext/**",
+    "dist/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "services/collector/.venv/**",
+    "**/.venv/**",
   ]),
+  {
+    // Anti-slop guardrails for agent-authored code
+    files: ["app/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}", "db/**/*.{ts,tsx}"],
+    rules: {
+      "no-console": ["warn", { "allow": ["warn", "error"] }],
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+      "prefer-const": "error",
+    },
+  },
+  {
+    files: ["components/**/*.{ts,tsx}"],
+    rules: {
+      "react-hooks/set-state-in-effect": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    },
+  },
   {
     files: ["components/ui/**/*.{ts,tsx}", "hooks/use-mobile.ts"],
     rules: {

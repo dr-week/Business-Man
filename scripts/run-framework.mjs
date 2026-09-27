@@ -18,6 +18,7 @@ if (managedLinux && command === "build") {
 const cli = new URL(managedLinux
   ? "../node_modules/vite/bin/vite.js"
   : "../node_modules/vinext/dist/cli.js", import.meta.url);
+const devPort = process.env.PORT || "5173";
 process.argv = [process.execPath, fileURLToPath(cli), command,
-  ...(!managedLinux && command === "dev" ? ["--port", "5173"] : []), ...args];
+  ...(!managedLinux && command === "dev" ? ["--port", devPort] : []), ...args];
 await import(cli.href);

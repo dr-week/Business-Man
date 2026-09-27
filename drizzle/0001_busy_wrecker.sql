@@ -1,0 +1,1 @@
+ALTER TABLE `hunt_leads` ADD `economics` text;

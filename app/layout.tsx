@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Businessman — Market Inefficiency Detector",
-  description: "Evidence-led discovery for emerging business opportunities.",
+  title: "Businessman — Opportunity Economics",
+  description: "Compare business opportunities, model unit economics, and evaluate evidence.",
   other: {
     "codex-preview": "development",
   },

@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import type { Economics } from "../lib/economics";
 
 /** Lean schema: factual evidence is separate from AI-derived scoring. */
 export const opportunities = sqliteTable("opportunities", {
@@ -35,3 +36,41 @@ export const watchlist = sqliteTable("watchlist", {
   opportunityId: integer("opportunity_id").notNull().references(() => opportunities.id),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+/** Research dossiers are user-scoped; a signal is not a validated opportunity. */
+export const huntLeads = sqliteTable("hunt_leads", {
+  id: text("id").primaryKey(),
+  ownerId: text("owner_id").notNull(),
+  title: text("title").notNull(),
+  lane: text("lane").notNull(),
+  failure: text("failure").notNull(),
+  buyer: text("buyer").notNull().default(""),
+  trigger: text("trigger").notNull().default(""),
+  source: text("source").notNull().default(""),
+  alternatives: text("alternatives").notNull().default(""),
+  payment: text("payment").notNull().default(""),
+  nextTest: text("next_test").notNull().default(""),
+  economics: text("economics", { mode: "json" }).$type<Economics>(),
+  decision: text("decision").notNull().default("Investigate"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("hunt_leads_owner_updated_idx").on(table.ownerId, table.updatedAt),
+  index("hunt_leads_owner_lane_idx").on(table.ownerId, table.lane),
+]);
+
+export const huntEvidence = sqliteTable("hunt_evidence", {
+  id: text("id").primaryKey(),
+  leadId: text("lead_id").notNull().references(() => huntLeads.id),
+  ownerId: text("owner_id").notNull(),
+  claim: text("claim").notNull(),
+  sourceTitle: text("source_title").notNull(),
+  sourceUrl: text("source_url").notNull().default(""),
+  kind: text("kind").notNull(), // official | buyer | field | supplier | other
+  direction: text("direction").notNull(), // supports | contradicts | context
+  observedAt: text("observed_at").notNull(),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("hunt_evidence_lead_idx").on(table.leadId, table.createdAt),
+  index("hunt_evidence_owner_idx").on(table.ownerId),
+]);

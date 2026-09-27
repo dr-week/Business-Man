@@ -30,6 +30,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.dev.vars*
+services/collector/.venv/
+services/collector/**/__pycache__/
 
 # vercel
 .vercel
@@ -44,3 +47,12 @@ next-env.d.ts
 /.codex/
 /outputs/
 /work/
+
+# Launcher logs & lock files
+/logs/
+scripts/server.lock
+
+# Cache and local temp files
+tsconfig.tsbuildinfo
+.codex-remote-attachments/
+
