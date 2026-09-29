@@ -1,9 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "@/db/schema";
-import { saveResearchRun } from "./research-run-store";
+import { listResearchRuns, saveResearchRun } from "./research-run-store";
 
 describe("research run storage", () => {
+  it("lists a bounded newest-first history scoped to its owner", () => {
+    const db = drizzle({} as D1Database, { schema });
+    const query = listResearchRuns(db, "owner-1").toSQL();
+    expect(query.sql).toContain('from "research_runs"');
+    expect(query.sql).toContain('"research_runs"."owner_id" = ?');
+    expect(query.sql).toContain('order by "research_runs"."created_at" desc, "research_runs"."id" desc');
+    expect(query.sql).toContain("limit ?");
+    expect(query.params).toEqual(["owner-1", 20]);
+  });
+
   it("batches insertion and owner-scoped retention", async () => {
     const db = drizzle({} as D1Database, { schema });
     const batch = vi.spyOn(db, "batch").mockResolvedValue([] as never);

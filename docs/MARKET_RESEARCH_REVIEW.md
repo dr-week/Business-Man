@@ -6,16 +6,16 @@ Reviewed 2026-09-29. Feature patterns inform modules; proprietary UI, content, a
 
 | Product | Offers | Still requires local validation |
 | --- | --- | --- |
-| [Similarweb](https://www.similarweb.com/corp/web/market-intelligence/) | Digital market, competitor, audience, and geography signals | Offline demand, buyer commitments, startup costs, and unit economics |
-| [Crunchbase Pro](https://about.crunchbase.com/products/crunchbase-pro) | Company/funding data, alerts, saved lists, and exports | Informal/local businesses, customer proof, and operating costs |
-| [IBISWorld](https://help.ibisworld.com/en/articles/8149882-industry-reports) | Industry size, forecasts, risks, regulation, and financial benchmarks | Site-level feasibility and venture-specific sales |
+| [Similarweb](https://www.similarweb.com/corp/web/market-intelligence/) | Market sizing, demand trends, competitors, audience/geography, custom views, and digital benchmarks | Offline demand, buyer commitments, startup costs, and unit economics |
+| [Crunchbase Pro](https://about.crunchbase.com/products/crunchbase-pro) | Private-company/funding data, saved lists, change alerts, notes/tags, workflow boards, and exports | Informal/local businesses, customer proof, and operating costs |
+| [IBISWorld](https://help.ibisworld.com/en/articles/8149882-industry-reports) | Industry definition, size, outlook/forecasts, risks, regulation, major players, and key statistics | Site-level feasibility and venture-specific sales |
 | [FRANdata](https://frandata.com/about-us/) | Franchise research, FDD data, and benchmarks | Current verified profitability for a particular franchise unit |
 
 Users: founders/operators, business-development teams, investors, franchise buyers, and analysts. Shared job: decide what to investigate, test, or fund. Search interest, listings, reports, and discussion are signals—not proof of sales.
 
 ## Current modules and gaps
 
-Research, local market, economics, validation plan, evidence, risks, source library, alternatives, and user-reported validation outcomes are separate modules. Sources can be searched and filtered by buyer, official, supplier, discussion, or other; publication age flags undated and older-than-12-month material. The static opportunity workbench has no comparable economics, so it omits the former blank Numbers tab. Key gaps: broader verified data coverage, named competitor price freshness, non-U.S. local datasets, alerts, and measured outcomes. Keep unknowns visible; never turn source volume into investment odds.
+Research, local market, economics, validation plan, evidence, risks, source library, alternatives, and user-reported validation outcomes are separate modules. Sources can be searched and filtered by buyer, official, supplier, discussion, or other; publication age flags undated and older-than-12-month material. The static opportunity workbench has no comparable economics, so it omits the former blank Numbers tab. Key gaps: broader verified data coverage, named competitor price freshness, non-U.S. local datasets, alerts, team workflows, and measured outcomes. Keep unknowns visible; never turn source volume into investment odds. Market intelligence products emphasize continuous monitoring, custom competitor sets, alerts, and exports. This app should add these only with sourced changes, bounded retention, and owner-scoped persistence.
 
 ## Reuse
 
@@ -55,3 +55,7 @@ The repository currently documents an ~88 MB package plus a separately acquired 
 4. Record buyer tests and later outcomes; evaluate screening quality before ranking opportunities.
 
 Primary references: [Startup India schemes](https://www.startupindia.gov.in/content/sih/en/government-schemes.html), [CPPP](https://eprocure.gov.in/eprocure/app?component=clear&page=FrontEndAdvancedSearch&service=direct), [OGD India](https://data.gov.in/). Treat portals as links until a documented API and dataset are identified.
+
+## GitHub issue hygiene
+
+Keep backlog issues tied to an active product goal, existing module, and an actionable owner-facing outcome. Close proposals that require unapproved field research, unrelated product pivots, nonexistent services, or credentials that belong in deployment configuration. Current backlog: [source ingestion](https://github.com/dr-week/Business-Man/issues/1) and [negative-evidence workflow](https://github.com/dr-week/Business-Man/issues/3). Closed issues explain why they are stale and what evidence would justify reopening.
