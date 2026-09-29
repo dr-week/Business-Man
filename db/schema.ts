@@ -92,3 +92,23 @@ export const researchRuns = sqliteTable("research_runs", {
 }, (table) => [
   index("research_runs_owner_created_idx").on(table.ownerId, table.createdAt),
 ]);
+
+/** User-authored falsification checks attached to an archived opportunity. */
+export const researchChecks = sqliteTable("research_checks", {
+  id: text("id").primaryKey(),
+  ownerId: text("owner_id").notNull(),
+  runId: text("run_id").notNull().references(() => researchRuns.id, { onDelete: "cascade" }),
+  opportunityId: text("opportunity_id").notNull(),
+  question: text("question").notNull(),
+  outcome: text("outcome").notNull().default("open"), // open | supports | disconfirms | inconclusive
+  evidenceKind: text("evidence_kind"), // sourced_fact | user_report | estimate | hypothesis
+  note: text("note").notNull().default(""),
+  sourceTitle: text("source_title").notNull().default(""),
+  sourceUrl: text("source_url").notNull().default(""),
+  observedAt: text("observed_at"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("research_checks_run_opportunity_idx").on(table.runId, table.opportunityId, table.createdAt),
+  index("research_checks_owner_idx").on(table.ownerId),
+]);

@@ -16,6 +16,7 @@ import { EvidenceMap } from "@/components/research/evidence-map";
 import { ResearchFocusCard } from "@/components/research/research-focus-card";
 import { SourceLedger } from "@/components/research/source-ledger";
 import { WebCandidates } from "@/components/research/web-candidates";
+import { CounterEvidence } from "@/components/research/counter-evidence";
 
 import { calculateFinancials, recalculateOpportunity, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity, type Provenance } from "@/lib/research-engine";
 import { TRENDING_PROMPTS } from "@/lib/trending-prompts";
@@ -99,6 +100,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   const [industry, setIndustry] = useState(""), [businessModel, setBusinessModel] = useState(""), [customer, setCustomer] = useState(""), [driver, setDriver] = useState("");
 
   const [input, setInput] = useState<ResearchInput | null>(null), [opportunities, setOpportunities] = useState<ResearchOpportunity[]>([]);
+  const [runId, setRunId] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<string | null>(null), [compare, setCompare] = useState<string[]>([]);
   const [firstImpressions, setFirstImpressions] = useState<Record<string, FirstImpression>>({});
@@ -124,11 +126,11 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   useEffect(() => {
     let active = true;
     fetch("/api/hunt/research-runs", { cache: "no-store" })
-      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation> } }[] }> : null)
+      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation> } }[] }> : null)
       .then((data) => {
         const latest = data?.runs?.[0];
         if (!active || !latest?.input || !Array.isArray(latest.result?.opportunities)) return;
-        setInput(latest.input); setOpportunities(latest.result.opportunities);
+        setRunId(latest.id ?? null); setInput(latest.input); setOpportunities(latest.result.opportunities);
         setTopic(latest.input.topic); setGeography(latest.input.geography); setBudget(latest.input.budget == null ? "" : String(latest.input.budget));
         setPreparedBrief(latest.result.query?.brief ?? ""); setInterpretation(latest.result.query ?? null);
       })
@@ -226,11 +228,11 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
       const response = await fetch("/api/hunt/research", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next), signal: controller.signal });
 
-      const data = await response.json() as { error?: string; query?: { brief: string; original: string; searchTerms: string; classifier: string; researchFocus: ResearchFocus; researchFocusSource: ResearchFocusSource; suggestions: { word: string; options: string[] }[] }; opportunities: ResearchOpportunity[]; providerErrors: string[]; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean };
+      const data = await response.json() as { error?: string; runId?: string; query?: { brief: string; original: string; searchTerms: string; classifier: string; researchFocus: ResearchFocus; researchFocusSource: ResearchFocusSource; suggestions: { word: string; options: string[] }[] }; opportunities: ResearchOpportunity[]; providerErrors: string[]; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean };
 
       if (!response.ok) throw new Error(data.error ?? "Research failed.");
 
-      setPreparedBrief(data.query?.brief ?? ""); setInterpretation(data.query ?? null); setInput(next); setOpportunities(data.opportunities); setProviderErrors(data.providerErrors); setWebResearch(data.webResearch ?? []); setWebSearchConfigured(!!data.webSearchConfigured);
+      setRunId(data.runId ?? null); setPreparedBrief(data.query?.brief ?? ""); setInterpretation(data.query ?? null); setInput(next); setOpportunities(data.opportunities); setProviderErrors(data.providerErrors); setWebResearch(data.webResearch ?? []); setWebSearchConfigured(!!data.webSearchConfigured);
 
       setSelected(null); setCompare([]); persist(next, data.opportunities);
 
@@ -434,6 +436,10 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
           <section className="research-detail-card">{active.risks.length ? <ul>{active.risks.map((risk) => <li key={risk}>{risk}</li>)}</ul> : <p>No explicit risks extracted. Check regulation, suppliers, operating costs, and buyer access.</p>}
             <p>Contradicting claims: {active.claims.filter((claim) => claim.direction === "contradicts").length}. Absence is not agreement.</p>
           </section>
+        </details>}
+        {view !== "economics" && runId && <details className="research-module">
+          <summary>Counter-evidence · test what could disprove this</summary>
+          <CounterEvidence key={`${runId}:${active.id}`} runId={runId} opportunityId={active.id} />
         </details>}
       </div>
 

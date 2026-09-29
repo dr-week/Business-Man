@@ -208,6 +208,17 @@
 .research-detail-modules > .research-validation-plan { margin:0; }
 .research-module > .research-detail-card details { margin-top:12px; }
 .research-module > .research-detail-card summary { cursor:pointer; color:#d1b476; }
+.counter-evidence { display:grid; gap:14px; }
+.counter-evidence form { display:grid; gap:10px; }
+.counter-evidence label { display:grid; gap:5px; color:#c5c3b8; font-size:12px; }
+.counter-evidence textarea,.counter-evidence input,.counter-evidence select { width:100%; border:1px solid #45483d; border-radius:6px; background:#141811; color:#eeeae0; padding:9px; font:inherit; }
+.counter-evidence button { justify-self:start; border:1px solid #80704a; border-radius:6px; background:#d1b476; color:#171910; padding:8px 12px; font:inherit; cursor:pointer; }
+.counter-evidence button:disabled { opacity:.55; cursor:not-allowed; }
+.counter-evidence ul { display:grid; gap:8px; list-style:none; padding:0; margin:0; }
+.counter-evidence li { border-top:1px solid #35392e; padding-top:8px; }
+.counter-evidence li summary { display:flex; justify-content:space-between; gap:12px; cursor:pointer; color:#eeeae0; font-size:12px; }
+.counter-evidence li summary span,.counter-evidence small { color:#aaa99b; }
+.counter-evidence li form,.counter-evidence li > details > div { padding:12px 0; }
 .research-local-competition { margin:0 20px 20px; padding:18px; border:1px solid #35392e; border-radius:8px; background:#1c2118; }
 .research-local-competition > summary { cursor:pointer; font-weight:650; }
 .research-local-competition > p { color:#aaa99b; font-size:12px; margin:10px 0 0; }

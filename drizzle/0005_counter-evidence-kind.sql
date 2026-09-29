@@ -1,0 +1,1 @@
+ALTER TABLE `research_checks` ADD `evidence_kind` text;
