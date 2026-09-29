@@ -411,6 +411,14 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
           </details>
         </details>}
 
+        {view !== "economics" && firstImpressions[active.id] && <section className="research-decision-review" aria-label="Decision review">
+          <h3>Review your first impression</h3>
+          <p>You marked this opportunity <strong>{firstImpressions[active.id]}</strong> before reviewing its evidence. Reconsider the choice after checking the sources, risks, and missing inputs. This is a reflection prompt, not an investment recommendation.</p>
+          <div className="research-first-impression" role="group" aria-label={`Updated decision for ${active.name}`}>
+            {(["investigate", "watch", "pass"] as const).map((choice) => <button key={choice} type="button" aria-pressed={firstImpressions[active.id] === choice} onClick={() => setFirstImpression(active.id, choice)}>{choice === "pass" ? "Pass" : choice === "watch" ? "Watch" : "Investigate"}</button>)}
+          </div>
+        </section>}
+
         {view !== "economics" && <>
           <ValidationPlan missing={active.missing} />
           <details className="research-module">
