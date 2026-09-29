@@ -27,7 +27,7 @@ Current API notes: [Google Trends API](https://developers.google.com/search/apis
 - Laya’s repository describes typed fast choice/score classifiers. In this app, use the optional adapter only to suggest query/research focus. Never use its confidence as opportunity strength or investment probability. Validate on labeled examples before triage; keep rules fallback. [Laya repository](https://github.com/NandhaKishorM/laya).
 - System 1/System 2 is a human review pattern only: capture a reversible first impression, then inspect evidence and uncertainty. Intuition can anchor subsequent analysis; do not treat this as a validated scoring model. [Nature Reviews Psychology](https://www.nature.com/articles/s44159-025-00466-6) · [dual-process review](https://pmc.ncbi.nlm.nih.gov/articles/PMC11591345/).
 - Reuse installed shadcn/Base UI, Lucide and Recharts. [shadcn/ui](https://github.com/shadcn-ui/ui) is MIT-licensed; retain notices for copied code. [Evidence](https://github.com/evidence-dev/evidence) is an MIT reporting-pattern reference but brings a separate Svelte stack; do not add it to this React app.
-- Keep provider payloads bounded and transient unless persistence is required and permitted. Current first impressions are browser-local, validated, and capped at 200 entries to bound storage and memory.
+- Keep provider payloads bounded and transient unless persistence is required and permitted. First impressions are browser-local, validated, capped at 200 entries, and evict the oldest insertion to bound storage and memory.
 
 ## Provider integrations
 

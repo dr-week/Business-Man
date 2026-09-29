@@ -28,11 +28,14 @@ describe("first impressions", () => {
     expect(Object.values(next)).not.toContain(undefined);
   });
 
-  it("evicts the lexically oldest id when adding beyond the cap", () => {
-    const current = Object.fromEntries(Array.from({ length: 200 }, (_, i) => [`lead-${String(i).padStart(3, "0")}`, "watch" as const]));
-    const next = recordFirstImpression(current, "lead-200", "pass");
+  it("evicts the oldest inserted decision, independent of identifier spelling", () => {
+    const current = Object.fromEntries([[
+      "z-old", "watch" as const,
+    ], ...Array.from({ length: 199 }, (_, i) => [`a-${i}`, "watch" as const])]);
+    const next = recordFirstImpression(current, "m-new", "pass");
     expect(Object.keys(next)).toHaveLength(200);
-    expect(next["lead-000"]).toBeUndefined();
-    expect(next["lead-200"]).toBe("pass");
+    expect(next["z-old"]).toBeUndefined();
+    expect(next["a-0"]).toBe("watch");
+    expect(next["m-new"]).toBe("pass");
   });
 });

@@ -20,7 +20,6 @@ export function recordFirstImpression(
   next[id] = choice;
   const keys = Object.keys(next);
   if (keys.length <= MAX_DECISIONS) return next;
-  const oldest = keys.reduce((candidate, key) => key < candidate ? key : candidate);
-  delete next[oldest];
+  delete next[keys[0]];
   return next;
 }
