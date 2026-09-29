@@ -29,11 +29,18 @@ echo ======================================================
 echo.
 
 if exist "%PORT_FILE%" set /p SAVED_PORT=<"%PORT_FILE%"
-if not defined SAVED_PORT goto find_port
 set "VERIFY_PORT=%SAVED_PORT%"
+set "CHECK_RESULT="
+for /f %%A in ('node scripts\verify-project-instance.mjs 2^>nul') do set "CHECK_RESULT=%%A"
+if not defined CHECK_RESULT goto find_port
 set "CHECK_STATUS="
-for /f %%A in ('node scripts\verify-project-instance.mjs 2^>nul') do set "CHECK_STATUS=%%A"
+set "CHECK_PORT="
+for /f "tokens=1,2 delims=:" %%A in ("%CHECK_RESULT%") do (
+    set "CHECK_STATUS=%%A"
+    set "CHECK_PORT=%%B"
+)
 if not "%CHECK_STATUS%"=="IS_BUSINESSMAN" goto find_port
+set "SAVED_PORT=%CHECK_PORT%"
 echo [+] Businessman is already running on port %SAVED_PORT%.
 echo [*] Opening http://localhost:%SAVED_PORT%...
 start "" "http://localhost:%SAVED_PORT%"

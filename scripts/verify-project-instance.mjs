@@ -1,6 +1,19 @@
 import http from "node:http";
+import { readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 
-const rawPort = process.env.VERIFY_PORT || process.argv[2] || process.env.PORT || "5173";
+function activeLockPort() {
+  try {
+    const lock = JSON.parse(readFileSync(join(process.cwd(), ".vinext", "dev", "lock.json"), "utf8"));
+    if (typeof lock.cwd !== "string" || resolve(lock.cwd).toLowerCase() !== resolve(process.cwd()).toLowerCase()) return "";
+    if (!Number.isInteger(lock.pid) || lock.pid < 1) return "";
+    try { process.kill(lock.pid, 0); }
+    catch (error) { if (error.code !== "EPERM") return ""; }
+    return String(lock.port ?? "");
+  } catch { return ""; }
+}
+
+const rawPort = process.env.VERIFY_PORT || process.argv[2] || process.env.PORT || activeLockPort();
 const parsedPort = Number(rawPort);
 if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
   process.stdout.write("NOT_LISTENING");
@@ -17,7 +30,7 @@ function finish(status) {
   process.stdout.write(status);
 }
 
-const req = http.get(`http://127.0.0.1:${port}/api/health`, { timeout: 1500 }, (res) => {
+const req = http.get(`http://localhost:${port}/api/health`, { timeout: 1500 }, (res) => {
   let data = "", bytes = 0;
   res.on("data", (chunk) => {
     bytes += chunk.length;
@@ -33,7 +46,7 @@ const req = http.get(`http://127.0.0.1:${port}/api/health`, { timeout: 1500 }, (
     try {
       const json = JSON.parse(data);
       if (json.app === expectedApp && json.status === "ok") {
-        finish("IS_BUSINESSMAN");
+        finish(`IS_BUSINESSMAN:${port}`);
       } else {
         finish("OTHER_PROJECT");
       }

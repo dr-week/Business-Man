@@ -10,10 +10,10 @@ afterEach(async () => {
   await Promise.all(servers.splice(0).map((server) => new Promise<void>((resolve) => server.close(() => resolve()))));
 });
 
-async function verify(handler: (_response: ServerResponse) => void) {
+async function verify(handler: (_response: ServerResponse) => void, host = "127.0.0.1") {
   const server = createServer((_request, response) => handler(response));
   servers.push(server);
-  server.listen(0, "127.0.0.1");
+  server.listen(0, host);
   await once(server, "listening");
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("Expected TCP test server.");
@@ -37,11 +37,16 @@ describe("project instance verification", () => {
     expect(launcher).toContain('set "verify_port=%saved_port%"');
     expect(launcher).not.toContain("!port!");
     expect(launcher).not.toContain("!crash_log!");
+    expect(launcher).not.toContain("pause >nul");
   });
 
   it("recognizes only the expected health response", async () => {
-    expect(await verify((response) => response.end(JSON.stringify({ app: "businessman", status: "ok" })))).toBe("IS_BUSINESSMAN");
+    expect(await verify((response) => response.end(JSON.stringify({ app: "businessman", status: "ok" })))).toMatch(/^IS_BUSINESSMAN:\d+$/);
     expect(await verify((response) => response.end(JSON.stringify({ app: "other", status: "ok" })))).toBe("OTHER_PROJECT");
+  });
+
+  it("recognizes the project when the dev server binds IPv6 localhost", async () => {
+    expect(await verify((response) => response.end(JSON.stringify({ app: "businessman", status: "ok" })), "::1")).toMatch(/^IS_BUSINESSMAN:\d+$/);
   });
 
   it("stops reading oversized health responses", async () => {

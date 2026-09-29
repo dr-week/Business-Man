@@ -29,6 +29,6 @@ npm run lint
 npm run build
 ```
 
-Windows dev launcher: `scripts/launch.bat`. It checks the saved port against `/api/health`, scans ports 5173–5223, and writes logs under ignored `logs/`. It never terminates a process based on a PID file.
+Windows dev launcher: `scripts/launch.bat`. It verifies the saved port or Vinext lock through `/api/health` on localhost, scans IPv4 and IPv6 ports 5173–5223, and writes logs under ignored `logs/`. The foreground server ends with the launcher window; failures exit without a pause. It never kills a process based on a stale PID file.
 
 Tests check behavior, not business truth. Review provenance, provider limits, persistence ownership, memory bounds, and unknown/error states separately. For localStorage-backed features, cap imported payload size and retained records; do not trust browser completion flags without required evidence fields.
