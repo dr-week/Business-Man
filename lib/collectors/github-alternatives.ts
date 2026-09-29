@@ -11,6 +11,7 @@ const responseShape = z.object({ items: z.array(repository).max(10) });
 export type CandidateAlternative = {
   name: string; url: string; description: string; stars: number;
   updatedAt: string; license: string | null;
+  matchedTerms?: string[]; relevance?: number;
 };
 
 export async function collectGitHubAlternatives(topic: string, signal?: AbortSignal): Promise<CandidateAlternative[]> {

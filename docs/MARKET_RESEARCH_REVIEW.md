@@ -6,7 +6,7 @@ Reviewed 2026-09-29. Feature patterns inform modules; proprietary UI, content, a
 
 | Product | Offers | Still requires local validation |
 | --- | --- | --- |
-| [Similarweb](https://www.similarweb.com/corp/web/market-intelligence/) | Market sizing, demand trends, competitors, audience/geography, custom views, and digital benchmarks | Offline demand, buyer commitments, startup costs, and unit economics |
+| [Similarweb](https://www.similarweb.com/corp/web/market-intelligence/) | Market sizing, demand trends, competitors, audience/geography, custom views, and digital benchmarks; competitive intelligence is packaged by feature and coverage | Offline demand, buyer commitments, startup costs, and unit economics; business pricing requires package selection/contact |
 | [Crunchbase Pro](https://about.crunchbase.com/products/crunchbase-pro) | Private-company/funding data, saved lists, change alerts, notes/tags, workflow boards, and exports | Informal/local businesses, customer proof, and operating costs |
 | [IBISWorld](https://help.ibisworld.com/en/articles/8149882-industry-reports) | Industry definition, size, outlook/forecasts, risks, regulation, major players, and key statistics | Site-level feasibility and venture-specific sales |
 | [FRANdata](https://frandata.com/about-us/) | Franchise research, FDD data, and benchmarks | Current verified profitability for a particular franchise unit |
@@ -40,7 +40,7 @@ Check each dependency's license and notices before copying code. Prefer small SC
 | [Brave Search API](https://api-dashboard.search.brave.com/app/documentation/web-search) | Optional transient web leads; snippets are not persisted or scored. Follow plan-specific storage terms. |
 | [Google Places](https://developers.google.com/maps/documentation/places/web-service/text-search) | Optional nearby listing candidates; requires key, billing, field mask, attribution, and policy-compliant storage. Not a complete market census. |
 | [U.S. Census CBP](https://www.census.gov/data/developers/data-sets/cbp-zbp/cbp-api.html) | 2023 employer-establishment footprint by NAICS; U.S.-only and not demand. |
-| [GitHub repository search](https://docs.github.com/en/rest/search/search#search-repositories) | Software alternatives and activity; misses offline/proprietary substitutes and commercial adoption. |
+| [GitHub repository search](https://docs.github.com/en/rest/search/search#search-repositories) | Open-source software candidates; lexical overlap is shown for audit and sorted before stars. It misses offline/proprietary substitutes and commercial adoption; stars and overlap are not competitor fit or demand. |
 | [Google Ads Keyword Planning](https://developers.google.com/google-ads/api/docs/keyword-planning/generate-historical-metrics) | Search volume and bid metrics for eligible accounts; volume is not willingness to pay. |
 | [Google Trends API](https://developers.google.com/search/apis/trends) | Comparable regional/time-series interest; alpha access is gated and interest is not revenue. |
 | [Google Custom Search JSON](https://developers.google.com/custom-search/v1/overview) | Closed to new customers; scheduled to discontinue 2027-01-01. Do not build on it. |
