@@ -1,13 +1,13 @@
 # Market research product review
 
-Reviewed 2026-09-29. Feature patterns inform modules; proprietary UI, content, and datasets are not copied.
+Reviewed 2026-09-30. Feature patterns inform modules; proprietary UI, content, and datasets are not copied.
 
 ## Benchmarks
 
 | Product | Offers | Still requires local validation |
 | --- | --- | --- |
-| [Similarweb](https://www.similarweb.com/corp/web/market-intelligence/) | Market sizing, demand trends, competitors, audience/geography, custom views, and digital benchmarks; competitive intelligence is packaged by feature and coverage | Offline demand, buyer commitments, startup costs, and unit economics; business pricing requires package selection/contact |
-| [Crunchbase Pro](https://about.crunchbase.com/products/crunchbase-pro) | Private-company/funding data, saved lists, change alerts, notes/tags, workflow boards, and exports | Informal/local businesses, customer proof, and operating costs |
+| [Similarweb](https://www.similarweb.com/corp/web/market-intelligence/) | Market sizing, demand trends, competitors, audience/geography, custom views, alerts, and digital benchmarks; individual Competitive Intelligence lists $125/month billed annually or $199 monthly, business pricing is custom | Offline demand, buyer commitments, startup costs, and unit economics |
+| [Crunchbase Pro](https://about.crunchbase.com/products/crunchbase-pro) | Private-company/funding data, saved lists, change alerts, notes/tags, workflow boards, and up to 2K-row monthly export; current product page does not list a price | Informal/local businesses, customer proof, and operating costs |
 | [IBISWorld](https://help.ibisworld.com/en/articles/8149882-industry-reports) | Industry definition, size, outlook/forecasts, risks, regulation, major players, and key statistics | Site-level feasibility and venture-specific sales |
 | [FRANdata](https://frandata.com/about-us/) | Franchise research, FDD data, and benchmarks | Current verified profitability for a particular franchise unit |
 

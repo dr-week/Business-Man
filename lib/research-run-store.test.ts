@@ -4,14 +4,14 @@ import * as schema from "@/db/schema";
 import { listResearchRuns, saveResearchRun } from "./research-run-store";
 
 describe("research run storage", () => {
-  it("lists a bounded newest-first history scoped to its owner", () => {
+  it("loads only the latest snapshot for its owner", () => {
     const db = drizzle({} as D1Database, { schema });
     const query = listResearchRuns(db, "owner-1").toSQL();
     expect(query.sql).toContain('from "research_runs"');
     expect(query.sql).toContain('"research_runs"."owner_id" = ?');
     expect(query.sql).toContain('order by "research_runs"."created_at" desc, "research_runs"."id" desc');
     expect(query.sql).toContain("limit ?");
-    expect(query.params).toEqual(["owner-1", 20]);
+    expect(query.params).toEqual(["owner-1", 1]);
   });
 
   it("batches insertion and owner-scoped retention", async () => {

@@ -5,12 +5,12 @@ import { researchRuns } from "@/db/schema";
 const MAX_RETAINED_RUNS = 20;
 const MAX_RUN_BYTES = 1_900_000;
 
-/** Return the bounded, newest-first history for one owner. */
+/** Return only the latest snapshot; the current UI restores one research run. */
 export function listResearchRuns(db: ReturnType<typeof getDb>, ownerId: string) {
   return db.select().from(researchRuns)
     .where(eq(researchRuns.ownerId, ownerId))
     .orderBy(desc(researchRuns.createdAt), desc(researchRuns.id))
-    .limit(MAX_RETAINED_RUNS);
+    .limit(1);
 }
 
 /** Save and retain the newest owner-scoped runs in one D1 transaction. */
