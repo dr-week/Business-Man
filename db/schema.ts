@@ -52,6 +52,10 @@ export const huntLeads = sqliteTable("hunt_leads", {
   nextTest: text("next_test").notNull().default(""),
   economics: text("economics", { mode: "json" }).$type<Economics>(),
   decision: text("decision").notNull().default("Investigate"),
+  validationStatus: text("validation_status").notNull().default("unverified"),
+  validationNote: text("validation_note").notNull().default(""),
+  validationSourceUrl: text("validation_source_url").notNull().default(""),
+  validationObservedAt: text("validation_observed_at").notNull().default(""),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
@@ -73,4 +77,18 @@ export const huntEvidence = sqliteTable("hunt_evidence", {
 }, (table) => [
   index("hunt_evidence_lead_idx").on(table.leadId, table.createdAt),
   index("hunt_evidence_owner_idx").on(table.ownerId),
+]);
+
+/** Durable, owner-scoped snapshots of completed research runs. */
+export const researchRuns = sqliteTable("research_runs", {
+  id: text("id").primaryKey(),
+  ownerId: text("owner_id").notNull(),
+  topic: text("topic").notNull(),
+  geography: text("geography").notNull(),
+  currency: text("currency").notNull(),
+  input: text("input", { mode: "json" }).notNull().$type<Record<string, unknown>>(),
+  result: text("result", { mode: "json" }).notNull().$type<Record<string, unknown>>(),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("research_runs_owner_created_idx").on(table.ownerId, table.createdAt),
 ]);

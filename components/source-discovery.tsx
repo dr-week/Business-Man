@@ -6,19 +6,30 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import dynamic from "next/dynamic";
 
-import { Download, ExternalLink, Search, Square, GitCompareArrows, Star } from "lucide-react";
+import { Download, ExternalLink, Search, Square, GitCompareArrows, Star, Store, BriefcaseBusiness } from "lucide-react";
 
 import type { Lead } from "@/lib/opportunity-hunt";
+import { ValidationPlan } from "@/components/research/validation-plan";
+import { ValidationChecklist } from "@/components/research/validation-checklist";
+import { MarketInspection } from "@/components/research/market-inspection";
+import { EvidenceMap } from "@/components/research/evidence-map";
+import { ResearchFocusCard } from "@/components/research/research-focus-card";
+import { SourceLedger } from "@/components/research/source-ledger";
+import { WebCandidates } from "@/components/research/web-candidates";
 
 import { calculateFinancials, recalculateOpportunity, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity, type Provenance } from "@/lib/research-engine";
 import { TRENDING_PROMPTS } from "@/lib/trending-prompts";
+import type { ResearchFocus, ResearchFocusSource } from "@/lib/research-focus";
+import type { WebResearchResult } from "@/lib/collectors/brave-search";
+import { estimatePriceFromBenchmark, priceBenchmarks } from "@/lib/price-benchmarks";
+import { independentSourceCount } from "@/lib/evidence-lineage";
+import { parseFirstImpressions, recordFirstImpression, type FirstImpression } from "@/lib/first-impressions";
 
 
 
 const Charts = dynamic(() => import("./research-charts"), { ssr: false });
 
 const storageKey = "businessman.research.v2";
-
 const fields = [
 
   ["price", "Selling price"], ["variableCost", "Variable cost"], ["fixedCost", "Monthly fixed cost"],
@@ -43,7 +54,7 @@ function exportCsv(items: ResearchOpportunity[], currency: string) {
 
   const rows = [["Opportunity", "Category", "Strength", "Confidence", "Investment " + currency, "Base monthly profit " + currency, "Evidence count", "Sources"],
 
-    ...items.map((item) => [item.name, item.category, item.strength ?? "Unrated", item.confidence, item.financials?.funding ?? "Unknown", item.financials?.scenarios[1].profit ?? "Unknown", item.sources.length, item.sources.map((source) => source.url).join(" ")])];
+    ...items.map((item) => [item.name, item.category, item.strength ?? "Unrated", item.confidence, item.financials?.funding ?? "Unknown", item.financials?.scenarios[1].profit ?? "Unknown", independentSourceCount(item.sources), item.sources.map((source) => source.url).join(" ")])];
 
   const cell = (value: string | number) => '"' + String(value).replace(/"/g, '""') + '"';
 
@@ -55,7 +66,7 @@ function exportCsv(items: ResearchOpportunity[], currency: string) {
 
 }
 
-export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError, initialTopic }: { view?: "research" | "starred" | "settings" | "profile"; onSaved: (lead: Lead) => void; onError: (message: string) => void; initialTopic?: string }) {
+export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError, initialTopic, onOpenAnalysis, onOpenResearch = () => {} }: { view?: "research" | "analysis" | "economics" | "market" | "sources" | "starred" | "settings" | "profile"; onSaved: (lead: Lead) => void; onError: (message: string) => void; initialTopic?: string; onOpenAnalysis?: () => void; onOpenResearch?: () => void }) {
 
   const abort = useRef<AbortController | null>(null);
   const [stars, setStars] = useState<string[]>([]);
@@ -90,15 +101,40 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   const [input, setInput] = useState<ResearchInput | null>(null), [opportunities, setOpportunities] = useState<ResearchOpportunity[]>([]);
 
   const [selected, setSelected] = useState<string | null>(null), [compare, setCompare] = useState<string[]>([]);
+  const [firstImpressions, setFirstImpressions] = useState<Record<string, FirstImpression>>({});
+  const setFirstImpression = (id: string, choice: FirstImpression) => setFirstImpressions((current) => {
+    const next = recordFirstImpression(current, id, choice);
+    try { localStorage.setItem("businessman.first-impressions.v1", JSON.stringify(next)); } catch { onError("Could not save your decision on this device."); }
+    return next;
+  });
+  useEffect(() => { try { setFirstImpressions(parseFirstImpressions(JSON.parse(localStorage.getItem("businessman.first-impressions.v1") ?? "{}"))); } catch { /* Ignore invalid local decisions. */ } }, []);
 
   const [sort, setSort] = useState<"name" | "strength" | "investment" | "profit" | "evidence">("strength");
 
   const [busy, setBusy] = useState(false), [progress, setProgress] = useState("");
 
   const [preparedBrief, setPreparedBrief] = useState("");
-  const [interpretation, setInterpretation] = useState<{ original: string; searchTerms: string; classifier: string; suggestions: { word: string; options: string[] }[] } | null>(null);
+  const [interpretation, setInterpretation] = useState<{ brief: string; original: string; searchTerms: string; classifier: string; researchFocus: ResearchFocus; researchFocusSource: ResearchFocusSource; suggestions: { word: string; options: string[] }[] } | null>(null);
   const [providerErrors, setProviderErrors] = useState<string[]>([]);
+  const [webResearch, setWebResearch] = useState<WebResearchResult[]>([]);
+  const [webSearchConfigured, setWebSearchConfigured] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [researchMode, setResearchMode] = useState<"ideas" | "market" | "franchise">("ideas");
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/hunt/research-runs", { cache: "no-store" })
+      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation> } }[] }> : null)
+      .then((data) => {
+        const latest = data?.runs?.[0];
+        if (!active || !latest?.input || !Array.isArray(latest.result?.opportunities)) return;
+        setInput(latest.input); setOpportunities(latest.result.opportunities);
+        setTopic(latest.input.topic); setGeography(latest.input.geography); setBudget(latest.input.budget == null ? "" : String(latest.input.budget));
+        setPreparedBrief(latest.result.query?.brief ?? ""); setInterpretation(latest.result.query ?? null);
+      })
+      .catch(() => { /* Local snapshot remains available when archive is unavailable. */ });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (topic) return;
@@ -131,6 +167,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
   }, []);
 
+
   useEffect(() => {
     if (initialTopic && initialTopic.trim()) {
       setTopic(initialTopic.trim());
@@ -158,13 +195,13 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
     if (sort === "name") return a.name.localeCompare(b.name);
 
-    if (sort === "evidence") return b.sources.length - a.sources.length;
+    if (sort === "evidence") return independentSourceCount(b.sources) - independentSourceCount(a.sources);
 
     if (sort === "investment") return (a.financials?.funding ?? Infinity) - (b.financials?.funding ?? Infinity);
 
     if (sort === "profit") return (b.financials?.scenarios[1].profit ?? -Infinity) - (a.financials?.scenarios[1].profit ?? -Infinity);
 
-    return (b.strength ?? -1) - (a.strength ?? -1) || b.sources.length - a.sources.length;
+    return (b.strength ?? -1) - (a.strength ?? -1) || independentSourceCount(b.sources) - independentSourceCount(a.sources);
 
   }), [opportunities, sort]);
 
@@ -183,21 +220,21 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
     if (next.budget != null && (next.minimumInvestment ?? 0) > next.budget) { onError("Check investment range in Personalisation."); return; }
     const controller = new AbortController(); abort.current = controller;
 
-    setBusy(true); setProgress("Collecting sources"); setProviderErrors([]); onError("");
+    setBusy(true); setProgress("Collecting sources"); setProviderErrors([]); setWebResearch([]); setWebSearchConfigured(false); onError("");
 
     try {
 
       const response = await fetch("/api/hunt/research", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next), signal: controller.signal });
 
-      const data = await response.json() as { error?: string; query?: { brief: string; original: string; searchTerms: string; classifier: string; suggestions: { word: string; options: string[] }[] }; opportunities: ResearchOpportunity[]; providerErrors: string[] };
+      const data = await response.json() as { error?: string; query?: { brief: string; original: string; searchTerms: string; classifier: string; researchFocus: ResearchFocus; researchFocusSource: ResearchFocusSource; suggestions: { word: string; options: string[] }[] }; opportunities: ResearchOpportunity[]; providerErrors: string[]; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean };
 
       if (!response.ok) throw new Error(data.error ?? "Research failed.");
 
-      setPreparedBrief(data.query?.brief ?? ""); setInterpretation(data.query ?? null); setInput(next); setOpportunities(data.opportunities); setProviderErrors(data.providerErrors);
+      setPreparedBrief(data.query?.brief ?? ""); setInterpretation(data.query ?? null); setInput(next); setOpportunities(data.opportunities); setProviderErrors(data.providerErrors); setWebResearch(data.webResearch ?? []); setWebSearchConfigured(!!data.webSearchConfigured);
 
       setSelected(null); setCompare([]); persist(next, data.opportunities);
 
-      setProgress(data.opportunities.length + " findings grouped and qualified");
+      setProgress(data.opportunities.length ? data.opportunities.length + " findings grouped and qualified" : data.webResearch?.length ? data.webResearch.length + " web results ready to review; no scored leads yet" : "No findings; broaden the topic or location");
 
     } catch (error) { if (!controller.signal.aborted) { onError((error as Error).message); setProgress(""); } else setProgress("Research cancelled"); }
 
@@ -221,11 +258,22 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
   return <section className="research-workspace" aria-label="Market research">
 
+    <div hidden={view !== "research" || !!opportunities.length} className="research-intro">
+      <div className="research-mode" role="tablist" aria-label="Research goal">
+        <button type="button" role="tab" aria-selected={researchMode === "ideas"} onClick={() => { setResearchMode("ideas"); setTopic(""); }}><BriefcaseBusiness size={16} />Find a business idea</button>
+        <button type="button" role="tab" aria-selected={researchMode === "market"} onClick={() => { setResearchMode("market"); setTopic(""); }}><Search size={16} />Check a market</button>
+        <button type="button" role="tab" aria-selected={researchMode === "franchise"} onClick={() => { setResearchMode("franchise"); setTopic(""); }}><Store size={16} />Compare franchises</button>
+      </div>
+      <p>{researchMode === "franchise" ? "Compare franchise brands using official disclosure documents, fee schedules, and franchisee conversations. Add brand names and source links; unknown terms stay unknown." : researchMode === "market" ? "Name a product, service, or industry and a location. Look for demand signals, competitors, and risks, then verify them with buyers." : "Start with a problem, product, skill, or place. Find a lead, see its evidence, then validate the opportunity with a buyer."}</p>
+      <div className="research-starters" aria-label="Example research questions">
+        {(researchMode === "franchise" ? ["Compare food franchises under my budget", "What should I check before buying a franchise?", "Compare franchise fees, closures, and territory terms"] : researchMode === "market" ? ["Demand for cold storage in Goa", "Compare laundry services in Panaji", "Market gaps for food processing in India"] : ["What can I sell to hotels in Goa?", "Business ideas using an empty garage", "Problems buyers pay to solve in food processing"]).map((prompt) => <button key={prompt} type="button" onClick={() => setTopic(prompt)}>{prompt}</button>)}
+      </div>
+    </div>
     <form hidden={view !== "research"} className="research-bar" onSubmit={(event) => void research(event)}>
 
       <label className="research-topic"><span className="sr-only">Topic</span><input required minLength={2} maxLength={1000} value={topic} onChange={(event) => setTopic(event.target.value)} placeholder={`e.g. ${TRENDING_PROMPTS[placeholderIndex] || "Research a business…"}`} /></label>
 
-      <button className="hunt-icon-action" title="Research" aria-label="Research" disabled={busy} type="submit"><Search size={18} /></button>
+      <button className="research-submit" disabled={busy} type="submit"><Search size={16} />{busy ? "Researching…" : "Find opportunities"}</button>
 
       {busy && <button className="hunt-icon-action" type="button" title="Cancel research" aria-label="Cancel research" onClick={() => abort.current?.abort()}><Square size={14} /></button>}
 
@@ -242,6 +290,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       <button className="hunt-create-submit" type="submit">Save</button><span role="status">{preferencesSaved ? "Saved" : ""}</span>
     </form>
     {preparedBrief && view === "research" && <details className="hunt-source-caption"><summary>Search interpretation</summary><p>{interpretation?.searchTerms ?? preparedBrief}</p><small>{interpretation?.classifier}</small>
+      {interpretation && <ResearchFocusCard focus={interpretation.researchFocus} source={interpretation.researchFocusSource} topic={input?.topic ?? topic} geography={input?.geography ?? geography} />}
       {interpretation?.suggestions.map((suggestion, index) => <div key={index}>{suggestion.word}: {suggestion.options.map((option) => <button className="hunt-tag" disabled={busy} key={option} title={"Search with " + option} onClick={() => { const corrected = interpretation.original.replace(suggestion.word, option); setTopic(corrected); void research(null, false, corrected); }}>{option}</button>)}</div>)}
       <button className="hunt-tag" disabled={busy} onClick={() => void research(null, true, interpretation?.original)}>Search original</button></details>}
     <section hidden={view !== "settings"} className="research-filters" aria-label="Business filters"><div>
@@ -256,158 +305,140 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
     </div><label>Web sources<textarea aria-label="Web source URLs" value={sourceUrls} onChange={(event) => setSourceUrls(event.target.value)} placeholder="Up to 3 public HTTPS URLs, one per line" rows={3} /></label><small>Applies to your next search.</small></section>
 
-    <div hidden={!progress && !providerErrors.length} className="research-status" aria-live="polite">{progress}{providerErrors.length > 0 && <span> Â· {providerErrors.join(", ")}</span>}</div>
+    <div hidden={!progress && !providerErrors.length} className="research-status" aria-live="polite">{progress && <span>{progress}</span>}{providerErrors.length > 0 && <span className="research-provider-errors">Some sources could not be reached: {providerErrors.join(", ")}</span>}</div>
 
     <div hidden={view === "settings" || view === "profile"}>
 
-    <section hidden={!ordered.filter((item) => view !== "starred" || stars.includes(item.id)).length} className="research-results" aria-label="Ranked findings">
+    {view === "sources" && <><SourceLedger opportunities={opportunities} />{input && <WebCandidates results={webResearch} configured={webSearchConfigured} />}</>}
 
-      <header><div><h2>Opportunity comparison</h2><small>{opportunities.length} grouped findings Â· unrated items require more evidence</small></div>
+    {opportunities.length > 0 && view === "research" && <section className="research-decision-strip" aria-label="Research quality summary">
+      <div><span>Leads found</span><strong>{opportunities.length}</strong></div>
+      <div><span>With linked sources</span><strong>{opportunities.filter((item) => item.sources.length > 0).length}</strong></div>
+      <div><span>With enough data to score</span><strong>{opportunities.filter((item) => item.strength !== null).length}</strong></div>
+    </section>}
+
+
+    {(view === "research" || view === "starred") && !!ordered.filter((item) => view !== "starred" || stars.includes(item.id)).length && <section className="research-results" aria-label="Ranked findings">
+
+      <header><div><h2>{view === "starred" ? "Starred" : "Results"}</h2></div>
 
         <button className="hunt-icon-action" title="Export results CSV" aria-label="Export results CSV" disabled={!opportunities.length} onClick={() => exportCsv(compare.length ? opportunities.filter((item) => compare.includes(item.id)) : ordered, input?.currency ?? currency)}><Download size={16} /></button></header>
 
       <div className="hunt-table-scroll"><table><thead><tr>
 
-        <th><button onClick={() => setSort("name")}>Opportunity</button></th><th>Category</th><th><button onClick={() => setSort("strength")}>Strength</button></th><th>Confidence</th>
+        <th><button onClick={() => setSort("name")}>Opportunity</button></th><th>Area</th><th><button onClick={() => setSort("strength")}>Evidence</button></th><th>Confidence</th>
 
         <th><button onClick={() => setSort("investment")}>Investment</button></th><th><button onClick={() => setSort("profit")}>Base profit / month</button></th>
 
-        <th><button onClick={() => setSort("evidence")}>Sources</button></th><th>Actions</th></tr></thead><tbody>
+        <th><button onClick={() => setSort("evidence")}>Independent sources</button></th><th>Actions</th><th>Decision</th></tr></thead><tbody>
 
         {ordered.filter((item) => view !== "starred" || stars.includes(item.id)).map((item) => <tr key={item.id} aria-selected={selected === item.id}>
 
-          <td data-label="Opportunity"><button className="research-star" title={stars.includes(item.id) ? "Unstar" : "Star"} aria-label={(stars.includes(item.id) ? "Unstar " : "Star ") + item.name} aria-pressed={stars.includes(item.id)} onClick={() => toggleStar(item.id)}><Star size={16} fill={stars.includes(item.id) ? "currentColor" : "none"} /></button><button className="hunt-open" onClick={() => setSelected(selected === item.id ? null : item.id)}>{item.name}</button></td>
+          <td data-label="Opportunity"><button className="research-star" title={stars.includes(item.id) ? "Unstar" : "Star"} aria-label={(stars.includes(item.id) ? "Unstar " : "Star ") + item.name} aria-pressed={stars.includes(item.id)} onClick={() => toggleStar(item.id)}><Star size={16} fill={stars.includes(item.id) ? "currentColor" : "none"} /></button><button className="hunt-open" onClick={() => { setSelected(item.id); onOpenAnalysis?.(); }}>{item.name}</button></td>
 
-          <td data-label="Category">{item.category}</td><td data-label="Strength">{item.strength ?? "Unrated"}</td><td data-label="Confidence">{item.confidence}</td>
+          <td data-label="Area">{item.category}</td><td data-label="Evidence">{item.strength == null ? "Needs checking" : item.strength + " / 100"}</td><td data-label="Confidence">{item.confidence}</td>
 
           <td data-label="Investment" className="hunt-number">{money(item.financials?.funding, input?.currency ?? currency)}</td>
 
           <td data-label="Profit / month" className="hunt-number">{money(item.financials?.scenarios[1].profit, input?.currency ?? currency)}</td>
 
-          <td data-label="Sources">{item.sources.length}</td><td className="research-actions">
+          <td data-label="Sources" title={`${item.sources.length} source links`}>{independentSourceCount(item.sources)}</td><td className="research-actions">
 
-            <a href={item.sources[0].url} target="_blank" rel="noreferrer" title="Open first source" aria-label={"Open source for " + item.name}><ExternalLink size={15} /></a>
+            {item.sources[0] && <a href={item.sources[0].url} target="_blank" rel="noreferrer" title="Open first source" aria-label={"Open source for " + item.name}><ExternalLink size={15} /></a>}
 
             <button title={compare.includes(item.id) ? "Remove from comparison" : "Add to comparison"} aria-label={(compare.includes(item.id) ? "Remove " : "Compare ") + item.name} aria-pressed={compare.includes(item.id)} onClick={() => setCompare((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])}><GitCompareArrows size={15} /></button>
 
           </td>
+          <td data-label="Decision"><div className="research-first-impression" role="group" aria-label={`Decision for ${item.name}`}>{(["investigate", "watch", "pass"] as const).map((choice) => <button key={choice} type="button" aria-pressed={firstImpressions[item.id] === choice} onClick={() => setFirstImpression(item.id, choice)}>{choice === "pass" ? "Pass" : choice === "watch" ? "Watch" : "Investigate"}</button>)}</div></td>
 
         </tr>)}
 
       </tbody></table></div>
 
-      {!(view === "starred" ? opportunities.filter((item) => stars.includes(item.id)).length : opportunities.length) && <p className="research-empty">{view === "starred" ? "Star results to keep them here." : "Search a market to begin."}</p>}
+    </section>}
 
-    </section>
+    {(view === "research" || view === "starred") && !ordered.filter((item) => view !== "starred" || stars.includes(item.id)).length && <p className="research-empty">{view === "starred" ? "No starred opportunities." : "Search a market to begin."}</p>}
+    {view === "analysis" && !active && <p className="research-empty">Select a result in <button type="button" className="hunt-open" onClick={onOpenResearch}>Research</button>.</p>}
+    {view === "economics" && !active && <p className="research-empty">Select a result in <button type="button" className="hunt-open" onClick={onOpenResearch}>Research</button>.</p>}
+    {view === "market" && !active && <p className="research-empty">Select a result in <button type="button" className="hunt-open" onClick={onOpenResearch}>Research</button>.</p>}
+    {view === "market" && active && <article className="research-analysis" aria-label="Local market"><header><h2>{active.name}</h2></header><MarketInspection key={active.id} opportunity={active} /></article>}
+    {view === "analysis" && compare.length > 0 && <section className="research-compare"><header><div><h3>Compare</h3></div><button type="button" className="research-compare-clear" onClick={() => setCompare([])}>Clear selection</button></header>
+      {compare.length > 1 ? <Charts kind="comparison" opportunities={opportunities.filter((item) => compare.includes(item.id))} currency={input?.currency ?? currency} /> : <p className="research-compare-hint">Select one more lead to compare them side by side.</p>}
+    </section>}
 
-    {!ordered.filter((item) => view !== "starred" || stars.includes(item.id)).length && <p className="research-empty">{view === "starred" ? "No starred results." : "Search a market to begin."}</p>}
-    {compare.length > 1 && <section className="research-compare"><h3>Selected comparison</h3><Charts kind="comparison" opportunities={opportunities.filter((item) => compare.includes(item.id))} currency={input?.currency ?? currency} /></section>}
+    {(view === "analysis" || view === "economics" || !onOpenAnalysis) && active && input && <article className="research-analysis" aria-label="Selected business analysis">
 
-    {active && input && <article className="research-analysis" aria-label="Selected business analysis">
+      <header><div><small>{active.geography}</small><h2>{active.name}</h2></div><button className="hunt-icon-action" title="Export selected finding" aria-label="Export selected finding" onClick={() => exportCsv([active], input.currency)}><Download size={16} /></button></header>
 
-      <header><div><small>MARKET BRIEF Â· {active.geography}</small><h2>{active.name}</h2></div><button className="hunt-icon-action" title="Export selected finding" aria-label="Export selected finding" onClick={() => exportCsv([active], input.currency)}><Download size={16} /></button></header>
-
-      <div className="research-figures">
-
-        <Figure label="Strength" value={active.strength == null ? "Unrated" : active.strength + " / 100"} detail={active.factors.map((factor) => factor.name + ": " + (factor.score ?? "Unknown") + "/10").join(" Â· ")} />
-
-        <Figure label="Initial funding" value={money(active.financials?.funding, input.currency)} detail="Setup + equipment + opening inventory + working capital reserve. Open assumption provenance below." />
-
-        <Figure label="Base monthly profit" value={money(active.financials?.scenarios[1].profit, input.currency)} detail="(Price âˆ’ variable cost) Ã— base monthly volume âˆ’ monthly fixed cost." />
-
-        <Figure label="Break-even" value={active.financials ? active.financials.breakEven == null ? "Not achievable" : active.financials.breakEven + " " + active.assumptions.unit + "s / month" : "Unknown"} detail="Fixed cost Ã· contribution per unit, rounded up. Nonpositive contribution has no achievable break-even." />
-
+      <div className={`research-figures${view === "economics" ? " research-figures-economics" : view === "analysis" ? " research-figures-analysis" : ""}`}>
+        {(view !== "economics") && <Figure label="Strength" value={active.strength == null ? "Unrated" : active.strength + " / 100"} detail={active.factors.map((factor) => factor.name + ": " + (factor.score ?? "Unknown") + "/10").join(" · ")} />}
+        {(view === "economics" || !onOpenAnalysis) && <><Figure label="Initial funding" value={money(active.financials?.funding, input.currency)} detail="Setup + equipment + opening inventory + working capital reserve." />
+        <Figure label="Base monthly profit" value={money(active.financials?.scenarios[1].profit, input.currency)} detail="(Price − variable cost) × base monthly volume − monthly fixed cost." />
+        <Figure label="Break-even" value={active.financials ? active.financials.breakEven == null ? "Not achievable" : active.financials.breakEven + " " + active.assumptions.unit + "s / month" : "Unknown"} detail="Fixed cost ÷ contribution per unit, rounded up." /></>}
       </div>
 
-      <div className="research-sections">
+      <div className="research-detail-modules">
+        {(view !== "economics") && <details className="research-module" open>
+          <summary>Overview · buyer and business case</summary>
+          <section className="research-detail-card"><dl>
+            <dt>Buyer</dt><dd>{active.buyer ?? "Unknown"}</dd><dt>Recurring problem</dt><dd>{active.problem}</dd>
+            <dt>Offering</dt><dd>{active.offering ?? "Unqualified"}</dd>
+          </dl></section>
+        </details>}
 
-        <section><h3>Business</h3><dl>
 
-          <dt>Buyer</dt><dd>{active.buyer ?? "Unknown"}</dd><dt>Recurring problem</dt><dd>{active.problem}</dd>
+        {(view === "economics" || !onOpenAnalysis) && <details className="research-module" open>
+          <summary>Inputs · scenarios · charts</summary>
+          <section className="research-detail-card"><dl>
+            <dt>Price / {active.assumptions.unit}</dt><dd>{money(active.assumptions.price.value, input.currency)}</dd>
+            <dt>Contribution / {active.assumptions.unit}</dt><dd>{money(active.financials?.contribution, input.currency)}</dd>
+            <dt>Base volume</dt><dd>{active.assumptions.baseVolume.value ?? "Unknown"}</dd>
+            <dt>Payback</dt><dd>{active.financials?.paybackMonth == null ? "Unknown" : active.financials.paybackMonth + " months"}</dd>
+          </dl></section>
+          <div className="research-default-charts"><Charts kind="scenarios" opportunity={active} currency={input.currency} /><Charts kind="breakEven" opportunity={active} currency={input.currency} /></div>
+          <details className="research-more-charts"><summary>Additional charts</summary><div>
+            <Charts kind="funding" opportunity={active} currency={input.currency} /><Charts kind="cashFlow" opportunity={active} currency={input.currency} />
+            <Charts kind="waterfall" opportunity={active} currency={input.currency} /><Charts kind="heatmap" opportunity={active} currency={input.currency} />
+            <Charts kind="radar" opportunity={active} currency={input.currency} /><Charts kind="demand" opportunity={active} currency={input.currency} />
+          </div></details>
+          <FinancialEditor item={active} onChange={(assumptions) => updateAssumptions(active.id, assumptions)} />
+          <details className="research-method"><summary>Scoring rules and assumption sources</summary>
+            <p>Strength measures evidence coverage and viability, not probability of success. Missing factors keep result Unrated.</p>
+            {active.factors.map((factor) => <p key={factor.name}><b>{factor.name} · {factor.weight} points · {factor.score == null ? "Unknown" : factor.score + "/10"}</b><br />{factor.rule}{factor.evidenceIds.map((id) => { const claim = active.claims.find((item) => item.id === id); const source = active.sources.find((item) => item.id === claim?.sourceIds[0]); return source && claim ? <span key={id} className="research-factor-source"><br /><a href={source.url} target="_blank" rel="noreferrer">{source.provider} · {source.publishedAt.slice(0, 10)}</a>: {claim.text}</span> : null; })}</p>)}
+            {fields.map(([field, label]) => <p key={field}><b>{label}: {active.assumptions[field].value ?? "Missing"} {active.assumptions[field].unit}</b><br />{active.assumptions[field].provenance} · {active.assumptions[field].geography} · {active.assumptions[field].date ?? "Date missing"} · {active.assumptions[field].note || "No rationale"}{active.assumptions[field].sourceIds.length ? " · Source: " + active.assumptions[field].sourceIds.join(", ") : ""}</p>)}
+          </details>
+        </details>}
 
-          <dt>Offering</dt><dd>{active.offering ?? "Unqualified"}</dd><dt>Alternatives</dt><dd>{active.alternatives.length ? active.alternatives.join(", ") : "Unknown"}</dd>
+        {view !== "economics" && <>
+          <ValidationPlan missing={active.missing} />
+          <details className="research-module">
+            <summary>Field validation log · record checks and evidence</summary>
+            <ValidationChecklist opportunityId={active.id} missing={active.missing} onError={onError} />
+          </details>
+        </>}
 
-          <dt>Competitive gap</dt><dd>{active.gap ?? "Unknown"}</dd>
+        {(view !== "economics") && <details className="research-module">
+          <summary>Evidence · {active.sources.length} links, {active.claims.length} extracted claims</summary>
+          <section className="research-detail-card"><p>{independentSourceCount(active.sources)} independent texts across {active.sources.length} links · {active.confidence} confidence</p>
+            <EvidenceMap sources={active.sources} />
+            <details><summary>Source claims and dates</summary>{active.claims.map((claim) => <div className="research-claim" key={claim.id}><p>{claim.text}</p><small>{claim.basis ?? claim.direction} · {claim.publishedAt?.slice(0, 10) ?? "Date missing"} · <a target="_blank" rel="noreferrer" href={active.sources.find((source) => source.id === claim.sourceIds[0])?.url}>{active.sources.find((source) => source.id === claim.sourceIds[0])?.provider}</a></small></div>)}</details>
+            <details><summary>Source tables and advertised offers</summary>{active.sources.filter((source) => source.facts).map((source) => <div key={source.id}><a href={source.url} target="_blank" rel="noreferrer">{source.title}</a><small>Collected {source.retrievedAt.slice(0, 10)} · Advertised, not verified</small>
+              {!!source.facts?.products.length && <div className="hunt-table-scroll"><table><thead><tr><th>Product</th><th>Quoted price</th><th>Currency</th></tr></thead><tbody>{source.facts.products.map((product, index) => <tr key={index}><td>{product.name}</td><td>{product.price || "—"}</td><td>{product.currency || "—"}</td></tr>)}</tbody></table></div>}
+              {!!source.facts?.tables.length && <div className="hunt-table-scroll"><table aria-label="Source table rows"><tbody>{source.facts.tables.map((row, index) => <tr key={index}>{row.map((cell, col) => <td key={col}>{cell}</td>)}</tr>)}</tbody></table></div>}
+            </div>)}</details>
+          </section>
+        </details>}
 
-        </dl></section>
-
-        <section><h3>Numbers</h3><dl>
-
-          <dt>Price / {active.assumptions.unit}</dt><dd>{money(active.assumptions.price.value, input.currency)}</dd>
-
-          <dt>Contribution / {active.assumptions.unit}</dt><dd>{money(active.financials?.contribution, input.currency)}</dd>
-
-          <dt>Base volume</dt><dd>{active.assumptions.baseVolume.value ?? "Unknown"}</dd>
-
-          <dt>Payback</dt><dd>{active.financials?.paybackMonth == null ? "Unknown" : active.financials.paybackMonth + " months"}</dd>
-
-        </dl></section>
-
-        <section><h3>Evidence</h3><p>{active.sources.length} source(s) Â· Confidence {active.confidence}</p>
-
-          <p>{active.missing.join(" Â· ")}</p>
-
-          <details><summary>Source claims and dates</summary>{active.claims.map((claim) => <div className="research-claim" key={claim.id}><p>{claim.text}</p><small>{claim.direction} Â· {claim.publishedAt?.slice(0, 10) ?? "Date missing"} Â· <a target="_blank" rel="noreferrer" href={active.sources.find((source) => source.id === claim.sourceIds[0])?.url}>{active.sources.find((source) => source.id === claim.sourceIds[0])?.provider}</a></small></div>)}</details>
-
-          <details><summary>Source tables and offers</summary>{active.sources.filter((source) => source.facts).map((source) => <div key={source.id}><a href={source.url} target="_blank" rel="noreferrer">{source.title}</a><small>Collected {source.retrievedAt.slice(0, 10)} · Advertised, not verified</small>
-            {!!source.facts?.products.length && <div className="hunt-table-scroll"><table><thead><tr><th>Product</th><th>Quoted price</th><th>Currency</th></tr></thead><tbody>{source.facts.products.map((product, index) => <tr key={index}><td>{product.name}</td><td>{product.price || "—"}</td><td>{product.currency || "—"}</td></tr>)}</tbody></table></div>}
-            {!!source.facts?.tables.length && <div className="hunt-table-scroll"><table aria-label="Source table rows"><tbody>{source.facts.tables.map((row, index) => <tr key={index}>{row.map((cell, col) => <td key={col}>{cell}</td>)}</tr>)}</tbody></table></div>}
-          </div>)}</details>
-          <details><summary>Risks and contradictions</summary><p>{active.risks.join(" Â· ")}</p><p>Contradicting claims: {active.claims.filter((claim) => claim.direction === "contradicts").length}. Absence is not agreement.</p></details>
-
-        </section>
-
+        {(view !== "economics") && <details className="research-module">
+          <summary>Risks · {active.risks.length} risks, {active.claims.filter((claim) => claim.direction === "contradicts").length} contradictions</summary>
+          <section className="research-detail-card">{active.risks.length ? <ul>{active.risks.map((risk) => <li key={risk}>{risk}</li>)}</ul> : <p>No explicit risks extracted. Check regulation, suppliers, operating costs, and buyer access.</p>}
+            <p>Contradicting claims: {active.claims.filter((claim) => claim.direction === "contradicts").length}. Absence is not agreement.</p>
+          </section>
+        </details>}
       </div>
-
-      <div className="research-default-charts">
-
-        <Charts kind="scenarios" opportunity={active} currency={input.currency} />
-
-        <Charts kind="breakEven" opportunity={active} currency={input.currency} />
-
-      </div>
-
-      <details className="research-more-charts"><summary>More charts</summary><div>
-
-        <Charts kind="funding" opportunity={active} currency={input.currency} />
-
-        <Charts kind="cashFlow" opportunity={active} currency={input.currency} />
-
-        <Charts kind="waterfall" opportunity={active} currency={input.currency} />
-
-        <Charts kind="heatmap" opportunity={active} currency={input.currency} />
-
-        <Charts kind="radar" opportunity={active} currency={input.currency} />
-
-        <Charts kind="demand" opportunity={active} currency={input.currency} />
-
-      </div></details>
-
-      <details className="research-method"><summary>Strength rules and assumption provenance</summary>
-
-        <p>Strength measures evidence coverage and viability, not probability of success. Missing factors keep result Unrated.</p>
-
-        {active.factors.map((factor) => <p key={factor.name}><b>{factor.name} Â· {factor.weight} points Â· {factor.score == null ? "Unknown" : factor.score + "/10"}</b><br />{factor.rule}
-
-          {factor.evidenceIds.map((id) => {
-
-            const claim = active.claims.find((item) => item.id === id);
-
-            const source = active.sources.find((item) => item.id === claim?.sourceIds[0]);
-
-            return source && claim ? <span key={id} className="research-factor-source"><br /><a href={source.url} target="_blank" rel="noreferrer">{source.provider} Â· {source.publishedAt.slice(0, 10)}</a>: {claim.text}</span> : null;
-
-          })}</p>)}
-
-        {fields.map(([field, label]) => <p key={field}><b>{label}: {active.assumptions[field].value ?? "Missing"} {active.assumptions[field].unit}</b><br />{active.assumptions[field].provenance} Â· {active.assumptions[field].geography} Â· {active.assumptions[field].date ?? "Date missing"} Â· {active.assumptions[field].note || "No rationale"}{active.assumptions[field].sourceIds.length ? " Â· Source: " + active.assumptions[field].sourceIds.join(", ") : ""}</p>)}
-
-      </details>
-
-      <FinancialEditor item={active} onChange={(assumptions) => updateAssumptions(active.id, assumptions)} />
 
     </article>}
 
-    <p className="hunt-source-caption">Ask HN and Stack Overflow public discussions Â· maximum 40 sources per search. Discussion activity does not establish demand, local feasibility, or price.</p>
     </div>
   </section>;
 
@@ -428,10 +459,13 @@ function FinancialEditor({ item, onChange }: { item: ResearchOpportunity; onChan
   }
 
   const valid = calculateFinancials(draft) !== null;
+  const benchmarks = priceBenchmarks(item.sources, draft.currency);
 
   return <details className="research-assumptions"><summary>Model financial assumptions</summary>
 
     <p>Enter comparable price, costs, funding, and low/base/high monthly volumes. Each amount retains provenance and date.</p>
+
+    {!!benchmarks.length && <details><summary>Advertised price benchmarks ({benchmarks.length})</summary><ul>{benchmarks.map((benchmark, index) => <li key={benchmark.sourceId + index}><a href={benchmark.sourceUrl} target="_blank" rel="noopener noreferrer">{benchmark.product}</a>: {benchmark.quote} · Collected {benchmark.collectedAt.slice(0, 10)} <button type="button" onClick={() => setDraft((current) => estimatePriceFromBenchmark(current, benchmark))}>Use as estimated price</button></li>)}</ul><small>Advertised competitor price. Confirm sales unit and local applicability before using it in a decision.</small></details>}
 
     <label>Sales unit<input value={draft.unit} onChange={(event) => setDraft({ ...draft, unit: event.target.value })} /></label>
 

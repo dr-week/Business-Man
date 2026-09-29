@@ -102,6 +102,8 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
     return qualifyPersonalizedNews(items, preferences);
   }, [data, preferences]);
 
+  const sourceNames = [...new Set(data?.items.map((item) => item.source) ?? [])];
+
   const renderCard = (item: PersonalizedOpportunity) => {
     const isExpanded = expandedId === item.id;
     const isStarred = stars.includes(item.id);
@@ -115,8 +117,8 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
               {item.entryRole}
             </span>
             {item.isInferred && (
-              <span className="news-opp-inferred-badge" title="News alone does not prove demand">
-                Inferred
+              <span className="news-opp-inferred-badge" title="A news story suggests a topic to investigate; it is not proof of buyer demand.">
+                News signal · unverified
               </span>
             )}
             <div className="news-opp-quick-metrics">
@@ -171,7 +173,7 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
               target="_blank"
               rel="noreferrer"
               className="news-opp-source-link"
-              title="Open verified source link"
+                title="Open publisher source"
               aria-label={`Open source for ${item.title}`}
             >
               <ExternalLink size={11} />
@@ -208,7 +210,7 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
               </div>
             )}
 
-            <div className="news-opp-breakdown">
+            {item.totalInvestment !== null && <div className="news-opp-breakdown">
               <span className="news-breakdown-cell">
                 <small>Setup cost</small>
                 <strong>
@@ -235,19 +237,19 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
                     : "Unknown"}
                 </strong>
               </span>
-            </div>
+            </div>}
 
-            <div className="news-opp-steps">
+            {item.operatingSteps.length > 0 && <div className="news-opp-steps">
               <h4>Operating steps</h4>
               <ol>
                 {item.operatingSteps.map((step, idx) => (
                   <li key={idx}>{step}</li>
                 ))}
               </ol>
-            </div>
+            </div>}
 
             <div className="news-opp-evidence">
-              <h4>Evidence & Claims</h4>
+              <h4>Source</h4>
               <ul>
                 {item.evidence.map((ev, idx) => (
                   <li key={idx} className={ev.risk ? "news-evidence-risk" : ""}>
@@ -268,7 +270,7 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
                 title={`Research ${item.topic}`}
               >
                 <Search size={14} />
-                Research this opportunity
+                Research this topic
               </button>
             </div>
           </div>
@@ -281,10 +283,11 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
     <section aria-label="Personalised business wire" className="news-feed">
       <header>
         <div className="news-feed-title">
+          <strong>Business signals to investigate</strong>
           <small>
             {data
-              ? `Wire updated ${new Date(data.fetchedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · ${preferences.geography}`
-              : "Personalised Business Wire"}
+              ? `${data.items.length} stories · ${sourceNames.join(", ") || "No sources"} · Updated ${new Date(data.fetchedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · ${preferences.geography}`
+              : "Recent business news, checked against your location and budget"}
           </small>
         </div>
         <button
@@ -304,6 +307,8 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
       <div role="status" className="news-feed-status">
         {loading ? "Fetching and qualifying wire…" : error || (data?.stale ? "Offline cache active" : "")}
       </div>
+
+      <p className="news-feed-explainer">A news story can reveal a change or problem, but it does not prove customers will pay. Open a card to review the source, unknown costs, and a practical validation step.</p>
 
       {!!data?.unavailable.length && (
         <small className="news-feed-notice">Feeds restricted: {data.unavailable.join(", ")}</small>
@@ -348,7 +353,7 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
               <Zap size={12} />
               Demand Now
             </span>
-            <span className="news-section-subtitle">Active procurement & buyer orders</span>
+            <span className="news-section-subtitle">Buyer requests with purchase details in the source</span>
           </div>
           <div className="news-cards-grid">{qualified.demandNow.map(renderCard)}</div>
         </section>
@@ -361,13 +366,13 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
 
       {/* SECTION 3: EVERYDAY BUSINESS */}
       {qualified.everydayBusiness.length > 0 && (
-        <section className="news-section news-section-everyday" aria-label="Recurring everyday business needs">
+        <section className="news-section news-section-everyday" aria-label="News to investigate">
           <div className="news-section-header">
             <span className="news-section-badge everyday-badge">
               <Briefcase size={12} />
-              Everyday Business
+              News to investigate
             </span>
-            <span className="news-section-subtitle">Recurring needs supported by evidence</span>
+            <span className="news-section-subtitle">Recurring needs with linked evidence; verify locally</span>
           </div>
           <div className="news-cards-grid">{qualified.everydayBusiness.map(renderCard)}</div>
         </section>

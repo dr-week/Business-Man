@@ -13,7 +13,7 @@ let expires = 0;
 let pending: Promise<NewsFeed> | undefined;
 
 async function readFeed(feed: typeof feeds[number]): Promise<NewsItem[]> {
-  const response = await fetch(feed.url, { signal: AbortSignal.timeout(8000), redirect: "error", headers: { Accept: "application/rss+xml, application/xml, text/xml" } });
+  const response = await fetch(feed.url, { signal: AbortSignal.timeout(8000), redirect: "manual", headers: { Accept: "application/rss+xml, application/xml, text/xml" } });
   if (!response.ok || !response.body) throw new Error("Feed unavailable");
   const reader = response.body.getReader(); const decoder = new TextDecoder(); let xml = ""; let bytes = 0;
   try { while (true) { const { value, done } = await reader.read(); if (done) break; bytes += value.byteLength; if (bytes > 500000) throw new Error("Feed too large"); xml += decoder.decode(value, { stream: true }); } xml += decoder.decode(); }

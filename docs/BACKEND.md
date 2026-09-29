@@ -3,8 +3,13 @@
 | Path | Responsibility |
 |---|---|
 | `app/api/hunt/research/route.ts` | Research orchestration/cache |
+| `lib/bounded-cache.ts` | Owner-scoped research TTL/LRU and byte budget |
+| `app/api/hunt/research-runs/` | Owner-scoped archive of completed research runs |
+| `lib/research-run-store.ts` | Atomic run save and 20-run retention |
 | `lib/research-engine.ts` | Input schema, grouping, scoring |
+| `lib/validation-plan.ts`, `components/research/validation-plan.tsx` | One prioritized evidence action; remaining questions collapsed |
 | `lib/economics.ts` | Scenario calculations |
+| `lib/investment-risks.ts` | Budget and downside flags from explicit inputs |
 | `app/api/hunt/leads/` | Authenticated owner-scoped dossiers/evidence |
 | `db/schema.ts`, `drizzle/` | D1 schema/migrations |
 | `app/api/news/route.ts` | Independent RSS endpoint |
@@ -13,11 +18,16 @@
 
 Submit -> prepare query -> fetch -> group evidence -> compare.
 
-- Ask HN + Stack Overflow: 20 results each; 12s/provider; 1 MB/provider; 10-minute cache.
+- HN, Stack Overflow, GitHub alternatives, Brave web, Places, Census, and optional supplied webpages run as independent collectors. Optional providers require server credentials; provider limits and failure handling live in `lib/collectors/`.
+- Research gate: 2 active and 6 queued requests per isolate; cancellation removes queued work, queue full returns 503.
+- Discussion, web snippets, place listings, repository activity, and establishment counts remain distinct from buyer proof. Places/Census are refreshed per research action; web results are transient.
+- Completed research: owner-scoped D1 snapshots; save and 20-run retention share one batch. Latest loads at startup. Browser snapshot remains fallback; assumption edits stay local until a rerun.
 - Optional supplied webpages: [collector](../services/collector/README.md).
-- Latest research: browser storage. Owner-scoped legacy dossiers: D1, `/hunt/legacy`.
+- Legacy dossiers and evidence: owner-scoped D1, `/hunt/legacy`.
 - Preserve URL, provider, dates, excerpt, and claim provenance. Discussion activity never proves sales.
 - Unknown stays missing. Separate sourced values, estimates, and hypotheses.
+- D1 dossiers store validation status, observation date, user note, and optional HTTPS proof link. User-reported outcomes are not independently verified sales.
+- Apply all local migrations with `npm run db:local:apply`; migration files are ordered in `drizzle/`.
 
 ## Calculations
 

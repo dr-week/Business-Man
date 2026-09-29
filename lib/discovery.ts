@@ -13,7 +13,7 @@ export async function collectSignals(query?: string, id?: string, signal?: Abort
   url.searchParams.set("tags", id ? `ask_hn,story_${id}` : "ask_hn");
   url.searchParams.set("hitsPerPage", "20");
   if (query) url.searchParams.set("query", query);
-  const response = await fetch(url, { signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000), redirect: "error", headers: { Accept: "application/json" } });
+  const response = await fetch(url, { signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000), redirect: "manual", headers: { Accept: "application/json" } });
   if (!response.ok) throw new Error(`Source unavailable (${response.status}). Try later.`);
   const reader = response.body?.getReader();
   if (!reader) throw new Error("Empty source response.");
@@ -47,7 +47,7 @@ export async function collectStackOverflow(query: string, signal?: AbortSignal):
   url.searchParams.set("sort", "relevance");
   url.searchParams.set("pagesize", "20");
   url.searchParams.set("filter", "withbody");
-  const response = await fetch(url, { signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000), redirect: "error", headers: { Accept: "application/json" } });
+  const response = await fetch(url, { signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(12000)]) : AbortSignal.timeout(12000), redirect: "manual", headers: { Accept: "application/json" } });
   if (!response.ok) throw new Error("Stack Overflow unavailable (" + response.status + ").");
   const reader = response.body?.getReader();
   if (!reader) throw new Error("Empty Stack Overflow response.");

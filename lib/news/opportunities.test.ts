@@ -42,31 +42,30 @@ describe("Personalized News Opportunities Engine", () => {
     expect(uniqueIds.size).toBe(allIds.length);
   });
 
-  it("matches For You against maximum available budget and geography", () => {
+  it("does not claim affordability from headlines without investment figures", () => {
     const preferences: UserPreferences = {
       geography: "Goa, India",
       currency: "INR",
-      budget: 150000, // Only Biogas AMC (₹1,10,000) is affordable among verified
+      budget: 150000,
       minimumInvestment: 0,
     };
 
     const qualified = qualifyPersonalizedNews(mockNews, preferences);
-    expect(qualified.forYou).not.toBeNull();
-    expect(qualified.forYou?.totalInvestment).toBeLessThanOrEqual(150000);
+    expect(qualified.forYou).toBeNull();
     expect(qualified.requiresBudgetPrompt).toBe(false);
   });
 
-  it("flags requiresBudgetPrompt when maximum budget is unset (null)", () => {
+  it("does not prompt for budget when source costs are unknown", () => {
     const preferences: UserPreferences = {
       geography: "Goa, India",
       currency: "INR",
-      budget: null, // Unset budget
+      budget: null,
       minimumInvestment: 0,
     };
 
     const qualified = qualifyPersonalizedNews(mockNews, preferences);
-    expect(qualified.requiresBudgetPrompt).toBe(true);
-    expect(qualified.forYou).not.toBeNull();
+    expect(qualified.requiresBudgetPrompt).toBe(false);
+    expect(qualified.forYou).toBeNull();
   });
 
   it("preserves null for unknown costs and labels inferred news opportunities", () => {
@@ -83,10 +82,10 @@ describe("Personalized News Opportunities Engine", () => {
     expect(inferred?.workingCapital).toBeNull();
     expect(inferred?.totalInvestment).toBeNull();
     expect(inferred?.metric1.value).toBe("Unknown");
-    expect(inferred?.evidence[0].claim).toContain("News alone does not prove commercial demand");
+    expect(inferred?.evidence.some((item) => item.claim.includes("unverified"))).toBe(true);
   });
 
-  it("includes buyer, quantity, location, deadline in Demand Now items", () => {
+  it("leaves Demand Now empty without a sourced buyer request", () => {
     const preferences: UserPreferences = {
       geography: "Goa, India",
       currency: "INR",
@@ -94,9 +93,7 @@ describe("Personalized News Opportunities Engine", () => {
     };
 
     const qualified = qualifyPersonalizedNews([], preferences);
-    expect(qualified.demandNow.length).toBeGreaterThan(0);
-    const firstDemand = qualified.demandNow[0];
-    expect(firstDemand.demandSignal).toBeDefined();
-    expect(firstDemand.demandSignal?.buyer).toBeDefined();
+    expect(qualified.demandNow).toEqual([]);
+    expect(qualified.everydayBusiness).toEqual([]);
   });
 });

@@ -1,5 +1,12 @@
 import { z } from "zod";
 import type { SourceSignal } from "./discovery";
+import { classifyIndustry, matchesIndustry } from "./industry-classifier";
+import { investmentRisks } from "./investment-risks";
+import type { CandidateAlternative } from "./collectors/github-alternatives";
+import { extractClaims } from "./claim-extraction";
+import { groupSources } from "./source-grouping";
+import { independentClaimCount, independentSourceCount } from "./evidence-lineage";
+export { groupSources } from "./source-grouping";
 
 export const researchInput = z.object({
   topic: z.string().trim().min(2).max(1000),
@@ -16,7 +23,7 @@ export const researchInput = z.object({
 }).strict().refine((value) => value.budget == null || (value.minimumInvestment ?? 0) <= value.budget, { message: "Minimum investment exceeds maximum budget", path: ["budget"] });
 export type ResearchInput = z.infer<typeof researchInput>;
 export type Provenance = "Sourced" | "Estimated" | "User-entered" | "Missing";
-export type Claim = { id: string; text: string; direction: "supports" | "contradicts" | "context"; factor?: FactorName; sourceIds: string[]; publishedAt: string | null };
+export type Claim = { id: string; text: string; direction: "supports" | "contradicts" | "context"; factor?: FactorName; basis?: string; sourceIds: string[]; publishedAt: string | null };
 export type Assumption = { value: number | null; unit: string; provenance: Provenance; sourceIds: string[]; date: string | null; geography: string; note: string };
 export const factorWeights = { "Paid demand": 25, "Severity and frequency": 20, "Alternative gap": 20, "Financial viability": 20, "Budget and location": 15 } as const;
 export type FactorName = keyof typeof factorWeights;
@@ -32,6 +39,7 @@ export type FinancialResult = { contribution: number; funding: number; breakEven
 export type ResearchOpportunity = {
   id: string; name: string; category: string; geography: string; buyer: string | null; problem: string;
   offering: string | null; alternatives: string[]; gap: string | null; risks: string[];
+  candidateAlternatives?: CandidateAlternative[];
   sources: SourceSignal[]; claims: Claim[]; assumptions: FinancialAssumptions;
   factors: Factor[]; strength: number | null; confidence: "Low" | "Medium" | "High";
   financials: FinancialResult | null; missing: string[];
@@ -72,67 +80,26 @@ export function calculateFinancials(a: FinancialAssumptions): FinancialResult | 
   return { contribution, funding, breakEven: contribution > 0 ? Math.ceil(n("fixedCost") / contribution) : null, paybackMonth, scenarios, cashFlow };
 }
 
-const stop = new Set("about after again and are best can does for from get have how into looking need should that the there these this what when where which with would your".split(" "));
-function tokens(value: string) { return new Set((value.toLowerCase().match(/[a-z0-9]{4,}/g) ?? []).filter((word) => !stop.has(word))); }
-function overlap(a: Set<string>, b: Set<string>) { return [...a].filter((word) => b.has(word)).length / Math.max(1, Math.min(a.size, b.size)); }
 function clean(value: string) { return value.replace(/^(ask hn|show hn|how do i|anyone else)[:?\s-]*/i, "").trim(); }
-export function groupSources(sources: SourceSignal[]): SourceSignal[][] {
-  const groups: SourceSignal[][] = [];
-  const unique = [...new Map(sources.map((source) => {
-    const url = new URL(source.url);
-    for (const key of [...url.searchParams.keys()]) if (/^utm_|^ref$|^source$/i.test(key)) url.searchParams.delete(key);
-    return [url.toString().replace(/\/$/, ""), source] as const;
-  })).values()];
-  for (const source of unique) {
-    const current = tokens(clean(source.title));
-    const group = groups.find((items) => current.size >= 2 && overlap(current, tokens(clean(items[0].title))) >= .72);
-    if (group) group.push(source); else groups.push([source]);
-  }
-  return groups;
-}
 function confidence(sources: SourceSignal[], claims: Claim[]): "Low" | "Medium" | "High" {
   if (claims.some((claim) => claim.direction === "contradicts")) return "Low";
   const providers = new Set(sources.map((item) => item.provider));
   const recent = sources.some((item) => Date.now() - Date.parse(item.publishedAt) < 2 * 365 * 86400000);
-  const independent = new Set(sources.map((item) => item.provider + ":" + (item.authorId || item.excerpt || item.title).toLowerCase())).size;
+  const independent = independentSourceCount(sources);
   if (independent >= 3 && recent && sources.some((item) => item.kind === "official") && sources.some((item) => item.kind === "buyer")) return "High";
   return providers.size >= 2 && independent >= 3 && recent ? "Medium" : "Low";
 }
 function factors(claims: Claim[], sources: SourceSignal[], financials: FinancialResult | null, budget: number | null, geography: string): Factor[] {
-  const independent = (matching: Claim[]) => new Set(matching.map((claim) => {
-    const source = sources.find((item) => item.id === claim.sourceIds[0]);
-    return source?.provider + ":" + (source?.authorId || claim.text).toLowerCase();
-  })).size;
   return (Object.keys(factorWeights) as FactorName[]).map((name) => {
     const matching = claims.filter((claim) => claim.direction === "supports" && claim.factor === name);
     const local = sources.filter((source) => geography.toLowerCase().split(/[, ]+/).filter((part) => part.length > 3).some((part) => (source.title + " " + source.excerpt).toLowerCase().includes(part)));
-    const count = independent(matching);
+    const count = independentClaimCount(matching, sources);
     const score = name === "Financial viability" ? financials ? financials.scenarios[1].profit <= 0 ? 0 : financials.scenarios[0].profit > 0 ? 10 : 5 : null
       : name === "Budget and location" ? budget == null ? null : financials?.funding != null && financials.funding > budget ? 0 : financials && local.some((source) => source.kind === "official" || source.kind === "buyer") ? 10 : financials && local.length ? 5 : null
       : count ? Math.min(10, count * 5) : null;
     return { name, weight: factorWeights[name], score, evidenceIds: matching.map((claim) => claim.id),
       rule: name === "Financial viability" ? "0: base loss; 5: base profit; 10: low and base profit." : name === "Budget and location" ? "0: funding over budget; 5: local discussion plus funding in budget; 10 requires verified local operating evidence." : "5: one explicit independent first-person source; 10: at least two. Missing evidence stays unknown." };
   });
-}
-function extractClaims(source: SourceSignal): Claim[] {
-  const body = source.excerpt;
-  const base = { sourceIds: [source.id], publishedAt: source.publishedAt };
-  const claims: Claim[] = [{ ...base, id: "context:" + source.id, text: body || source.title, direction: "context" }];
-  const sentences = body.match(/[^.!?]+[.!?]?/g)?.slice(0, 15) ?? [];
-  for (const [i, raw] of sentences.entries()) {
-    const text = raw.trim();
-    if (!/\b(i|we|our)\b/i.test(text)) continue;
-    if (/\b(not a problem|no longer a problem|already solved|works fine)\b/i.test(text)) {
-      claims.push({ ...base, id: "contradiction:" + source.id + ":" + i, text, direction: "contradicts" });
-      continue;
-    }
-    const factor: FactorName | null =
-      /\b(pay|paid|paying|purchased|bought|contracted)\b/i.test(text) ? "Paid demand" :
-      /\b(daily|weekly|every day|every week|every month|repeatedly|recurring)\b/i.test(text) ? "Severity and frequency" :
-      /\b(currently use|tried|alternative|competitor|spreadsheet|manual)\b/i.test(text) && /\b(but|however|fails|too expensive|doesn't|cannot)\b/i.test(text) ? "Alternative gap" : null;
-    if (factor) claims.push({ ...base, id: "support:" + source.id + ":" + i, text, direction: "supports", factor });
-  }
-  return claims;
 }
 export function recalculateOpportunity(item: ResearchOpportunity, budget: number | null): ResearchOpportunity {
   const financials = calculateFinancials(item.assumptions);
@@ -148,7 +115,9 @@ export function recalculateOpportunity(item: ResearchOpportunity, budget: number
     ...(score("Budget and location") == null ? ["Local feasibility"] : []),
     ...(!financials ? ["Pricing, costs, and scenario volumes"] : []),
   ];
-  return { ...item, financials, factors: ranked, strength, missing };
+  const risks = investmentRisks(financials, budget, item.assumptions.currency);
+  if (item.claims.some((claim) => claim.direction === "contradicts")) risks.push("Contradicting source claim needs review");
+  return { ...item, financials, factors: ranked, strength, missing, risks };
 }
 export function analyzeResearch(input: ResearchInput, sources: SourceSignal[]): ResearchOpportunity[] {
   return groupSources(sources).map((group) => {
@@ -158,7 +127,7 @@ export function analyzeResearch(input: ResearchInput, sources: SourceSignal[]): 
     const alternatives = [...new Set(group.flatMap((source) => source.excerpt.match(/\b(?:spreadsheet|manual process|existing tool|consultant|in-house system)\b/gi) ?? []))];
     const assumptions = blankFinancials(input);
     const item: ResearchOpportunity = {
-      id: first.id, name: clean(first.title), category: first.provider === "Web page" ? "Unclassified" : "Software / workflow", geography: input.geography,
+      id: first.id, name: clean(first.title), category: classifyIndustry(group.map((source) => source.title + " " + source.excerpt).join(" ")), geography: input.geography,
       buyer, problem: first.excerpt || first.title,
       offering: "Hypothesis: " + (input.businessModel || "service") + " addressing " + clean(first.title).replace(/[?.!]+$/, "").toLowerCase(),
       alternatives, gap: claims.some((claim) => claim.factor === "Alternative gap") ? "A source reports friction with an existing alternative; compare specific products before qualification." : null,
@@ -168,8 +137,8 @@ export function analyzeResearch(input: ResearchInput, sources: SourceSignal[]): 
     };
     return recalculateOpportunity(item, input.budget);
   }).filter((item) => {
-    if (input.industry && !/software|workflow|technology/i.test(input.industry)) return false;
     const evidence = item.sources.map((source) => source.title + " " + source.excerpt).join(" ").toLowerCase();
+    if (input.industry && !matchesIndustry(input.industry, item.category, evidence)) return false;
     if (input.businessModel && !evidence.includes(input.businessModel.toLowerCase())) return false;
     if (input.customer && !evidence.includes(input.customer.toLowerCase())) return false;
     if (input.driver && !evidence.includes(input.driver.toLowerCase())) return false;
