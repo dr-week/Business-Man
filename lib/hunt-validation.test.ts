@@ -65,4 +65,11 @@ describe("Hunt Validation Schemas", () => {
     const parsed = leadPatch.safeParse(patch);
     expect(parsed.success).toBe(true);
   });
+
+  it("requires dated user evidence for a validation outcome", () => {
+    expect(leadPatch.safeParse({ validationStatus: "paid_pilot", validationObservedAt: "2026-09-29", validationNote: "Buyer paid for a trial." }).success).toBe(true);
+    expect(leadPatch.safeParse({ validationStatus: "paid_pilot" }).success).toBe(false);
+    expect(leadPatch.safeParse({ validationStatus: "stopped", validationObservedAt: "2026-99-99", validationNote: "No buyer need." }).success).toBe(false);
+    expect(leadPatch.safeParse({ validationStatus: "repeat_purchase", validationObservedAt: "2026-09-29", validationSourceUrl: "javascript:alert(1)" }).success).toBe(false);
+  });
 });

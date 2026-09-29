@@ -1,0 +1,19 @@
+.card {
+  display: flex;
+  gap: 11px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #414735;
+  border-radius: 8px;
+  background: #171a14;
+}
+
+.icon { flex: 0 0 auto; color: #d1b476; padding-top: 2px; }
+.content { min-width: 0; display: grid; gap: 5px; }
+.heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.heading strong { color: #eeeae0; font-size: 12px; }
+.heading small,.limit { color: #929687; font-size: 10px; }
+.content p { margin: 0; color: #c2c4b8; font-size: 12px; line-height: 1.45; }
+.content a { display: inline-flex; align-items: center; gap: 5px; width: fit-content; color: #d1b476; font-size: 11px; text-decoration: underline; text-underline-offset: 2px; }
+.content a:focus-visible { outline: 2px solid #d1b476; outline-offset: 3px; border-radius: 2px; }
+.limit { line-height: 1.4; }

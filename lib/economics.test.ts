@@ -5,7 +5,9 @@ const sample = { price: 1000, variableCost: 400, monthlyUnits: 100, fixedCost: 2
 describe("opportunity economics", () => {
   it("calculates contribution, returns and rounded break-even from assumptions", () => {
     expect(calculateEconomics(sample)).toMatchObject({ revenue: 100000, profit: 40000, margin: 40, breakEven: 34, payback: 5 });
-    expect(calculateEconomics(sample)?.scenarios.map((item) => item.profit)).toEqual([10000, 40000, 70000]);
+    expect(calculateEconomics(sample)?.scenarios.map((item) => [item.label, item.profit])).toEqual([
+      ["50% sales", 10000], ["100% sales", 40000], ["150% sales", 70000],
+    ]);
   });
   it("keeps missing data unknown instead of treating it as zero", () => {
     expect(calculateEconomics(emptyEconomics)).toBeNull();

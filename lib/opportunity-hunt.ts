@@ -31,6 +31,10 @@ export type Lead = {
   createdAt: string;
   economics?: Economics | null;
   decision?: "Investigate" | "Watch" | "Reject";
+  validationStatus?: "unverified" | "need_confirmed" | "pilot_offered" | "paid_pilot" | "repeat_purchase" | "stopped";
+  validationNote?: string;
+  validationSourceUrl?: string;
+  validationObservedAt?: string;
 };
 
 export type HuntEvidence = {

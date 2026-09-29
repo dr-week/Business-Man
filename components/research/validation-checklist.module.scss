@@ -1,0 +1,91 @@
+.panel {
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  h3 { margin: 0 0 5px; }
+  p { margin: 0; color: #aaa99b; font-size: 12px; }
+}
+
+.progress {
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border: 1px solid #526044;
+  border-radius: 999px;
+  color: #dce6cb;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.steps {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    gap: 9px;
+    padding: 11px;
+    border: 1px solid #35392e;
+    border-radius: 8px;
+    background: #141710;
+  }
+}
+
+.complete {
+  border-color: #526044 !important;
+  background: #1a2117 !important;
+}
+
+.stepLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #d4d4c8;
+  font-size: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+
+  input { flex: 0 0 auto; width: 16px; height: 16px; margin: 1px 0 0; accent-color: #a9c18a; }
+}
+
+.field {
+  display: grid;
+  gap: 5px;
+  color: #959888;
+  font-size: 10px;
+
+  input, textarea {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #35392e;
+    border-radius: 6px;
+    padding: 8px 9px;
+    background: #10120f;
+    color: #eeeae0;
+    font: inherit;
+    font-size: 12px;
+  }
+
+  textarea { resize: vertical; }
+  input:focus-visible, textarea:focus-visible { outline: 2px solid #d1b476; outline-offset: 2px; }
+}
+
+.privacy { color: #858879; font-size: 10px; line-height: 1.5; }
+
+.unknown {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #35392e;
+  color: #aaa99b;
+  font-size: 11px;
+
+  strong { color: #d1b476; }
+}

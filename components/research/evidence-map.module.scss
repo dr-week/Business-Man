@@ -1,0 +1,28 @@
+.map {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.category {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-content: start;
+  gap: 4px 8px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #35392e;
+  border-radius: 7px;
+  color: #aaa99b;
+  font-size: 11px;
+}
+
+.category strong { color: #eeeae0; font-size: 14px; }
+.category ul { grid-column: 1 / -1; display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
+.category a { overflow: hidden; color: #d1b476; text-overflow: ellipsis; white-space: nowrap; }
+.map > small { grid-column: 1 / -1; color: #aaa99b; font-size: 10px; }
+
+@media (max-width: 600px) {
+  .map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -1,4 +1,5 @@
 import { correctQuery } from "./query-spelling";
+import { inferResearchFocus } from "./research-focus";
 
 export const intentLabels = {
   asset: "Use materials, premises or equipment already owned",
@@ -10,7 +11,7 @@ export function prepareResearchQuery(raw: string, options: { geography?: string;
   const original = raw.trim();
   const spelling = options.original ? { corrected: original, edits: [], suggestions: [] } : correctQuery(original, [options.geography ?? ""]);
   const normalized = spelling.corrected.normalize("NFC").replace(/\s+/g, " ");
-  const intent = /\bi (?:have|own)\b/i.test(normalized) ? "asset"
+  const intent: keyof typeof intentLabels = /\bi (?:have|own)\b/i.test(normalized) ? "asset"
     : /\bmanufactur\w*|fabrication\b/i.test(normalized) ? "manufacturing"
     : /\bservice\w*|trekking|repair|rental|rent|cleaning|grooming|installation|laundry\b/i.test(normalized) ? "service" : "explore";
   const subject = normalized
@@ -24,7 +25,8 @@ export function prepareResearchQuery(raw: string, options: { geography?: string;
     locations: normalized.match(/\b(?:in|near|at)\s+[^,.;!?]+/gi) ?? [],
   };
   return { original, corrected: normalized, brief: `${intentLabels[intent]}: ${normalized}`, searchTerms,
-    intent, classifier: "rules" as string, assets: intent === "asset" ? [subject] : [], constraints,
+    intent, classifier: "rules" as string, researchFocus: inferResearchFocus(normalized), researchFocusSource: "rules" as "rules" | "Laya (provisional)",
+    assets: intent === "asset" ? [subject] : [], constraints,
     edits: spelling.edits, suggestions: spelling.suggestions };
 }
 export type PreparedQuery = ReturnType<typeof prepareResearchQuery>;

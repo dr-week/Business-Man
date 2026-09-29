@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { SourceDiscovery } from "@/components/source-discovery";
-import "../hunt.css";
+import { ValidationOutcome } from "@/components/research/validation-outcome";
+import { OfficialSourceLibrary } from "@/components/research/official-source-library";
+import "../hunt.scss";
 import { OpportunityEconomics } from "@/components/opportunity-economics";
 import { calculateEconomics, inr, type Economics } from "@/lib/economics";
 import { ArrowLeft, Bookmark, CheckCircle2, Coins, Crown, ExternalLink, Eye, FlaskConical, Layers, Plus, Radio, Search, ShieldAlert, ShieldCheck, Sparkles, User, X, RefreshCw } from "lucide-react";
@@ -12,15 +14,6 @@ import { LANES, SEED_LEADS, nextGate, type HuntEvidence, type Lane, type Lead } 
 const LEGACY_KEY = "businessman.hunt.leads.v1";
 const blankLead = { title: "", lane: "Workflow failure" as Lane, failure: "", buyer: "", trigger: "", source: "", alternatives: "", payment: "", nextTest: "" };
 const blankEvidence = { claim: "", sourceTitle: "", sourceUrl: "", kind: "official" as HuntEvidence["kind"], direction: "supports" as HuntEvidence["direction"], observedAt: "" };
-
-const SOURCE_SHELF = [
-  { name: "PMEGP project reports", url: "https://www.kviconline.gov.in/pmegp/pmegpweb/docs/jsp/newprojectReports.jsp", use: "Project models" },
-  { name: "myScheme", url: "https://www.myscheme.gov.in/", use: "Eligibility" },
-  { name: "NSIC profiles", url: "https://www.nsic.co.in/Info/ProjectProfiles", use: "Small industries" },
-  { name: "India TradeStat", url: "https://tradestat.commerce.gov.in/meidb/commodity_wise_all_countries_import", use: "Import signals" },
-  { name: "ICAR–CCARI Goa", url: "https://ccari.res.in/", use: "Local crop research" },
-  { name: "MNRE biogas", url: "https://mnre.gov.in/en/bio-gas/", use: "Approved models" },
-] as const;
 
 function isSeed(id: string): boolean { return SEED_LEADS.some((lead) => lead.id === id); }
 
@@ -58,7 +51,7 @@ export default function HuntPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [legacyCount, setLegacyCount] = useState(0);
   const [loaded, setLoaded] = useState(false);
-  const [view, setView] = useState<"Saved" | "Research" | "Sources">("Research");
+  const [view, setView] = useState<"Saved" | "Research" | "Analysis" | "Sources">("Research");
 
   const all = saved;
   const visible = useMemo(() => all.filter((lead) =>
@@ -143,6 +136,13 @@ export default function HuntPage() {
     setSaved((current) => current.map((item) => item.id === lead.id ? lead : item));
   }
 
+  async function saveValidation(outcome: Pick<Lead, "validationStatus" | "validationNote" | "validationSourceUrl" | "validationObservedAt">) {
+    if (!selected) return;
+    const { lead } = await jsonRequest<{ lead: Lead }>(`/api/hunt/leads/${encodeURIComponent(selected.id)}`, { method: "PATCH", body: JSON.stringify(outcome) });
+    setSaved((current) => current.map((item) => item.id === lead.id ? lead : item));
+    setStatus("");
+  }
+
   async function addEvidence(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selected || busy) return;
@@ -189,18 +189,14 @@ export default function HuntPage() {
     </header>
     <div className="hunt-main">
     <div className="hunt-heading">
-      <h1>{view === "Sources" ? "Sources" : view === "Research" ? "Research" : "Opportunities"}</h1>
+      <h1>{view === "Sources" ? "Sources" : view === "Research" ? "Research" : view === "Analysis" ? "Analysis" : "Opportunities"}</h1>
       <div className="hunt-heading-actions">
         {view === "Saved" && <button className="hunt-icon-action" title={adding ? "Close form" : "Add opportunity"} aria-label={adding ? "Close form" : "Add opportunity"} onClick={() => { setAdding(!adding); setSelectedId(""); }}>{adding ? <X size={18} /> : <Plus size={18} />}</button>}
         <button className="hunt-icon-action" title="Reload saved research" aria-label="Reload saved research" onClick={refreshResearch} disabled={refreshing}><RefreshCw size={18} /></button>
       </div>
     </div>
     {status && <div className="hunt-status" role="status">{status}{status.includes("Sign in") && <> <Link href="/signin-with-chatgpt?return_to=%2Fhunt">Sign in</Link></>}</div>}
-    {view === "Research" ? <SourceDiscovery onError={setStatus} onSaved={(lead) => { setSaved((current) => [lead, ...current.filter((item) => item.id !== lead.id)]); setLoaded(true); }} /> : view === "Sources" ? <section className="hunt-source-page" aria-label="Research sources">
-      <div className="hunt-source-grid">{SOURCE_SHELF.map((item) =>
-        <a key={item.url} href={item.url} target="_blank" rel="noreferrer"><strong>{item.name}</strong><span>{item.use} <ExternalLink size={10} /></span></a>)}</div>
-
-    </section> : <>
+    {(view === "Research" || view === "Analysis") ? <SourceDiscovery view={view === "Research" ? "research" : "analysis"} onOpenAnalysis={() => setView("Analysis")} onOpenResearch={() => setView("Research")} onError={setStatus} onSaved={(lead) => { setSaved((current) => [lead, ...current.filter((item) => item.id !== lead.id)]); setLoaded(true); }} /> : view === "Sources" ? <OfficialSourceLibrary /> : <>
     {legacyCount > 0 && <button className="hunt-import" onClick={importDrafts} disabled={busy}>Import {legacyCount} browser drafts</button>}
     {adding && <form className="hunt-form" onSubmit={addLead}>
       <label>Problem<input required minLength={3} autoFocus placeholder="e.g. Orders arrive late" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
@@ -228,8 +224,9 @@ export default function HuntPage() {
         <button className="hunt-back" title="Back" aria-label="Back" onClick={() => setSelectedId("")}><ArrowLeft size={18} /></button>
         <div className="hunt-dossier-head"><h2>{selected.title}</h2><p>{selected.failure}</p>
         </div>
-        <OpportunityEconomics key={selected.id} initial={selected.economics} example={example} onSave={saveEconomics} />
+        <OpportunityEconomics key={selected.id} initial={selected.economics} onSave={saveEconomics} />
         <div className="hunt-next-test"><FlaskConical size={18} /><div><small>NEXT TEST</small><p>{selected.nextTest || "Define one buyer test."}</p></div></div>
+        {!example && <ValidationOutcome key={selected.id + "-outcome"} value={selected} onSave={saveValidation} />}
         {!example && (
           <div className="hunt-decisions" aria-label="Research decision">
             <button title="Investigate" aria-label="Investigate" className={selected.decision === "Investigate" ? "is-active" : ""} onClick={() => updateLead("decision", "Investigate")}>

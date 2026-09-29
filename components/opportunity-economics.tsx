@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Calculator, Save, FlaskConical } from "lucide-react";
+import { Calculator, Save } from "lucide-react";
 import { calculateEconomics, economicsInput, emptyEconomics, inr, type Economics } from "@/lib/economics";
 
 const fields = [
@@ -12,7 +12,7 @@ const fields = [
   ["investment", "Startup investment", "₹"],
 ] as const;
 
-export function OpportunityEconomics({ initial, example, onSave }: { initial?: Economics | null; example: boolean; onSave: (value: Economics) => Promise<void> }) {
+export function OpportunityEconomics({ initial, onSave }: { initial?: Economics | null; onSave: (value: Economics) => Promise<void> }) {
   const [draft, setDraft] = useState<Economics>(initial ?? emptyEconomics);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
@@ -27,15 +27,12 @@ export function OpportunityEconomics({ initial, example, onSave }: { initial?: E
     finally { setSaving(false); }
   }
   return <section className="economics" aria-label="Economics calculator">
-    <header><div><Calculator size={18} /><h2>Economics</h2><span className="hunt-tag">INR · Estimate</span></div>
-      <button type="button" title="Load demo assumptions" aria-label="Load demo assumptions" onClick={() => { setDraft({ price: 1000, variableCost: 400, monthlyUnits: 100, fixedCost: 20000, investment: 200000, basis: "Demo assumptions only. Replace with buyer and supplier quotes." }); setMessage("Demo assumptions"); }}><FlaskConical size={18} /></button>
-    </header>
+    <header><div><Calculator size={18} /><h2>Economics</h2><span className="hunt-tag">INR · Estimate</span></div></header>
     <div className="economics-layout">
       <form onSubmit={save}>
         <div className="economics-inputs">{fields.map(([key, label, unit]) => <label key={key}>{label}<div><span>{unit}</span><input type="number" min="0" max={key === "monthlyUnits" ? 1000000 : 1000000000} step={key === "monthlyUnits" ? "1" : "0.01"} aria-label={label} placeholder="Unknown" value={draft[key] ?? ""} onChange={(event) => { setDraft({ ...draft, [key]: event.target.value === "" ? null : event.target.valueAsNumber }); setMessage(""); }} /></div></label>)}</div>
         <label className="economics-basis">Assumption sources<textarea maxLength={1500} placeholder="Buyer quote, supplier quote, date…" value={draft.basis} onChange={(event) => setDraft({ ...draft, basis: event.target.value })} /></label>
-        {!example && <button className="hunt-create-submit" disabled={saving || !parsed.success} type="submit"><Save size={15} />{saving ? "Saving…" : "Save assumptions"}</button>}
-        {example && <p className="hunt-table-note">Unsaved example</p>}
+        <button className="hunt-create-submit" disabled={saving || !parsed.success} type="submit"><Save size={15} />{saving ? "Saving…" : "Save assumptions"}</button>
         {message && <p role="status">{message}</p>}
       </form>
       <div>
@@ -46,10 +43,10 @@ export function OpportunityEconomics({ initial, example, onSave }: { initial?: E
           <div><span>Break-even units / month</span><strong>{result ? result.breakEven ?? "Not reachable" : "—"}</strong></div>
           <div><span>Simple payback</span><strong>{result ? result.payback === null ? "Not reached" : `${result.payback.toFixed(1)} months` : "—"}</strong></div>
         </div>
-        {result ? <figure className="economics-chart"><figcaption>Monthly profit · sales sensitivity</figcaption>
+        {result ? <figure className="economics-chart"><figcaption>Illustrative profit sensitivity · not a forecast</figcaption>
           {result.scenarios.map((scenario) => <div className="scenario" key={scenario.label}><span>{scenario.label}<small>{scenario.units} units</small></span><div className="scenario-track"><i className={scenario.profit < 0 ? "negative" : ""} style={{ width: `${Math.abs(scenario.profit) / Math.max(1, ...result.scenarios.map((item) => Math.abs(item.profit))) * 100}%` }} /></div><strong>{inr(scenario.profit)}</strong></div>)}
         </figure> : <div className="economics-placeholder">Enter assumptions</div>}
-        <details className="economics-method"><summary>Calculation basis</summary><p>Profit = (price − variable cost) × units − fixed costs. Margin = profit ÷ revenue. Break-even = fixed costs ÷ contribution per unit, rounded up. Payback = investment ÷ positive monthly profit. Constant monthly sales assumed; taxes, financing and changes in working capital are excluded. Investment should include startup working capital.</p></details>
+        <details className="economics-method"><summary>Calculation basis</summary><p>The 50%, 100%, and 150% rows scale entered monthly sales; they are sensitivity cases, not demand forecasts. Profit = (price − variable cost) × units − fixed costs. Margin = profit ÷ revenue. Break-even = fixed costs ÷ contribution per unit, rounded up. Payback = investment ÷ positive monthly profit. Constant monthly sales assumed; taxes, financing and changes in working capital are excluded. Investment should include startup working capital.</p></details>
       </div>
     </div>
   </section>;

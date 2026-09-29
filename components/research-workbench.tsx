@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Archive, Code2, Coins, ExternalLink, FlaskConical, Layers, Package, Scale, Shield, ShieldCheck, Telescope, User } from "lucide-react";
+import { Archive, Code2, Coins, ExternalLink, FlaskConical, Layers, Package, Scale, Shield, ShieldCheck, User } from "lucide-react";
 import type { Opportunity } from "@/lib/opportunities-data";
+import { summarizeEvidence } from "@/lib/evidence-coverage";
 
 const TABS = [
   { id: "Case",     icon: Archive    },
   { id: "Evidence", icon: Scale      },
   { id: "Risks",    icon: Shield     },
-  { id: "Numbers",  icon: Telescope  },
   { id: "Test",     icon: FlaskConical },
 ] as const;
 
@@ -21,6 +21,7 @@ export function ResearchWorkbench({ opportunity }: { opportunity: Opportunity })
   const riskEvidence    = opportunity.evidence.filter((e) =>  e.risk);
   const risks = opportunity.risks
     ?? riskEvidence.map((e) => ({ risk: e.claim, mitigation: "Verify before entry." }));
+  const coverage = summarizeEvidence(opportunity.evidence, opportunity.nextTest);
 
   return (
     <>
@@ -54,7 +55,12 @@ export function ResearchWorkbench({ opportunity }: { opportunity: Opportunity })
 
         {/* ── Evidence ──────────────────────────────────── */}
         {tab === "Evidence" && (
-          <div className="evidence-list">
+          <div className="evidence-workspace">
+            <section className="evidence-coverage" aria-label="Evidence coverage">
+              <div className="coverage-stats"><Stat label="Claims" value={coverage.total} /><Stat label="Linked sources" value={coverage.linked} /><Stat label="Source domains" value={coverage.sourceDomains} /><Stat label="Open questions" value={coverage.openQuestions} /></div>
+              <div className="coverage-next"><span>Next best research step</span><strong>{coverage.nextAction}</strong><small>{coverage.actionReason} This is a research prompt, not an investment recommendation.</small></div>
+            </section>
+            <div className="evidence-list">
             {supportEvidence.length === 0 && (
               <div className="empty-state">No evidence logged.</div>
             )}
@@ -72,6 +78,7 @@ export function ResearchWorkbench({ opportunity }: { opportunity: Opportunity })
                 </div>
               </div>
             ))}
+            </div>
           </div>
         )}
 
@@ -94,25 +101,14 @@ export function ResearchWorkbench({ opportunity }: { opportunity: Opportunity })
           </div>
         )}
 
-        {/* ── Numbers ───────────────────────────────────── */}
-        {tab === "Numbers" && (
-          <div className="number-grid">
-            <Stat label="Linked sources" value={supportEvidence.filter((item) => item.url !== "#").length} />
-            <Stat label="Open questions" value={riskEvidence.length} />
-            <Stat label="Investment" value={undefined} />
-            <Stat label="Margin" value={undefined} />
-            <Stat label="Paid pilots" value={undefined} />
-          </div>
-        )}
-
         {/* ── Test ──────────────────────────────────────── */}
         {tab === "Test" && (
           <div className="test-card">
             <FlaskConical size={17} />
             <div>
               <span className="test-label">Next move</span>
-              <strong className="test-move">{opportunity.nextTest}</strong>
-              <span className="test-stop">Stop if demand or distribution fails.</span>
+              <strong className="test-move">{coverage.nextAction}</strong>
+              <span className="test-stop">{coverage.actionReason} Update the evidence after the test.</span>
             </div>
           </div>
         )}
