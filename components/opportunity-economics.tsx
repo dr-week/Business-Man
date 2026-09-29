@@ -46,7 +46,7 @@ export function OpportunityEconomics({ initial, example, onSave }: { initial?: E
           <div><span>Break-even units / month</span><strong>{result ? result.breakEven ?? "Not reachable" : "—"}</strong></div>
           <div><span>Simple payback</span><strong>{result ? result.payback === null ? "Not reached" : `${result.payback.toFixed(1)} months` : "—"}</strong></div>
         </div>
-        {result ? <figure className="economics-chart"><figcaption>Monthly profit · sales sensitivity</figcaption>
+        {result ? <figure className="economics-chart"><figcaption>Illustrative profit sensitivity · not a forecast</figcaption>
           {result.scenarios.map((scenario) => <div className="scenario" key={scenario.label}><span>{scenario.label}<small>{scenario.units} units</small></span><div className="scenario-track"><i className={scenario.profit < 0 ? "negative" : ""} style={{ width: `${Math.abs(scenario.profit) / Math.max(1, ...result.scenarios.map((item) => Math.abs(item.profit))) * 100}%` }} /></div><strong>{inr(scenario.profit)}</strong></div>)}
         </figure> : <div className="economics-placeholder">Enter assumptions</div>}
         <details className="economics-method"><summary>Calculation basis</summary><p>Profit = (price − variable cost) × units − fixed costs. Margin = profit ÷ revenue. Break-even = fixed costs ÷ contribution per unit, rounded up. Payback = investment ÷ positive monthly profit. Constant monthly sales assumed; taxes, financing and changes in working capital are excluded. Investment should include startup working capital.</p></details>
