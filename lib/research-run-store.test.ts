@@ -31,4 +31,13 @@ describe("research run storage", () => {
     expect(query.params).toContain("owner-1");
     expect(query.params).toContain(20);
   });
+
+  it("rejects snapshots above the D1 row budget before writing", async () => {
+    const db = drizzle({} as D1Database, { schema });
+    const batch = vi.spyOn(db, "batch");
+    await expect(saveResearchRun(db, {
+      id: "run-large", ownerId: "owner-1", topic: "cafes", geography: "Goa, India", currency: "INR", input: {}, result: { text: "x".repeat(1_900_000) },
+    })).rejects.toThrow("Research snapshot exceeds the D1 row budget");
+    expect(batch).not.toHaveBeenCalled();
+  });
 });

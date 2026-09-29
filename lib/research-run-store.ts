@@ -3,6 +3,7 @@ import type { getDb } from "@/db";
 import { researchRuns } from "@/db/schema";
 
 const MAX_RETAINED_RUNS = 20;
+const MAX_RUN_BYTES = 1_900_000;
 
 /** Return the bounded, newest-first history for one owner. */
 export function listResearchRuns(db: ReturnType<typeof getDb>, ownerId: string) {
@@ -14,6 +15,8 @@ export function listResearchRuns(db: ReturnType<typeof getDb>, ownerId: string) 
 
 /** Save and retain the newest owner-scoped runs in one D1 transaction. */
 export async function saveResearchRun(db: ReturnType<typeof getDb>, run: typeof researchRuns.$inferInsert) {
+  const runBytes = new TextEncoder().encode(JSON.stringify(run)).byteLength;
+  if (runBytes > MAX_RUN_BYTES) throw new Error("Research snapshot exceeds the D1 row budget");
   const retained = db.select({ id: researchRuns.id }).from(researchRuns)
     .where(eq(researchRuns.ownerId, run.ownerId))
     .orderBy(desc(researchRuns.createdAt), desc(researchRuns.id)).limit(MAX_RETAINED_RUNS);

@@ -10,7 +10,7 @@
 
 Evidence independence uses normalized full text when available and canonical URLs for short records. URL fragments, `www`, and common tracking parameters do not create additional sources. Similar but non-identical reports remain separate; this conservative rule avoids semantic false merges.
 
-`db/schema.ts` owns the schema; append SQL migrations under `drizzle/` and apply with `npm run db:local:apply`. `lib/research-run-store.ts` batches save and 20-run owner-scoped retention. Snapshots are immutable; edited assumptions remain browser-local until another run. `lib/bounded-cache.ts` holds owner-scoped results for 10 minutes, at most 8 entries and 1 MiB of estimated JSON size; oversized results bypass cache. The isolate gate admits 2 active and 6 waiting searches.
+`db/schema.ts` owns the schema; append SQL migrations under `drizzle/` and apply with `npm run db:local:apply`. `lib/research-run-store.ts` batches save and 20-run owner-scoped retention; snapshots above 1.9 MB UTF-8 are rejected before D1 writes. Snapshots are immutable; edited assumptions remain browser-local until another run. `lib/bounded-cache.ts` holds owner-scoped results for 10 minutes, at most 8 entries and 1 MiB of estimated JSON size; oversized results bypass cache. The isolate gate admits 2 active and 6 waiting searches.
 
 ## Memory bounds
 
