@@ -12,15 +12,17 @@ function sameProblem(left: SourceSignal, right: SourceSignal): boolean {
   const shared = [...a].filter((word) => b.has(word)).length;
   return shared >= 2 && shared / Math.max(a.size, b.size) >= 0.6;
 }
-function canonicalUrl(raw: string): string {
+function canonicalUrl(raw: string): string | null {
   try {
     const url = new URL(raw);
-    if (url.protocol !== "https:" && url.protocol !== "http:") return raw.trim();
+    if ((url.protocol !== "https:" && url.protocol !== "http:") || url.username || url.password) return null;
+    url.hostname = url.hostname.toLowerCase().replace(/^www\./, "");
     url.hash = "";
-    for (const key of [...url.searchParams.keys()]) if (/^utm_|^ref$|^source$/i.test(key)) url.searchParams.delete(key);
+    for (const key of [...url.searchParams.keys()]) if (/^utm_.+|^(ref|source|fbclid|gclid)$/i.test(key)) url.searchParams.delete(key);
+    url.searchParams.sort();
     return url.toString().replace(/\/$/, "");
   } catch {
-    return raw.trim();
+    return null;
   }
 }
 
@@ -30,7 +32,7 @@ const MAX_SOURCES = 500;
 export function groupSources(sources: SourceSignal[]): SourceSignal[][] {
   const unique = new Map<string, SourceSignal>();
   for (const source of sources.slice(0, MAX_SOURCES)) {
-    const key = canonicalUrl(source.url);
+    const key = canonicalUrl(source.url) ?? `invalid:${source.provider}:${source.id}`;
     if (!unique.has(key)) unique.set(key, source);
   }
   const groups: SourceSignal[][] = [];

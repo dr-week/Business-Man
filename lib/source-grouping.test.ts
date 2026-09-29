@@ -30,13 +30,27 @@ describe("source grouping", () => {
     expect(groups.flat()).toHaveLength(1);
     expect(groups[0][0].id).toBe("1");
   });
-  it("keeps malformed or non-web URLs as distinct sources without throwing", () => {
+  it("keeps malformed or non-web records distinct without throwing", () => {
     const groups = groupSources([
       source("1", "Restaurant inventory errors", "not a url"),
       source("2", "Restaurant inventory errors", "not a url"),
       source("3", "Restaurant inventory errors", "javascript:alert(1)"),
     ]);
-    expect(groups.flat().map(({ id }) => id)).toEqual(["1", "3"]);
+    expect(groups.flat().map(({ id }) => id)).toEqual(["1", "2", "3"]);
+  });
+  it("deduplicates canonical URLs with reordered queries and tracking parameters", () => {
+    const groups = groupSources([
+      source("1", "Restaurant inventory errors", "https://www.example.com/post?b=2&utm_source=mail&a=1#details"),
+      source("2", "Restaurant inventory errors", "https://example.com/post?a=1&b=2"),
+    ]);
+    expect(groups.flat().map(({ id }) => id)).toEqual(["1"]);
+  });
+  it("does not collapse URL credentials into an invalid-source key", () => {
+    const groups = groupSources([
+      source("1", "Restaurant inventory errors", "https://user:pass@example.com/post"),
+      source("2", "Restaurant inventory errors", "https://user:pass@example.com/post"),
+    ]);
+    expect(groups.flat().map(({ id }) => id)).toEqual(["1", "2"]);
   });
   it("bounds work and retained results for oversized provider input", () => {
     const items = Array.from({ length: 510 }, (_, index) => source(String(index), `Unique buyer problem ${index}`));
