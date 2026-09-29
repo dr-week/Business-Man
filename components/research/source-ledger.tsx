@@ -3,17 +3,12 @@
 import { useState } from "react";
 import { ExternalLink, Search } from "lucide-react";
 import type { ResearchOpportunity } from "@/lib/research-engine";
+import { sourceAgeLabel } from "@/lib/source-freshness";
 import styles from "./source-ledger.module.scss";
 
 const filters = ["all", "buyer", "official", "supplier", "discussion", "other"] as const;
 type SourceFilter = (typeof filters)[number];
 const labels: Record<SourceFilter, string> = { all: "All", buyer: "Buyer", official: "Official", supplier: "Supplier", discussion: "Discussion", other: "Other" };
-
-function publicationAge(value?: string) {
-  const timestamp = value ? Date.parse(value) : NaN;
-  if (!Number.isFinite(timestamp)) return "Date unknown";
-  return Date.now() - timestamp > 365 * 24 * 60 * 60 * 1000 ? "Older than 12 months" : "Published within 12 months";
-}
 
 export function SourceLedger({ opportunities }: { opportunities: ResearchOpportunity[] }) {
   const sources = [...new Map(opportunities.flatMap((item) => item.sources).map((source) => [source.url, source])).values()]
@@ -38,7 +33,7 @@ export function SourceLedger({ opportunities }: { opportunities: ResearchOpportu
     <div className={styles.filters} role="group" aria-label="Filter sources by evidence type">{filters.map((kind) => <button type="button" key={kind} aria-pressed={filter === kind} onClick={() => setFilter(kind)}>{labels[kind]} <span>{counts[kind]}</span></button>)}</div>
     {visible.length ? <ul>{visible.map((source) => <li key={source.url}>
       <a href={source.url} target="_blank" rel="noopener noreferrer" title="Open source"><span>{source.title || source.provider}</span><ExternalLink size={15} aria-hidden="true" /></a>
-      <small>{source.provider} · {labels[source.kind as SourceFilter] ?? "Other"} · Published {source.publishedAt?.slice(0, 10) || "date unknown"} · {publicationAge(source.publishedAt)} · Collected {source.retrievedAt?.slice(0, 10) || "date unknown"}</small>
+      <small>{source.provider} · {labels[source.kind as SourceFilter] ?? "Other"} · Published {source.publishedAt?.slice(0, 10) || "date unknown"} · {sourceAgeLabel(source.publishedAt)} · Collected {source.retrievedAt?.slice(0, 10) || "date unknown"}</small>
     </li>)}</ul> : <p className={styles.empty}>No sources match these filters.</p>}
   </section>;
 }
