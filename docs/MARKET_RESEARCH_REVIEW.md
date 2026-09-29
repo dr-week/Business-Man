@@ -13,6 +13,10 @@ Reviewed 2026-09-29. Feature patterns inform modules; proprietary UI, content, a
 
 Users: founders/operators, business-development teams, investors, franchise buyers, and analysts. Shared job: decide what to investigate, test, or fund. Search interest, listings, reports, and discussion are signals—not proof of sales.
 
+## “Business maxxxing”
+
+Search found no established business-software category or strong demand evidence for this exact phrase. Interpret it as business outcome optimization, not a validated market trend. Useful product behavior: expose evidence-backed break-even thresholds and next validation actions; avoid guaranteed growth claims or opaque “maximize” scores. Broader “maxxing” coverage describes a general self-optimization meme, not verified buyer demand ([Forbes workplace coverage](https://www.forbes.com/sites/bryanrobinson/2026/05/07/why-the-career-maxxing-trend-is-everywhere-in-the-workplace/)).
+
 ## Current modules and gaps
 
 Research, local market, economics, validation plan, evidence, risks, source library, alternatives, and user-reported validation outcomes are separate modules. Sources can be searched and filtered by buyer, official, supplier, discussion, or other; publication age flags undated and older-than-12-month material. The static opportunity workbench has no comparable economics, so it omits the former blank Numbers tab. Key gaps: broader verified data coverage, named competitor price freshness, non-U.S. local datasets, alerts, team workflows, and measured outcomes. Keep unknowns visible; never turn source volume into investment odds. Market intelligence products emphasize continuous monitoring, custom competitor sets, alerts, and exports. This app should add these only with sourced changes, bounded retention, and owner-scoped persistence.

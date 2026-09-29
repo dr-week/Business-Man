@@ -23,6 +23,12 @@ export function calculateEconomics(input: Economics) {
     margin: revenue > 0 ? profit / revenue * 100 : null,
     breakEven: contribution > 0 ? Math.ceil(fixedCost / contribution) : null,
     payback: profit > 0 ? investment / profit : null,
+    breakEvenTargets: {
+      priceFloor: monthlyUnits > 0 ? variableCost + fixedCost / monthlyUnits : null,
+      variableCostCeiling: monthlyUnits > 0 ? price - fixedCost / monthlyUnits : null,
+      fixedCostCeiling: contribution > 0 ? contribution * monthlyUnits : null,
+      additionalUnits: contribution > 0 ? Math.max(0, Math.ceil(fixedCost / contribution) - monthlyUnits) : null,
+    },
     scenarios: [0.5, 1, 1.5].map((factor) => {
       const units = Math.round(monthlyUnits * factor);
       return { label: `${factor * 100}% sales`, units, profit: contribution * units - fixedCost };
