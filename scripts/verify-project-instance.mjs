@@ -1,35 +1,52 @@
 import http from "node:http";
 
-const port = process.argv[2] || process.env.PORT || "5173";
+const rawPort = process.env.VERIFY_PORT || process.argv[2] || process.env.PORT || "5173";
+const parsedPort = Number(rawPort);
+if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+  process.stdout.write("NOT_LISTENING");
+  process.exit(0);
+}
+const port = String(parsedPort);
 const expectedApp = "businessman";
+const maxHealthBytes = 8 * 1024;
+let finished = false;
+
+function finish(status) {
+  if (finished) return;
+  finished = true;
+  process.stdout.write(status);
+}
 
 const req = http.get(`http://127.0.0.1:${port}/api/health`, { timeout: 1500 }, (res) => {
-  let data = "";
-  res.on("data", (chunk) => { data += chunk; });
+  let data = "", bytes = 0;
+  res.on("data", (chunk) => {
+    bytes += chunk.length;
+    if (bytes > maxHealthBytes) {
+      finish("OTHER_SERVICE");
+      res.destroy();
+      return;
+    }
+    data += chunk;
+  });
   res.on("end", () => {
+    if (res.statusCode !== 200) return finish("OTHER_SERVICE");
     try {
       const json = JSON.parse(data);
       if (json.app === expectedApp && json.status === "ok") {
-        process.stdout.write("IS_BUSINESSMAN");
-        process.exit(0);
+        finish("IS_BUSINESSMAN");
       } else {
-        process.stdout.write("OTHER_PROJECT");
-        process.exit(0);
+        finish("OTHER_PROJECT");
       }
     } catch {
-      process.stdout.write("OTHER_SERVICE");
-      process.exit(0);
+      finish("OTHER_SERVICE");
     }
   });
+  res.on("error", () => finish("OTHER_SERVICE"));
 });
 
-req.on("error", () => {
-  process.stdout.write("NOT_LISTENING");
-  process.exit(0);
-});
+req.on("error", () => finish("NOT_LISTENING"));
 
 req.on("timeout", () => {
   req.destroy();
-  process.stdout.write("TIMEOUT");
-  process.exit(0);
+  finish("TIMEOUT");
 });
