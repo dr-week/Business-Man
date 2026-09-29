@@ -25,3 +25,4 @@ Target: quiet, Japanese-inspired minimalism; whitespace, restrained colour, clea
 - `components/research/source-ledger.tsx`, `source-ledger.module.scss`: source search and evidence-type filters.
 - `components/research/market-panel.tsx`: competitor and alternative view.
 - `components/research/validation-checklist.tsx`, `.module.scss`: collapsed field-work log; completion requires a note and HTTPS evidence link. Browser-local, user-reported progress.
+- `components/research/counter-evidence.tsx`, `.module.scss`: collapsed list of sourced contradictions and open checks beside the evidence map.

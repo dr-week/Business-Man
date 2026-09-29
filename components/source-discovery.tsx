@@ -16,6 +16,7 @@ import { EvidenceMap } from "@/components/research/evidence-map";
 import { ResearchFocusCard } from "@/components/research/research-focus-card";
 import { SourceLedger } from "@/components/research/source-ledger";
 import { WebCandidates } from "@/components/research/web-candidates";
+import { CounterEvidence } from "@/components/research/counter-evidence";
 
 import { calculateFinancials, recalculateOpportunity, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity, type Provenance } from "@/lib/research-engine";
 import { TRENDING_PROMPTS } from "@/lib/trending-prompts";
@@ -421,6 +422,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
           <summary>Evidence · {active.sources.length} links, {active.claims.length} extracted claims</summary>
           <section className="research-detail-card"><p>{independentSourceCount(active.sources)} independent texts across {active.sources.length} links · {active.confidence} confidence</p>
             <EvidenceMap sources={active.sources} />
+            <CounterEvidence claims={active.claims} sources={active.sources} missing={active.missing} />
             <details><summary>Source claims and dates</summary>{active.claims.map((claim) => <div className="research-claim" key={claim.id}><p>{claim.text}</p><small>{claim.basis ?? claim.direction} · {claim.publishedAt?.slice(0, 10) ?? "Date missing"} · <a target="_blank" rel="noreferrer" href={active.sources.find((source) => source.id === claim.sourceIds[0])?.url}>{active.sources.find((source) => source.id === claim.sourceIds[0])?.provider}</a></small></div>)}</details>
             <details><summary>Source tables and advertised offers</summary>{active.sources.filter((source) => source.facts).map((source) => <div key={source.id}><a href={source.url} target="_blank" rel="noreferrer">{source.title}</a><small>Collected {source.retrievedAt.slice(0, 10)} · Advertised, not verified</small>
               {!!source.facts?.products.length && <div className="hunt-table-scroll"><table><thead><tr><th>Product</th><th>Quoted price</th><th>Currency</th></tr></thead><tbody>{source.facts.products.map((product, index) => <tr key={index}><td>{product.name}</td><td>{product.price || "—"}</td><td>{product.currency || "—"}</td></tr>)}</tbody></table></div>}

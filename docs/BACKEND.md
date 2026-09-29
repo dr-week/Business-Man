@@ -7,6 +7,7 @@
 | `app/api/hunt/research-runs/` | Owner-scoped archive of completed research runs |
 | `lib/research-run-store.ts` | Owner-scoped run history, atomic save, and 20-run retention |
 | `lib/research-engine.ts` | Input schema, grouping, scoring |
+| `lib/counter-evidence.ts` | Sourced contradictions plus checks derived from missing evidence |
 | `lib/validation-plan.ts`, `components/research/validation-plan.tsx` | One prioritized evidence action; remaining questions collapsed |
 | `lib/economics.ts` | Scenario calculations |
 | `lib/investment-risks.ts` | Budget and downside flags from explicit inputs |
