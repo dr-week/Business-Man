@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { readLimitedJson } from "@/lib/read-limited-json";
 
 const payloadSchema = z.object({
   web: z.object({
@@ -34,22 +35,7 @@ export async function collectBraveWebResults(topic: string, geography: string, a
     headers: { Accept: "application/json", "X-Subscription-Token": apiKey },
   });
   if (!response.ok) throw new Error(`Web search unavailable (${response.status})`);
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error("Empty web search response");
-  const decoder = new TextDecoder();
-  let text = "", bytes = 0;
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      bytes += value.byteLength;
-      if (bytes > 512_000) throw new Error("Web search response too large");
-      text += decoder.decode(value, { stream: true });
-    }
-    text += decoder.decode();
-  } finally { await reader.cancel(); }
-
-  const parsed = payloadSchema.parse(JSON.parse(text));
+  const parsed = payloadSchema.parse(await readLimitedJson(response, 512_000));
   return (parsed.web?.results ?? []).flatMap((item) => {
     try {
       const url = new URL(item.url);

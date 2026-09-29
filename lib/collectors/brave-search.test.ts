@@ -24,3 +24,10 @@ it("requests local leads and keeps only bounded HTTPS links", async () => {
   expect(options.redirect).toBe("manual");
   expect(results).toEqual([{ title: "Supplier", url: "https://example.org/supply", snippet: "Market listing" }]);
 });
+
+it("rejects oversized provider responses at the shared stream limit", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ web: { results: [
+    { title: "Supplier", url: "https://example.org/" + "x".repeat(512_000), description: "" },
+  ] } }))));
+  await expect(collectBraveWebResults("metal fabrication", "Goa, India", "test-key")).rejects.toThrow("Response too large");
+});
