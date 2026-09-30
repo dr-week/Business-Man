@@ -3,7 +3,7 @@ import { parseCollectorResults } from "./web";
 
 const signal = {
   id: "page-1", provider: "Web page", title: "Buyer pain", excerpt: "A recurring delay costs staff time.",
-  url: "https://example.com/report", publishedAt: "2026-09-01", retrievedAt: "2026-09-29T00:00:00.000Z", comments: 0,
+  url: "https://example.com/report", publishedAt: "2026-09-01", retrievedAt: "2026-09-29T00:00:00.000Z", engagement: { metric: "comments" as const, count: 0 },
 };
 
 describe("web collector response", () => {
