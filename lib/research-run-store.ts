@@ -71,8 +71,12 @@ export async function saveResearchRun(db: ReturnType<typeof getDb>, run: typeof 
     throw new Error("Unsupported research snapshot schema version");
   }
   const snapshot = { ...run, createdAt: run.createdAt ?? new Date().toISOString() };
-  const runBytes = new TextEncoder().encode(JSON.stringify(snapshot)).byteLength;
-  if (runBytes > MAX_RUN_BYTES) throw new Error("Research snapshot exceeds the D1 row budget");
+  const serialized = JSON.stringify(snapshot);
+  // UTF-8 uses at most three bytes per UTF-16 code unit. Most snapshots fit
+  // this safe range, so avoid allocating an encoded copy for them.
+  if (serialized.length > MAX_RUN_BYTES || (serialized.length * 3 > MAX_RUN_BYTES && new TextEncoder().encode(serialized).byteLength > MAX_RUN_BYTES)) {
+    throw new Error("Research snapshot exceeds the D1 row budget");
+  }
   const retained = db.select({ id: researchRuns.id }).from(researchRuns)
     .where(and(eq(researchRuns.ownerId, run.ownerId), ne(researchRuns.id, run.id)))
     .orderBy(desc(researchRuns.createdAt), desc(researchRuns.id)).limit(MAX_RETAINED_RUNS - 1);
