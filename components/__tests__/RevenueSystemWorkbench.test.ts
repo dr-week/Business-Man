@@ -7,6 +7,7 @@ describe("revenue system workflow", () => {
     const markup = renderToStaticMarkup(createElement(RevenueSystemWorkbench, { currency: "INR" }));
 
     expect(markup).toContain("No payment data is connected");
+    expect(markup).toContain("do not describe this checkout as open source yet");
     expect(markup).toContain("Scenario units / month");
     expect(markup).toContain("₹0");
     expect(markup).toContain("₹18,000");
