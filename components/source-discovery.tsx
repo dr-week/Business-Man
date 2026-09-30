@@ -260,6 +260,18 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
   return <section className="research-workspace" aria-label="Market research">
 
+    <form hidden={view !== "research"} className="research-bar" onSubmit={(event) => void research(event)}>
+
+      <label className="research-topic"><span>Topic</span><input required minLength={2} maxLength={1000} value={topic} onChange={(event) => setTopic(event.target.value)} placeholder={`e.g. ${TRENDING_PROMPTS[placeholderIndex] || "Research a business…"}`} /></label>
+      <label><span>Location</span><input required minLength={2} maxLength={100} value={geography} onChange={(event) => setGeography(event.target.value)} placeholder="City, region, or country" /></label>
+      <label><span>Available budget</span><input min="0" max="1000000000" type="number" inputMode="decimal" value={budget} onChange={(event) => setBudget(event.target.value)} placeholder="Optional" /></label>
+      <label className="research-currency"><span>Currency</span><select aria-label="Budget currency" value={currency} onChange={(event) => setCurrency(event.target.value)}><option>INR</option><option>USD</option><option>EUR</option><option>GBP</option></select></label>
+      <button className="research-submit" disabled={busy} type="submit"><Search size={16} />{busy ? "Researching…" : "Research"}</button>
+
+      {busy && <button className="hunt-icon-action" type="button" title="Cancel research" aria-label="Cancel research" onClick={() => abort.current?.abort()}><Square size={14} /></button>}
+
+    </form>
+
     <div hidden={view !== "research" || !!opportunities.length} className="research-intro">
       <div className="research-mode" role="tablist" aria-label="Research goal">
         <button type="button" role="tab" aria-selected={researchMode === "ideas"} onClick={() => { setResearchMode("ideas"); setTopic(""); }}><BriefcaseBusiness size={16} />Find a business idea</button>
@@ -271,16 +283,6 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
         {(researchMode === "franchise" ? ["Compare food franchises under my budget", "What should I check before buying a franchise?", "Compare franchise fees, closures, and territory terms"] : researchMode === "market" ? ["Demand for cold storage in Goa", "Compare laundry services in Panaji", "Market gaps for food processing in India"] : ["What can I sell to hotels in Goa?", "Business ideas using an empty garage", "Problems buyers pay to solve in food processing"]).map((prompt) => <button key={prompt} type="button" onClick={() => setTopic(prompt)}>{prompt}</button>)}
       </div>
     </div>
-    <form hidden={view !== "research"} className="research-bar" onSubmit={(event) => void research(event)}>
-
-      <label className="research-topic"><span className="sr-only">Topic</span><input required minLength={2} maxLength={1000} value={topic} onChange={(event) => setTopic(event.target.value)} placeholder={`e.g. ${TRENDING_PROMPTS[placeholderIndex] || "Research a business…"}`} /></label>
-
-      <button className="research-submit" disabled={busy} type="submit"><Search size={16} />{busy ? "Researching…" : "Find opportunities"}</button>
-
-      {busy && <button className="hunt-icon-action" type="button" title="Cancel research" aria-label="Cancel research" onClick={() => abort.current?.abort()}><Square size={14} /></button>}
-
-    </form>
-
     <form hidden={view !== "profile"} className="research-personalisation" onSubmit={savePreferences} onChange={() => setPreferencesSaved(false)}>
       <label>Location<input required minLength={2} maxLength={100} value={geography} onChange={(event) => setGeography(event.target.value)} placeholder="e.g. Goa, India" /></label>
 
