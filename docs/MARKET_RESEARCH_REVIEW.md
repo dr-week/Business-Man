@@ -26,6 +26,27 @@ Reviewed 2026-09-30. Feature patterns inform modules; proprietary UI, content, a
 
 **India-specific product requirements:** show INR by default for Indian geography while retaining editable currency; date and cite all local prices/benchmarks; distinguish national from state/city coverage; disclose stale or absent Indian data; provide UPI/card checkout and GST-compliant billing through an appropriate payment provider after legal/tax review. Localize evidence collection before translating UI: local business listings, public statistics, regional competitors, and regulatory sources are the product's differentiator.
 
+## Revenue decision: demand is real, product demand is unproven
+
+**Market signal:** buyers already pay for adjacent products: one-off idea reports advertise $9–$129 globally, trend-intelligence subscriptions advertise $39–$249/month, and Similarweb lists individual competitive intelligence at $125/month annually / $199 monthly. In India, idea-report offers advertise ₹159 credits to ₹2,999 per report, while human desk research advertises ₹10,000+. These are not equivalent products and published prices are not audited transactions. DimeADozen claims 100,000+ ideas analyzed; treat this as vendor-reported activity, not verified paid customers. [DimeADozen](https://www.dimeadozen.ai/pricing), [Exploding Topics](https://explodingtopics.com/pricing), [Similarweb](https://www.similarweb.com/packages/web/?type=Individuals), [AiiQA](https://www.aiiqa.com/validate/), [LaunchRight India](https://www.launchrightindia.com/), [MNB Research](https://www.mnbresearch.com/market-validation).
+
+**Evidence of user need:** G2's Crayon seller page shows 385 reviews and describes recurring competitor monitoring, market updates, and sales enablement use. A small 2026 exploratory study interviewed 29 founders across 16 software startups; it identifies pre-MVP paying customers as stronger evidence than activity counts. Neither proves demand for Businessman. The founder survey found on Reddit claims 500 respondents and 22% willingness to pay, but is posted by a market-research vendor, is not independently audited, and has selection/measurement limits; do not use its percentage for conversion forecasts. [G2 Crayon reviews](https://www.g2.com/sellers/crayon), [exploratory study](https://www.mdpi.com/2073-432X/15/8/535), [vendor-posted survey discussion](https://www.reddit.com/r/SaaS/comments/1sbreur/asked_500_startup_founders_how_they_validate/).
+
+**Recommended revenue design:**
+
+| Offer | User / payer | Revenue logic | Evidence gate |
+| --- | --- | --- | --- |
+| Free preview | Founder evaluating an idea | Acquisition; show source coverage, gaps, and a sample conclusion | Track completion and qualified conversion |
+| One-off decision brief | Founder about to commit time/capital | Paid report; test $9–$20 global and ₹299–₹999 India price bands against actual checkout | Paid orders, refunds, and whether evidence changed a decision |
+| Advisor / incubator workspace | Consultant, incubator, accelerator, or venture program | Recurring seat/report bundle only when multiple cases, saved comparisons, and monitoring produce repeat usage | Paid pilot followed by renewal/repeat purchase |
+| Assisted validation | Founder/institution needing buyer interviews or local field evidence | Higher-priced service revenue, human-delivered and scoped separately | Sell a pilot before staffing a service |
+
+The sharpest position is **“evidence-backed decision brief with local assumptions and a next validation test,”** not another generic AI idea score. Founder reports can be the first checkout experiment; repeat B2B buyers are the stronger subscription hypothesis. For India, test one city/sector and local evidence quality before claiming nationwide coverage. Distribution: direct web/search and founder communities for self-serve; incubator, university entrepreneurship-cell, and advisor pilots for repeat buyers. No channel is validated yet.
+
+**Revenue math:** `monthly revenue = paid reports × report price + active team seats × monthly seat price + scoped validation services`. `Contribution = revenue − research/API/payment/support costs`; `break-even customers = monthly fixed cost ÷ contribution per customer`. Do not publish a revenue forecast until observed conversion, variable cost, refunds, and repeat purchase supply the inputs. Build subscriptions only after saved research/alerts create an ongoing job; a report generator alone naturally supports one-off revenue.
+
+**Next validation:** recruit 10 founders who recently chose whether to build/invest and 5 advisors or incubator program managers who screen ideas. Ask about their last actual decision, current workaround/spend, budget owner, and missing evidence; then sell a real pilot at the relevant test price. Continue with the segment that pays, not the segment that praises the concept. Sample sizes are a practical discovery test, not a representative demand study.
+
 ## Benchmarks
 
 | Product | Offers | Still requires local validation |
