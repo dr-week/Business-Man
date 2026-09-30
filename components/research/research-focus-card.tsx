@@ -24,7 +24,7 @@ export function ResearchFocusCard({ focus, source, topic, geography }: { focus: 
       <div className={styles.heading}><strong>Start here: {item.label}</strong><small>{source === "rules" ? "Rule-based suggestion" : "LAYA suggestion · provisional"}</small></div>
       <p>{item.action}</p>
       <a href={trendsUrl(topic, geography)} target="_blank" rel="noreferrer">{comparesVariants ? "Compare phrase spellings in Google Trends" : "Check relative search interest in Google Trends"} <ExternalLink size={12} /></a>
-      <small className={styles.limit}>Search interest is a lead only; it does not establish customer demand, sales, or market size.</small>
+      <small className={styles.limit}>Trends scales sampled searches from 0–100; it is not search volume. Keep the same country and date range when comparing terms. Low-volume phrases may have no chart. Treat interest as a lead, not customer demand, sales, or market size.</small>
     </div>
   </aside>;
 }

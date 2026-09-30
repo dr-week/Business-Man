@@ -38,7 +38,7 @@ Keep inference external and optional; do not bundle the model into the app. The 
 
 - Supplied-page results are validated per requested URL. Malformed or blocked rows report their own error; valid sibling pages remain usable. Top-level responses above 200 KB or three rows are rejected.
 
-- Google Trends API is alpha/approval-gated; current UI opens a Trends exploration link only. Recognized `-maxxing` phrases compare `-maxxing`/`-maxing` spellings; relative search interest is a lead, not proof of demand or sales.
+- Google Trends API is still alpha and requires acceptance; do not call it or scrape Trends. Current UI opens a country-scoped Trends link and compares recognized `-maxxing` spellings. Trends uses sampled, normalized 0–100 interest, not search volume; compare the same country and date range. Low-volume terms may have no chart. Treat interest as a lead, not proof of demand or sales ([API access](https://developers.google.com/search/apis/trends), [data normalization](https://support.google.com/trends/answer/4365533)).
 - Places API (New) supplies nearby listing candidates when `GOOGLE_PLACES_API_KEY` is configured. Billing, attribution, field-mask pricing, and storage policies apply. Listings need verification; they are not market size.
 - Business Profile API manages locations the caller owns or is authorized to manage; it is not a general competitor lookup service.
 - Google Ads Keyword Planning can provide location-scoped search metrics for eligible accounts; search volume remains a proxy, not willingness to pay.
