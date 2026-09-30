@@ -270,6 +270,8 @@
 .saved-research-actions[open] > div a { padding:7px 9px; color:#d1b476; font-size:12px; text-decoration:none; }
 .saved-research-actions[open] > div a:hover { background:#252b20; }
 .market-software-comparison > p { color:#bbbbae; font-size:12px; line-height:1.55; }
+.market-software-comparison summary { width:fit-content; margin:4px 0 10px; color:#d1b476; font-size:12px; cursor:pointer; }
+.market-software-comparison summary:focus-visible { outline:2px solid #d1b476; outline-offset:3px; }
 .market-software-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:10px; }
 .market-software-list article { min-width:0; padding:12px; border:1px solid #35392e; border-radius:6px; }
 .market-software-list h4 { margin:0 0 8px; font-size:13px; }
