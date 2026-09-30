@@ -7,6 +7,7 @@ vi.mock("@/lib/discovery", () => ({
   collectStackOverflow: vi.fn(async () => [{ id: "so:2", provider: "Stack Overflow", title: "How to track restaurant inventory?", excerpt: "", url: "https://stackoverflow.com/questions/2", publishedAt: "2026-02-01T00:00:00.000Z", retrievedAt: "2026-09-27T00:00:00.000Z", comments: 1 }]),
 }));
 vi.mock("@/lib/collectors/brave-search", () => ({ collectBraveWebResults: vi.fn(async () => [{ title: "Market result", url: "https://example.com/market", snippet: "Candidate result" }]) }));
+import { collectSignals } from "@/lib/discovery";
 import { collectBraveWebResults } from "@/lib/collectors/brave-search";
 import { POST } from "./route";
 
@@ -25,5 +26,20 @@ describe("research route", () => {
     const cachedData = await cachedResponse.json() as { cached: boolean };
     expect(cachedData.cached).toBe(true);
     expect(collectBraveWebResults).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not qualify generic question words or location-only matches as topic evidence", async () => {
+    vi.mocked(collectSignals).mockResolvedValueOnce([
+      { id: "3", provider: "Ask HN", kind: "discussion", title: "How to sell my startup?", excerpt: "A post about selling a startup.", url: "https://news.ycombinator.com/item?id=3", publishedAt: "2026-01-01T00:00:00.000Z", retrievedAt: "2026-09-27T00:00:00.000Z" },
+      { id: "4", provider: "Ask HN", kind: "discussion", title: "Small business ideas in Goa", excerpt: "A general local discussion.", url: "https://news.ycombinator.com/item?id=4", publishedAt: "2026-01-01T00:00:00.000Z", retrievedAt: "2026-09-27T00:00:00.000Z" },
+      { id: "5", provider: "Ask HN", kind: "discussion", title: "Hotel laundry service problems", excerpt: "A buyer describes a recurring hotel laundry issue.", url: "https://news.ycombinator.com/item?id=5", publishedAt: "2026-01-01T00:00:00.000Z", retrievedAt: "2026-09-27T00:00:00.000Z" },
+    ]);
+    const response = await POST(new Request("http://localhost/api/hunt/research", {
+      method: "POST",
+      body: JSON.stringify({ topic: "What can I sell to hotels in Goa?", geography: "Goa, India", budget: 100000 }),
+    }));
+    const data = await response.json() as { opportunities: { name: string }[] };
+    expect(response.status).toBe(200);
+    expect(data.opportunities.map((item) => item.name)).toEqual(["Hotel laundry service problems"]);
   });
 });
