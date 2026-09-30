@@ -14,6 +14,7 @@ import { ResearchFocusCard } from "@/components/research/research-focus-card";
 import { SourceLedger } from "@/components/research/source-ledger";
 import { WebCandidates } from "@/components/research/web-candidates";
 import { OpportunityDetailSection } from "@/components/research/opportunity-detail-section";
+import { SavedResearchPicker, type SavedResearchSummary } from "@/components/research/saved-research-picker";
 
 import { recalculateOpportunity, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity } from "@/lib/research-engine";
 import { downloadDossierReport } from "@/lib/dossier-report";
@@ -85,6 +86,8 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
   const [input, setInput] = useState<ResearchInput | null>(null), [opportunities, setOpportunities] = useState<ResearchOpportunity[]>([]);
   const [runId, setRunId] = useState<string | null>(null);
+  const [savedRuns, setSavedRuns] = useState<SavedResearchSummary[]>([]);
+  const [loadingSavedRun, setLoadingSavedRun] = useState(false);
 
   const [selected, setSelected] = useState<string | null>(null), [compare, setCompare] = useState<string[]>([]);
   const [firstImpressions, setFirstImpressions] = useState<Record<string, FirstImpression>>({});
@@ -110,8 +113,9 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   useEffect(() => {
     let active = true;
     fetch("/api/hunt/research-runs", { cache: "no-store" })
-      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation> } }[] }> : null)
+      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation> } }[]; history?: SavedResearchSummary[] }> : null)
       .then((data) => {
+        if (active && Array.isArray(data?.history)) setSavedRuns(data.history.filter((item) => item && typeof item.id === "string" && typeof item.topic === "string" && typeof item.geography === "string" && typeof item.createdAt === "string"));
         const latest = data?.runs?.[0];
         if (!active || !latest?.input || !Array.isArray(latest.result?.opportunities)) return;
         setRunId(latest.id ?? null); setInput(latest.input); setOpportunities(latest.result.opportunities);
@@ -121,6 +125,38 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       .catch(() => { /* Local snapshot remains available when archive is unavailable. */ });
     return () => { active = false; };
   }, []);
+
+  async function openSavedResearch(id: string) {
+    if (!id || id === runId || loadingSavedRun) return;
+    setLoadingSavedRun(true); onError("");
+    try {
+      const response = await fetch(`/api/hunt/research-runs?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+      const data = await response.json() as { error?: string; run?: { id: string; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation>; providerErrors?: string[] } } };
+      const run = data.run;
+      if (!response.ok || !run?.input || !Array.isArray(run.result?.opportunities)) throw new Error(data.error ?? "Could not open saved research.");
+      const savedInput = run.input;
+      const savedOpportunities = run.result.opportunities;
+      setRunId(run.id); setInput(savedInput); setOpportunities(savedOpportunities); setTopic(savedInput.topic); setGeography(savedInput.geography);
+      setBudget(savedInput.budget == null ? "" : String(savedInput.budget)); setMinimumInvestment(String(savedInput.minimumInvestment ?? 0)); setCurrency(savedInput.currency);
+      setSourceUrls((savedInput.sourceUrls ?? []).join("\n")); setIndustry(savedInput.industry ?? ""); setBusinessModel(savedInput.businessModel ?? "");
+      setCustomer(savedInput.customer ?? ""); setDriver(savedInput.driver ?? ""); setPreparedBrief(run.result.query?.brief ?? "");
+      setInterpretation(run.result.query ?? null); setProviderErrors(run.result.providerErrors ?? []); setWebResearch([]); setWebSearchConfigured(false); setSelected(null); setCompare([]);
+      persist(savedInput, savedOpportunities, run.id); setProgress("Saved research opened");
+    } catch (error) {
+      onError((error as Error).message);
+    } finally {
+      setLoadingSavedRun(false);
+    }
+  }
+
+  async function refreshSavedRunIndex() {
+    try {
+      const response = await fetch("/api/hunt/research-runs", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json() as { history?: SavedResearchSummary[] };
+      if (Array.isArray(data.history)) setSavedRuns(data.history.filter((item) => item && typeof item.id === "string" && typeof item.topic === "string" && typeof item.geography === "string" && typeof item.createdAt === "string"));
+    } catch { /* Keep the current archive list when refresh is unavailable. */ }
+  }
 
   useEffect(() => {
     if (topic) return;
@@ -220,6 +256,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       setRunId(data.runId ?? null); setPreparedBrief(data.query?.brief ?? ""); setInterpretation(data.query ?? null); setInput(next); setOpportunities(data.opportunities); setProviderErrors(data.providerErrors); setWebResearch(data.webResearch ?? []); setWebSearchConfigured(!!data.webSearchConfigured);
 
       setSelected(null); setCompare([]); persist(next, data.opportunities, data.runId ?? null);
+      if (data.runId) void refreshSavedRunIndex();
 
       setProgress(data.opportunities.length ? data.opportunities.length + " findings grouped and qualified" : data.webResearch?.length ? data.webResearch.length + " web results ready to review; no scored leads yet" : "No findings; broaden the topic or location");
 
@@ -256,6 +293,8 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       {busy && <button className="hunt-icon-action" type="button" title="Cancel research" aria-label="Cancel research" onClick={() => abort.current?.abort()}><Square size={14} /></button>}
 
     </form>
+
+    {view === "research" && <SavedResearchPicker runs={savedRuns} selectedId={runId} loading={loadingSavedRun} onSelect={(id) => void openSavedResearch(id)} />}
 
     <div hidden={view !== "research" || !!opportunities.length} className="research-intro">
       <div className="research-mode" role="tablist" aria-label="Research goal">

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "@/db/schema";
-import { listResearchRuns, saveResearchRun } from "./research-run-store";
+import { getResearchRun, listResearchRunSummaries, listResearchRuns, saveResearchRun } from "./research-run-store";
 
 describe("research run storage", () => {
   it("loads only the latest snapshot for its owner", () => {
@@ -12,6 +12,22 @@ describe("research run storage", () => {
     expect(query.sql).toContain('order by "research_runs"."created_at" desc, "research_runs"."id" desc');
     expect(query.sql).toContain("limit ?");
     expect(query.params).toEqual(["owner-1", 1]);
+  });
+
+  it("lists a bounded archive index without loading result payloads", () => {
+    const db = drizzle({} as D1Database, { schema });
+    const query = listResearchRunSummaries(db, "owner-1").toSQL();
+    expect(query.sql).toContain('select "id", "topic", "geography", "created_at"');
+    expect(query.sql).not.toContain('"research_runs"."result"');
+    expect(query.sql).toContain('"research_runs"."owner_id" = ?');
+    expect(query.params).toEqual(["owner-1", 20]);
+  });
+
+  it("loads one archived run by owner and ID", () => {
+    const db = drizzle({} as D1Database, { schema });
+    const query = getResearchRun(db, "owner-1", "run-1").toSQL();
+    expect(query.sql).toContain('"research_runs"."owner_id" = ? and "research_runs"."id" = ?');
+    expect(query.params).toEqual(["owner-1", "run-1", 1]);
   });
 
   it("batches insertion and owner-scoped retention", async () => {
