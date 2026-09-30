@@ -9,7 +9,6 @@ import dynamic from "next/dynamic";
 import { Download, ExternalLink, Search, Square, GitCompareArrows, Star, Store, BriefcaseBusiness, FileText } from "lucide-react";
 
 import type { Lead } from "@/lib/opportunity-hunt";
-import { downloadDossierReport } from "@/lib/dossier-report";
 import { ValidationPlan } from "@/components/research/validation-plan";
 import { ValidationChecklist } from "@/components/research/validation-checklist";
 import { MarketInspection } from "@/components/research/market-inspection";
@@ -18,14 +17,16 @@ import { ResearchFocusCard } from "@/components/research/research-focus-card";
 import { SourceLedger } from "@/components/research/source-ledger";
 import { WebCandidates } from "@/components/research/web-candidates";
 import { CounterEvidence } from "@/components/research/counter-evidence";
+import { MarketingAutomationPanel } from "@/components/research/marketing-automation-panel";
 
 import { calculateFinancials, recalculateOpportunity, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity, type Provenance } from "@/lib/research-engine";
+import { downloadDossierReport } from "@/lib/dossier-report";
 import { TRENDING_PROMPTS } from "@/lib/trending-prompts";
 import type { ResearchFocus, ResearchFocusSource } from "@/lib/research-focus";
 import type { WebResearchResult } from "@/lib/collectors/brave-search";
 import { estimatePriceFromBenchmark, priceBenchmarks } from "@/lib/price-benchmarks";
 import { independentSourceCount } from "@/lib/evidence-lineage";
-import { parseFirstImpressions, recordFirstImpression, recordDecisionRationale, type FirstImpression, type ImpressionRecord } from "@/lib/first-impressions";
+import { parseFirstImpressions, recordFirstImpression, type FirstImpression } from "@/lib/first-impressions";
 
 
 
@@ -104,15 +105,10 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   const [runId, setRunId] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<string | null>(null), [compare, setCompare] = useState<string[]>([]);
-  const [firstImpressions, setFirstImpressions] = useState<Record<string, ImpressionRecord>>({});
+  const [firstImpressions, setFirstImpressions] = useState<Record<string, FirstImpression>>({});
   const setFirstImpression = (id: string, choice: FirstImpression) => setFirstImpressions((current) => {
     const next = recordFirstImpression(current, id, choice);
     try { localStorage.setItem("businessman.first-impressions.v1", JSON.stringify(next)); } catch { onError("Could not save your decision on this device."); }
-    return next;
-  });
-  const setDecisionRationale = (id: string, rationale: string) => setFirstImpressions((current) => {
-    const next = recordDecisionRationale(current, id, rationale);
-    try { localStorage.setItem("businessman.first-impressions.v1", JSON.stringify(next)); } catch { onError("Could not save your rationale on this device."); }
     return next;
   });
   useEffect(() => { try { setFirstImpressions(parseFirstImpressions(JSON.parse(localStorage.getItem("businessman.first-impressions.v1") ?? "{}"))); } catch { /* Ignore invalid local decisions. */ } }, []);
@@ -382,10 +378,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
             <button title={compare.includes(item.id) ? "Remove from comparison" : "Add to comparison"} aria-label={(compare.includes(item.id) ? "Remove " : "Compare ") + item.name} aria-pressed={compare.includes(item.id)} onClick={() => setCompare((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])}><GitCompareArrows size={15} /></button>
 
           </td>
-          <td data-label="Decision"><div className="research-first-impression" role="group" aria-label={`Decision for ${item.name}`}>{(["investigate", "watch", "pass"] as const).map((choice) => {
-            const currentChoice = firstImpressions[item.id]?.reviewedChoice ?? firstImpressions[item.id]?.initialChoice;
-            return <button key={choice} type="button" aria-pressed={currentChoice === choice} onClick={() => setFirstImpression(item.id, choice)}>{choice === "pass" ? "Pass" : choice === "watch" ? "Watch" : "Investigate"}</button>;
-          })}</div></td>
+          <td data-label="Decision"><div className="research-first-impression" role="group" aria-label={`Decision for ${item.name}`}>{(["investigate", "watch", "pass"] as const).map((choice) => <button key={choice} type="button" aria-pressed={firstImpressions[item.id] === choice} onClick={() => setFirstImpression(item.id, choice)}>{choice === "pass" ? "Pass" : choice === "watch" ? "Watch" : "Investigate"}</button>)}</div></td>
 
         </tr>)}
 
@@ -446,31 +439,10 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
         </details>}
 
         {view !== "economics" && firstImpressions[active.id] && <section className="research-decision-review" aria-label="Decision review">
-          <h3>System 1 ↔ System 2 Decision Calibration</h3>
-          <p>Initial fast impression: <strong style={{ color: "var(--gold)" }}>{firstImpressions[active.id].initialChoice}</strong> ({firstImpressions[active.id].initialRecordedAt}). Re-evaluate your choice after inspecting evidence, unit economics, risks, and missing factors:</p>
+          <h3>Review your first impression</h3>
+          <p>You marked this opportunity <strong>{firstImpressions[active.id]}</strong> before reviewing its evidence. Reconsider the choice after checking the sources, risks, and missing inputs. This is a reflection prompt, not an investment recommendation.</p>
           <div className="research-first-impression" role="group" aria-label={`Updated decision for ${active.name}`}>
-            {(["investigate", "watch", "pass"] as const).map((choice) => {
-              const currentChoice = firstImpressions[active.id].reviewedChoice ?? firstImpressions[active.id].initialChoice;
-              return <button key={choice} type="button" aria-pressed={currentChoice === choice} onClick={() => setFirstImpression(active.id, choice)}>{choice === "pass" ? "Pass" : choice === "watch" ? "Watch" : "Investigate"}</button>;
-            })}
-          </div>
-          {firstImpressions[active.id].reviewedChoice && firstImpressions[active.id].reviewedChoice !== firstImpressions[active.id].initialChoice && (
-            <div className="decision-shift-badge" style={{ marginTop: "10px", fontSize: "12px", color: "var(--gold)" }}>
-              Shifted from <em>{firstImpressions[active.id].initialChoice}</em> to <strong>{firstImpressions[active.id].reviewedChoice}</strong> on {firstImpressions[active.id].reviewedAt}
-            </div>
-          )}
-          <div style={{ marginTop: "12px" }}>
-            <label style={{ display: "grid", gap: "4px", fontSize: "11px", color: "var(--muted)" }}>
-              <span>Decision rationale (What evidence or missing data changed your view?):</span>
-              <input
-                type="text"
-                maxLength={500}
-                placeholder="e.g. Unit economics break-even requires 40 units, but local foot-traffic supports only 15."
-                value={firstImpressions[active.id].rationale ?? ""}
-                onChange={(e) => setDecisionRationale(active.id, e.target.value)}
-                style={{ padding: "8px 10px", background: "#141711", border: "1px solid #414735", borderRadius: "6px", color: "var(--cream)", fontSize: "12px" }}
-              />
-            </label>
+            {(["investigate", "watch", "pass"] as const).map((choice) => <button key={choice} type="button" aria-pressed={firstImpressions[active.id] === choice} onClick={() => setFirstImpression(active.id, choice)}>{choice === "pass" ? "Pass" : choice === "watch" ? "Watch" : "Investigate"}</button>)}
           </div>
         </section>}
 
@@ -503,6 +475,10 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
         {view !== "economics" && runId && <details className="research-module">
           <summary>Counter-evidence · test what could disprove this</summary>
           <CounterEvidence key={`${runId}:${active.id}`} runId={runId} opportunityId={active.id} />
+        </details>}
+        {view !== "economics" && <details className="research-module">
+          <summary>Marketing & Distribution Playbook · zero-ad-spend growth</summary>
+          <MarketingAutomationPanel opportunity={active} currency={input?.currency ?? currency} />
         </details>}
       </div>
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { generateExecutiveDossierMarkdown, type DossierReportMetadata } from "./dossier-report";
-import type { ResearchOpportunity } from "@/lib/research-engine";
+import { blankFinancials, type ResearchOpportunity } from "@/lib/research-engine";
 
 const sampleOpportunity: ResearchOpportunity = {
   id: "test-opp-1",
@@ -15,8 +15,6 @@ const sampleOpportunity: ResearchOpportunity = {
   risks: ["Low merchant urgency", "Payment gateway integration complexity"],
   confidence: "Medium",
   strength: 78,
-  thesis: "Indian merchants need agent-readable catalog and checkout bridges.",
-  nextTest: "Interview 10 D2C Shopify merchants in Surat and Mumbai.",
   financials: {
     contribution: 3000,
     funding: 45000,
@@ -30,7 +28,7 @@ const sampleOpportunity: ResearchOpportunity = {
     ],
   },
   claims: [],
-  assumptions: {} as any,
+  assumptions: blankFinancials({ topic: "Agent Commerce", geography: "India", budget: 100000, currency: "INR" }),
   factors: [],
   missing: [],
   sources: [
@@ -72,7 +70,7 @@ describe("dossier report generator", () => {
     expect(report).toContain("Agent Commerce Adapters");
     expect(report).toContain("Platforms");
     expect(report).toContain("78/100");
-    expect(report).toContain("Interview 10 D2C Shopify merchants");
+    expect(report).toContain("No live Indian adapter");
     expect(report).toContain("Low merchant urgency");
     expect(report).toContain("Google UCP Protocol Spec");
   });
@@ -90,12 +88,11 @@ describe("dossier report generator", () => {
       gap: null,
       risks: [],
       claims: [],
-      assumptions: {} as any,
+      assumptions: blankFinancials({ topic: "Rural Telematics Hub", geography: "India", budget: 50000, currency: "INR" }),
       factors: [],
       missing: [],
       confidence: "Low",
       strength: null,
-      thesis: "Offline GPS data aggregators for tractor fleet owners.",
       sources: [],
       financials: null,
     };

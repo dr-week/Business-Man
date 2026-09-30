@@ -60,9 +60,9 @@ export function generateExecutiveDossierMarkdown(
     const opp = items[i];
     lines.push(`#### 3.${i + 1} ${opp.name}`);
     lines.push(`- **Sector & Category:** ${opp.category}`);
-    lines.push(`- **Strategic Thesis:** ${opp.thesis ?? opp.problem ?? "Unsolved workflow with rising demand signal."}`);
-    if (opp.nextTest) {
-      lines.push(`- **Immediate Falsification Test:** *${opp.nextTest}*`);
+    lines.push(`- **Strategic Thesis:** ${opp.problem ?? "Unsolved workflow with rising demand signal."}`);
+    if (opp.gap) {
+      lines.push(`- **Market Gap / Unmet Need:** *${opp.gap}*`);
     }
 
     if (opp.financials) {
