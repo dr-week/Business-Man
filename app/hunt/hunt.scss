@@ -551,6 +551,6 @@
 .revenue-sale-row small { color:var(--muted); font-size:11px; }
 .revenue-sale-row > strong { color:var(--cream); font-variant-numeric:tabular-nums; }
 @media(max-width:850px) { .revenue-tier-grid { grid-template-columns:repeat(2, 1fr); } .revenue-metrics-summary { grid-template-columns:repeat(2, 1fr); } .revenue-input-sliders { grid-template-columns:repeat(2, 1fr); } .revenue-tier-detail-card dl { grid-template-columns:1fr; } }
-@media(max-width:550px) { .revenue-tier-grid { grid-template-columns:1fr; } .revenue-metrics-summary { grid-template-columns:1fr; } .revenue-input-sliders { grid-template-columns:1fr; } }
+@media(max-width:550px) { .revenue-tier-grid { grid-template-columns:1fr; } .revenue-metrics-summary { grid-template-columns:1fr; } .revenue-input-sliders { grid-template-columns:1fr; } .revenue-sale-row { grid-template-columns:1fr auto; } .revenue-sale-row button { grid-column:1 / -1; justify-self:start; } }
 
 
