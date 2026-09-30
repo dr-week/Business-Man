@@ -18,6 +18,19 @@ import { createBoundedCache } from "@/lib/bounded-cache";
 
 const researchGate = createResearchGate(2, 6);
 const cache = createBoundedCache<{ query: ReturnType<typeof prepareResearchQuery>; result: ReturnType<typeof analyzeResearch>; errors: string[]; webResearch: WebResearchResult[] }>(8, 1_048_576);
+
+const queryStopWords = new Set("a an and are as at be before by can could do does for from get give go how i in into is it make my of on or sell start the their them there they this to want was what when where which who why with would you your business opportunity opportunities idea ideas".split(" "));
+const normalizeWord = (word: string) => word.toLowerCase().replace(/ies$/, "y").replace(/s$/, "");
+function matchesResearchTopic(text: string, topic: string, geography: string) {
+  const locationWords = new Set(geography.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  const anchors = [...new Set(topic.toLowerCase().match(/[a-z0-9]+/g) ?? [])]
+    .filter((word) => word.length >= 2 && !queryStopWords.has(word) && !locationWords.has(word))
+    .map(normalizeWord);
+  if (!anchors.length) return false;
+  const sourceWords = new Set((text.toLowerCase().match(/[a-z0-9]+/g) ?? []).map(normalizeWord));
+  return anchors.some((word) => sourceWords.has(word));
+}
+
 export async function POST(request: Request) {
   if (isCrossOrigin(request)) return Response.json({ error: "Cross-origin request denied." }, { status: 403 });
   const owner = await ownerId();
@@ -49,10 +62,8 @@ export async function POST(request: Request) {
     collectGitHubAlternatives(query.searchTerms, request.signal).then((value) => ({ value, error: null })).catch(() => ({ value: [], error: "GitHub alternatives unavailable" })),
     collectBraveWebResults(query.searchTerms, input.geography, env.BRAVE_SEARCH_API_KEY, request.signal).then((value) => ({ value, error: null })).catch(() => ({ value: [], error: "Web search unavailable" }))]);
   if (request.signal.aborted) return Response.json({ error: "Research cancelled." }, { status: 499 });
-  const topicWords = query.searchTerms.toLowerCase().match(/[a-z0-9]{2,}/g) ?? [];
   const sources = [...web.sources, ...results.flatMap((item) => item.status === "fulfilled" ? item.value : []).filter((source) => {
-    const text = (source.title + " " + source.excerpt).toLowerCase();
-    return topicWords.some((word) => text.includes(word));
+    return matchesResearchTopic(source.title, query.searchTerms, input.geography);
   })];
   const providerErrors = results.flatMap((item, index) => item.status === "rejected" ? [(index === 0 ? "Ask HN" : "Stack Overflow") + " unavailable"] : []);
   const communitiesFailed = providerErrors.length === 2;
