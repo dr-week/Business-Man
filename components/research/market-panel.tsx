@@ -3,6 +3,7 @@ import type { LocalCompetitor } from "@/lib/collectors/places";
 import type { CensusMarketSignal } from "@/lib/collectors/census-market";
 import { MarketFootprint } from "./market-footprint";
 import { IndiaMarketContext } from "./india-market-context";
+import { MarketSoftwareComparison } from "./market-software-comparison";
 
 export function MarketPanel({ opportunity, competitors, placesConfigured, footprint }: {
   opportunity: ResearchOpportunity;
@@ -22,6 +23,7 @@ export function MarketPanel({ opportunity, competitors, placesConfigured, footpr
       {footprint && <MarketFootprint value={footprint} />}
     </section>
     {/\bindia\b/i.test(opportunity.geography) && <IndiaMarketContext />}
+    <MarketSoftwareComparison />
     <section className="research-detail-card"><h3>Alternatives</h3><dl>
       <dt>Current</dt><dd>{opportunity.alternatives.length ? opportunity.alternatives.join(", ") : "Unknown"}</dd>
       <dt>Gap</dt><dd>{opportunity.gap ?? "Unknown"}</dd>

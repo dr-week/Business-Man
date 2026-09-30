@@ -236,6 +236,14 @@
 .research-local-competition { margin:0 20px 20px; padding:18px; border:1px solid #35392e; border-radius:8px; background:#1c2118; }
 .research-local-competition > summary { cursor:pointer; font-weight:650; }
 .research-local-competition > p { color:#aaa99b; font-size:12px; margin:10px 0 0; }
+.market-software-comparison > p { color:#bbbbae; font-size:12px; line-height:1.55; }
+.market-software-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.market-software-list article { min-width:0; padding:12px; border:1px solid #35392e; border-radius:6px; }
+.market-software-list h4 { margin:0 0 8px; font-size:13px; }
+.market-software-list p { margin:6px 0; color:#bbbbae; font-size:12px; line-height:1.5; }
+.market-software-list a { color:#d1b476; font-size:12px; text-decoration:underline; }
+.market-software-comparison .market-software-hypothesis { padding:10px; background:#252a20; border-radius:6px; }
+.market-software-comparison > small { color:#aaa99b; font-size:11px; }
 .research-local-competition [translate="no"] { display:inline-block; margin-top:12px; color:#fff; font:400 12px Roboto,Arial,sans-serif; }
 .research-market-density { margin:0 20px 20px; padding:16px 18px; border:1px solid #35392e; border-radius:8px; background:#1c2118; }
 .research-market-density > summary { cursor:pointer; color:#d1b476; font-weight:650; }
@@ -316,7 +324,7 @@
 .research-compare > header p,.research-compare-hint { color:#aaa99b; font-size:12px; }
 .research-compare-clear { padding:6px 10px; border:1px solid #414735; border-radius:6px; color:#d1b476; font-size:12px; }
 @media(max-width:900px) { .research-filters > div { grid-template-columns:repeat(2,1fr); } }
-@media(max-width:650px) { .research-figures { grid-template-columns:repeat(2,minmax(0,1fr)); } .research-default-charts,.research-more-charts > div,.research-assumption-grid { grid-template-columns:1fr; } .research-bar label { flex-basis:100%; } .research-bar select { flex:1; } .research-local-competition li { grid-template-columns:1fr auto; } .research-local-competition li div { grid-column:1/-1; } }
+@media(max-width:650px) { .research-figures { grid-template-columns:repeat(2,minmax(0,1fr)); } .research-default-charts,.research-more-charts > div,.research-assumption-grid,.market-software-list { grid-template-columns:1fr; } .research-bar label { flex-basis:100%; } .research-bar select { flex:1; } .research-local-competition li { grid-template-columns:1fr auto; } .research-local-competition li div { grid-column:1/-1; } }
 @media(max-width:650px) { .research-figures-analysis,.research-figures-economics { grid-template-columns:1fr; } }
 @media(max-width:600px) { .research-decision-strip { grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; padding:8px; } .research-decision-strip > div { padding:6px; } .research-decision-strip span { font-size:10px; } .research-decision-strip strong { font-size:17px; } }
 
