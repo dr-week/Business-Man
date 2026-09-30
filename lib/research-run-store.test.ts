@@ -1,9 +1,36 @@
 import { describe, expect, it, vi } from "vitest";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "@/db/schema";
-import { listResearchRuns, saveResearchRun } from "./research-run-store";
+import { listResearchRuns, parseResearchBackup, saveResearchRun } from "./research-run-store";
 
 describe("research run storage", () => {
+  it("imports a supported backup as a new owner-scoped snapshot", () => {
+    const row = parseResearchBackup({
+      format: "businessman-research-run", formatVersion: 1,
+      run: {
+        id: "old-run", ownerId: "old-owner", schemaVersion: 1,
+        topic: "Cafe demand", geography: "Goa, India", currency: "INR", createdAt: "2026-09-20T10:00:00.000Z",
+        input: { topic: "Cafe demand", geography: "Goa, India", currency: "INR", budget: null },
+        result: { opportunities: [] },
+      },
+    }, "new-owner");
+
+    expect(row.id).not.toBe("old-run");
+    expect(row.ownerId).toBe("new-owner");
+    expect(row.topic).toBe("Cafe demand");
+  });
+
+  it("rejects backups whose metadata conflicts with the validated input", () => {
+    expect(() => parseResearchBackup({
+      format: "businessman-research-run", formatVersion: 1,
+      run: {
+        schemaVersion: 1, topic: "Cafe demand", geography: "Goa, India", currency: "INR", createdAt: "2026-09-20T10:00:00.000Z",
+        input: { topic: "Bakery demand", geography: "Goa, India", currency: "INR", budget: null },
+        result: { opportunities: [] },
+      },
+    }, "owner-1")).toThrow("Backup metadata does not match");
+  });
+
   it("loads only the latest snapshot for its owner", () => {
     const db = drizzle({} as D1Database, { schema });
     const query = listResearchRuns(db, "owner-1").toSQL();

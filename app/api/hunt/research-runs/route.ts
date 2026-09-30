@@ -1,7 +1,28 @@
 import { getDb } from "@/db";
-import { apiError, ownerId } from "@/lib/hunt-api";
-import { getLatestResearchRun, getResearchRun, listResearchRuns, RESEARCH_RUN_SCHEMA_VERSION } from "@/lib/research-run-store";
+import { apiError, isCrossOrigin, ownerId } from "@/lib/hunt-api";
+import { getLatestResearchRun, getResearchRun, listResearchRuns, parseResearchBackup, RESEARCH_RUN_SCHEMA_VERSION, saveResearchRun } from "@/lib/research-run-store";
+import { readLimitedJson } from "@/lib/read-limited-json";
 import { z } from "zod";
+
+export async function POST(request: Request) {
+  if (isCrossOrigin(request)) return Response.json({ error: "Cross-origin request denied." }, { status: 403 });
+  const owner = await ownerId();
+  if (!owner) return Response.json({ error: "Sign in to import saved research." }, { status: 401 });
+  try {
+    const value = await readLimitedJson(request, 1_900_000);
+    const run = parseResearchBackup(value, owner);
+    await saveResearchRun(getDb(), run);
+    return Response.json({ id: run.id }, { status: 201, headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    if (error instanceof SyntaxError || (error instanceof Error && (error.message.includes("too large") || error.message.includes("Empty response")))) {
+      return Response.json({ error: "Backup is invalid or exceeds the 1.9 MB limit." }, { status: 400 });
+    }
+    if (error instanceof Error && (error.message.startsWith("Backup ") || error.message.startsWith("Backup metadata"))) {
+      return Response.json({ error: error.message }, { status: 400 });
+    }
+    return apiError(error);
+  }
+}
 
 export async function GET(request: Request) {
   const owner = await ownerId();

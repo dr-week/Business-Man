@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import dynamic from "next/dynamic";
 
-import { Download, ExternalLink, Search, Square, GitCompareArrows, Star, Store, BriefcaseBusiness, FileText } from "lucide-react";
+import { Download, ExternalLink, Search, Square, GitCompareArrows, Star, Store, BriefcaseBusiness, FileText, Upload } from "lucide-react";
 
 import type { Lead } from "@/lib/opportunity-hunt";
 import { ResearchFocusCard } from "@/components/research/research-focus-card";
@@ -57,6 +57,7 @@ function exportCsv(items: ResearchOpportunity[], currency: string) {
 export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError, initialTopic, onOpenAnalysis, onOpenResearch = () => {} }: { view?: "research" | "analysis" | "economics" | "market" | "sources" | "starred" | "settings" | "profile"; onSaved: (lead: Lead) => void; onError: (message: string) => void; initialTopic?: string; onOpenAnalysis?: () => void; onOpenResearch?: () => void }) {
 
   const [savedRuns, setSavedRuns] = useState<{ id: string; schemaVersion: number; topic: string; geography: string; currency: string; createdAt: string }[]>([]);
+  const [importingBackup, setImportingBackup] = useState(false);
   const [restoringRun, setRestoringRun] = useState("");
 
   const abort = useRef<AbortController | null>(null);
@@ -151,6 +152,30 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       onError("");
     } catch (error) { onError(error instanceof Error ? error.message : "Could not restore saved research."); }
     finally { setRestoringRun(""); }
+  }
+
+  async function importResearchBackup(file: File | undefined) {
+    if (!file) return;
+    setImportingBackup(true);
+    try {
+      if (file.size > 1_900_000) throw new Error("Backup exceeds the 1.9 MB limit.");
+      const backup: unknown = JSON.parse(await file.text());
+      const response = await fetch("/api/hunt/research-runs", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(backup),
+      });
+      const body: unknown = await response.json();
+      if (!response.ok || typeof body !== "object" || body === null || !("id" in body) || typeof body.id !== "string") {
+        throw new Error(typeof body === "object" && body !== null && "error" in body && typeof body.error === "string" ? body.error : "Could not import this backup.");
+      }
+      const history = await fetch("/api/hunt/research-runs?list=1", { cache: "no-store" });
+      if (history.ok) {
+        const data: unknown = await history.json();
+        if (typeof data === "object" && data !== null && "runs" in data && Array.isArray(data.runs)) setSavedRuns(data.runs as typeof savedRuns);
+      }
+      await restoreSavedRun(body.id);
+    } catch (error) {
+      onError(error instanceof Error ? error.message : "Could not import this backup.");
+    } finally { setImportingBackup(false); }
   }
 
   async function refreshSavedRun(id: string) {
@@ -313,6 +338,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
     <details hidden={view !== "research" && view !== "analysis"} className="saved-research-history">
       <summary>Saved research ({savedRuns.length})</summary>
+      <label className="saved-research-import"><Upload size={15} />{importingBackup ? "Importing backup…" : "Import backup"}<input type="file" accept="application/json,.json" disabled={importingBackup || busy} onChange={(event) => { void importResearchBackup(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} /></label>
       {savedRuns.length ? <ul>{savedRuns.map((saved) => <li key={saved.id}>
         <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small></span>
         <button type="button" disabled={!!restoringRun || busy || saved.schemaVersion !== 1} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === 1 ? "Restore" : "Update needed"}</button>

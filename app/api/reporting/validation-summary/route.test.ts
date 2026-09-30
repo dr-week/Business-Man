@@ -35,7 +35,7 @@ describe("validation reporting aggregates", () => {
 
   it("counts paid-pilot statuses separately from repeat purchases while summing both payments", async () => {
     const response = await GET();
-    const report = await response.json();
+    const report = await response.json() as { buyerValidation: Record<string, unknown>; businessmanPaymentRecords: unknown[] };
 
     expect(response.status).toBe(200);
     expect(report.buyerValidation).toMatchObject({

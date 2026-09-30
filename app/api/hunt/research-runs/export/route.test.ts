@@ -50,7 +50,7 @@ describe("saved research backup endpoint", () => {
   it("downloads one supported snapshot without exposing its owner id", async () => {
     mocks.getResearchRun.mockResolvedValue([run]);
     const response = await GET(new Request(`https://app.test/api/hunt/research-runs/export?id=${run.id}`));
-    const body = await response.json();
+    const body = await response.json() as { run: Record<string, unknown> };
 
     expect(mocks.getResearchRun).toHaveBeenCalledWith({ database: true }, "owner-1", run.id);
     expect(response.status).toBe(200);
