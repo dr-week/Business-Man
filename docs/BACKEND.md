@@ -11,7 +11,7 @@
 | `lib/research-engine.ts` | Input schema, grouping, scoring |
 | `lib/validation-plan.ts`, `components/research/validation-plan.tsx` | One prioritized evidence action; remaining questions collapsed |
 | `lib/economics.ts` | Scenario calculations |
-| `lib/revenue-system.ts`, `components/research/revenue-system-workbench.tsx` | Product revenue model, payer segmentation, price bands, unit contribution, and break-even explorer |
+| `lib/revenue-system.ts`, `components/research/revenue-system-workbench.tsx` | Product revenue model, payer segmentation, price benchmarks, variable cost, and break-even simulator |
 | `lib/investment-risks.ts` | Budget and downside flags from explicit inputs |
 | `app/api/hunt/leads/` | Authenticated owner-scoped dossiers/evidence |
 | `db/schema.ts`, `drizzle/` | D1 schema/migrations |
