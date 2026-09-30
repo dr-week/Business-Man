@@ -6,13 +6,29 @@
 
 import { NextResponse } from 'next/server';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { readLimitedJson } from '@/lib/read-limited-json';
+import { z } from 'zod';
+
+const reportInput = z.object({
+  title: z.string().trim().min(1).max(120),
+  sections: z.array(z.object({
+    heading: z.string().trim().min(1).max(200),
+    content: z.string().max(12_000),
+  }).strict()).min(1).max(100),
+}).strict();
 
 export async function POST(request: Request) {
   try {
-    const { title, sections } = await request.json();
-    if (!title || !Array.isArray(sections)) {
+    let body: unknown;
+    try { body = await readLimitedJson(request, 512_000); }
+    catch {
+      return NextResponse.json({ error: 'Invalid or oversized report payload' }, { status: 400 });
+    }
+    const parsed = reportInput.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
+    const { title, sections } = parsed.data;
 
     const pdfDoc = await PDFDocument.create();
     const timesRoman = await pdfDoc.embedFont(StandardFonts.TimesRoman);
@@ -48,9 +64,9 @@ export async function POST(request: Request) {
       y -= headingFontSize + 6;
 
       // Content (wrap manually)
-      const words = sec.content.split(' ');
       let line = '';
-      for (const word of words) {
+      for (const match of sec.content.matchAll(/\S+/g)) {
+        const word = match[0];
         const testLine = line + (line ? ' ' : '') + word;
         const textWidth = timesRoman.widthOfTextAtSize(testLine, contentFontSize);
         if (textWidth > width - 2 * margin) {
