@@ -8,10 +8,20 @@ Reviewed 2026-09-30. Feature patterns inform modules; proprietary UI, content, a
 | --- | --- | --- |
 | [Similarweb](https://www.similarweb.com/corp/web/market-intelligence/) | Market sizing, demand trends, competitors, audience/geography, custom views, alerts, and digital benchmarks; individual Competitive Intelligence lists $125/month billed annually or $199 monthly, business pricing is custom | Offline demand, buyer commitments, startup costs, and unit economics |
 | [Crunchbase Pro](https://about.crunchbase.com/products/crunchbase-pro) | Private-company/funding data, saved lists, change alerts, notes/tags, workflow boards, and up to 2K-row monthly export; current product page does not list a price | Informal/local businesses, customer proof, and operating costs |
+| [IdeaProof](https://ideaproof.io/pricing) / [RoastIdea](https://www.roastidea.com/pricing) | Self-serve, one-time idea reports: IdeaProof €19.99–€99.99 credit bundles; RoastIdea $9.99 validation / $19.99 deeper reports | Product pages disclose offers, not transaction volume, retention, or validated customer outcomes |
 | [IBISWorld](https://help.ibisworld.com/en/articles/8149882-industry-reports) | Industry definition, size, outlook/forecasts, risks, regulation, major players, and key statistics | Site-level feasibility and venture-specific sales |
 | [FRANdata](https://frandata.com/about-us/) | Franchise research, FDD data, and benchmarks | Current verified profitability for a particular franchise unit |
 
 Users: founders/operators, business-development teams, investors, franchise buyers, and analysts. Shared job: decide what to investigate, test, or fund. Search interest, listings, reports, and discussion are signals—not proof of sales.
+
+## Buyer and channel hypotheses
+
+- **Solo founders/builders:** frequent idea screening; low-budget and often DIY. One-time reports around $10–€20 are visible market price anchors, not proof of purchases.
+- **Consultants/advisors/accelerators:** repeat research across clients could support recurring or team pricing; no direct willingness-to-pay evidence collected yet.
+- **Small-business/franchise buyers:** costly location and investment decisions create stronger potential value, but require local, sourced economics beyond idea-generation reports.
+- **Investors:** higher potential contract value, with a higher bar for data coverage and reliability; not yet validated as target buyers.
+
+Forum discussions are small, self-selected samples. Respondents question generic AI-only reports and value interviews, actual buyer behavior, and evidence that reduces a consequential risk. Test with interviews plus a paid pilot/deposit; do not treat votes, stated intent, or competitor list prices as market size or sales proof. Self-serve checkout/community content fits low-ticket reports; advisors may be a route to repeat B2B use. Both channels remain unvalidated.
 
 ## “Business maxxxing”
 
