@@ -12,7 +12,7 @@ export async function GET() {
 
   try {
     const db = getDb();
-    const [runCount, outcomeRows, evidenceRows, leadStatuses, paymentRows, productPayments] = await Promise.all([
+    const [runCount, outcomeRows, evidenceRows, leadStatuses, paymentRows, productPayments] = await db.batch([
       db.select({ total: count() }).from(researchRuns).where(eq(researchRuns.ownerId, owner)),
       db.select({ key: researchChecks.outcome, total: count() }).from(researchChecks)
         .where(eq(researchChecks.ownerId, owner)).groupBy(researchChecks.outcome),
