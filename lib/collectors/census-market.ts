@@ -18,7 +18,7 @@ const sectors: Record<string, { naics: string; label: string }> = {
 const apiRows = z.array(z.array(z.string().max(160)).max(10)).max(20);
 export type CensusMarketSignal = {
   status: "available" | "not_configured" | "unsupported_geography" | "unclassified_industry" | "unavailable";
-  establishments: number | null; industry: string; geography: string; year: number;
+  establishments: number | null; industry: string; geography: string; year: number | null;
   retrievedAt: string; sourceUrl: string; geographyLevel: "state" | "zip" | null; naicsCode: string | null;
 };
 const sourceUrl = "https://www.census.gov/data/developers/data-sets/cbp-zbp/cbp-api.html";
@@ -40,7 +40,7 @@ export async function collectCensusMarket(input: { geography: string; industry: 
   const sector = sectors[industry];
   const naicsCode = zip ? "00" : sector?.naics ?? null;
   const result = (status: CensusMarketSignal["status"], establishments: number | null = null, label = input.industry, geography = input.geography): CensusMarketSignal => ({
-    status, establishments, industry: label, geography, year: 2023, retrievedAt: new Date().toISOString(), sourceUrl,
+    status, establishments, industry: label, geography, year: status === "available" ? 2023 : null, retrievedAt: new Date().toISOString(), sourceUrl,
     geographyLevel: zip ? "zip" : state ? "state" : null, naicsCode,
   });
   if (!zip && !state) return result("unsupported_geography");

@@ -12,9 +12,9 @@ describe("Census market footprint", () => {
   });
   it("leaves missing keys and unsupported regions unavailable without network calls", async () => {
     const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher);
-    expect((await collectCensusMarket({ geography: "Austin, Texas", industry: "Food" })).status).toBe("not_configured");
-    expect((await collectCensusMarket({ geography: "Goa, India", industry: "Food", key: "test" })).status).toBe("unsupported_geography");
-    expect((await collectCensusMarket({ geography: "Goa, India", industry: "Food" })).status).toBe("unsupported_geography");
+    expect(await collectCensusMarket({ geography: "Austin, Texas", industry: "Food" })).toMatchObject({ status: "not_configured", year: null });
+    expect(await collectCensusMarket({ geography: "Goa, India", industry: "Food", key: "test" })).toMatchObject({ status: "unsupported_geography", year: null });
+    expect(await collectCensusMarket({ geography: "Goa, India", industry: "Food" })).toMatchObject({ status: "unsupported_geography", year: null });
     expect(fetcher).not.toHaveBeenCalled();
   });
   it("returns an attributed employer count with dataset year and broad sector label", async () => {
@@ -41,5 +41,10 @@ describe("Census market footprint", () => {
     vi.stubGlobal("fetch", vi.fn(async () => Response.json([["ESTAB", "NAICS2017_LABEL", "NAME"], ["-", "Retail trade", "Texas"]])));
     const result = await collectCensusMarket({ geography: "Texas", industry: "Retail", key: "test" });
     expect(result).toMatchObject({ status: "available", establishments: null });
+  });
+  it("does not attach an observation year when the census fetch fails", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 503 })));
+    await expect(collectCensusMarket({ geography: "Texas", industry: "Retail", key: "test" }))
+      .resolves.toMatchObject({ status: "unavailable", year: null });
   });
 });
