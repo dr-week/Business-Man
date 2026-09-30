@@ -4,7 +4,7 @@ import {
   createDefaultBountyFromOpportunity,
   type ResearchContribution,
 } from "./research-collaboration";
-import type { ResearchOpportunity } from "./research-engine";
+import { blankFinancials, type ResearchOpportunity } from "./research-engine";
 
 describe("research-collaboration", () => {
   it("creates a bounty from an opportunity risk or gap", () => {
@@ -23,7 +23,7 @@ describe("research-collaboration", () => {
       strength: 80,
       financials: null,
       claims: [],
-      assumptions: {} as any,
+      assumptions: blankFinancials({ topic: "Solar Robot", geography: "India", budget: 150000, currency: "INR" }),
       factors: [],
       missing: [],
       sources: [],

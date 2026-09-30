@@ -19,6 +19,7 @@ import { WebCandidates } from "@/components/research/web-candidates";
 import { CounterEvidence } from "@/components/research/counter-evidence";
 import { MarketingAutomationPanel } from "@/components/research/marketing-automation-panel";
 import { ResearchCollaborationPanel } from "@/components/research/research-collaboration-panel";
+import { System1TriageBadge, System1TriagePanel } from "@/components/research/system1-triage-panel";
 
 import { calculateFinancials, recalculateOpportunity, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity, type Provenance } from "@/lib/research-engine";
 import { downloadDossierReport } from "@/lib/dossier-report";
@@ -398,7 +399,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
     {(view === "analysis" || view === "economics" || !onOpenAnalysis) && active && input && <article className="research-analysis" aria-label="Selected business analysis">
 
-      <header><div><small>{active.geography}</small><h2>{active.name}</h2></div><button className="hunt-icon-action" title="Export selected finding" aria-label="Export selected finding" onClick={() => exportCsv([active], input.currency)}><Download size={16} /></button></header>
+      <header><div><small>{active.geography}</small><div style={{ display: "flex", alignItems: "center", gap: "10px" }}><h2>{active.name}</h2><System1TriageBadge opportunity={active} /></div></div><button className="hunt-icon-action" title="Export selected finding" aria-label="Export selected finding" onClick={() => exportCsv([active], input.currency)}><Download size={16} /></button></header>
 
       <div className={`research-figures${view === "economics" ? " research-figures-economics" : view === "analysis" ? " research-figures-analysis" : ""}`}>
         {(view !== "economics") && <Figure label="Strength" value={active.strength == null ? "Unrated" : active.strength + " / 100"} detail={active.factors.map((factor) => factor.name + ": " + (factor.score ?? "Unknown") + "/10").join(" · ")} />}
@@ -406,6 +407,8 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
         <Figure label="Base monthly profit" value={money(active.financials?.scenarios[1].profit, input.currency)} detail="(Price − variable cost) × base monthly volume − monthly fixed cost." />
         <Figure label="Break-even" value={active.financials ? active.financials.breakEven == null ? "Not achievable" : active.financials.breakEven + " " + active.assumptions.unit + "s / month" : "Unknown"} detail="Fixed cost ÷ contribution per unit, rounded up." /></>}
       </div>
+
+      {view !== "economics" && <System1TriagePanel opportunity={active} />}
 
       <div className="research-detail-modules">
         {(view !== "economics") && <details className="research-module" open>

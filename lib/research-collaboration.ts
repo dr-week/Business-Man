@@ -110,3 +110,20 @@ export function createDefaultBountyFromOpportunity(
     createdAt: new Date().toISOString(),
   };
 }
+
+/**
+ * Calculates platform split and payouts for peer-verified research bounties.
+ * Platform retains a 15% verification escrow fee, paying 85% to the verified contributor.
+ */
+export function calculateBountySplit(rewardAmount: number): {
+  contributorPayout: number;
+  platformEscrowFee: number;
+} {
+  const safeReward = Math.max(0, Math.floor(rewardAmount));
+  const platformEscrowFee = Math.round(safeReward * 0.15);
+  const contributorPayout = safeReward - platformEscrowFee;
+  return {
+    contributorPayout,
+    platformEscrowFee,
+  };
+}

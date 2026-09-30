@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Users, Award, ShieldAlert, CheckCircle, PlusCircle, ExternalLink } from "lucide-react";
+import { Users, Award, ShieldAlert, CheckCircle, PlusCircle } from "lucide-react";
 import {
   type ResearchContribution,
   type ResearchBounty,
+  type ContributorRole,
+  type ContributionVerdict,
+  type EvidenceType,
   createDefaultBountyFromOpportunity,
   calculateCommunityReputationImpact,
 } from "@/lib/research-collaboration";
@@ -110,8 +113,15 @@ export function ResearchCollaborationPanel({
 
       {/* Target Falsification Callout */}
       <div style={{ padding: "10px 12px", background: "#192015", border: "1px solid #37422a", borderRadius: "6px", fontSize: "12px", color: "#ddd8c8", marginBottom: "14px" }}>
-        <strong style={{ color: "var(--gold)" }}>Falsification Target: </strong>
-        <span>"{bounty.falsificationTarget}"</span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", flexWrap: "wrap" }}>
+          <div>
+            <strong style={{ color: "var(--gold)" }}>Falsification Target: </strong>
+            <span>"{bounty.falsificationTarget}"</span>
+          </div>
+          <div style={{ fontSize: "11px", color: "var(--gold)", background: "#10140e", padding: "2px 8px", borderRadius: "4px", border: "1px solid #2e3626" }}>
+            Payout: {bounty.currency} {calculateBountySplit(bounty.rewardAmount).contributorPayout.toLocaleString("en-IN")} · Escrow Fee (15%): {bounty.currency} {calculateBountySplit(bounty.rewardAmount).platformEscrowFee.toLocaleString("en-IN")}
+          </div>
+        </div>
         <div style={{ fontSize: "11px", color: "#8a957d", marginTop: "4px" }}>
           Submit verified local pricing, supplier alternatives, or customer refusal data to claim attribution & verification bounties.
         </div>
@@ -129,7 +139,7 @@ export function ResearchCollaborationPanel({
           />
           <select
             value={newRole}
-            onChange={(e) => setNewRole(e.target.value as any)}
+            onChange={(e) => setNewRole(e.target.value as ContributorRole)}
             style={{ padding: "6px 10px", background: "#171c13", border: "1px solid #333d28", borderRadius: "4px", color: "#eee", fontSize: "12px" }}
           >
             <option value="local_operator">Local Operator</option>
@@ -139,7 +149,7 @@ export function ResearchCollaborationPanel({
           </select>
           <select
             value={newVerdict}
-            onChange={(e) => setNewVerdict(e.target.value as any)}
+            onChange={(e) => setNewVerdict(e.target.value as ContributionVerdict)}
             style={{ padding: "6px 10px", background: "#171c13", border: "1px solid #333d28", borderRadius: "4px", color: newVerdict === "disconfirms" ? "#f87171" : newVerdict === "confirms" ? "#4ade80" : "#facc15", fontSize: "12px" }}
           >
             <option value="disconfirms">Disconfirms Opportunity (-22 pts)</option>
@@ -148,7 +158,7 @@ export function ResearchCollaborationPanel({
           </select>
           <select
             value={newEvidenceType}
-            onChange={(e) => setNewEvidenceType(e.target.value as any)}
+            onChange={(e) => setNewEvidenceType(e.target.value as EvidenceType)}
             style={{ padding: "6px 10px", background: "#171c13", border: "1px solid #333d28", borderRadius: "4px", color: "#eee", fontSize: "12px" }}
           >
             <option value="counter_pricing">Pricing Check</option>
