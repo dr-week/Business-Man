@@ -42,7 +42,7 @@ export async function GET() {
       checks: { total: Object.values(outcomes).reduce((sum, value) => sum + value, 0), outcomes, evidenceKinds },
       buyerValidation: {
         pilotOffers: statuses.pilot_offered,
-        paidPilotRecords: paymentRows.reduce((total, row) => total + row.records, 0),
+        paidPilotRecords: statuses.paid_pilot,
         repeatPurchases: statuses.repeat_purchase,
         recordedAmountsByCurrency: paymentRows.map((row) => ({ currency: row.currency, amount: Number(row.amount ?? 0) })),
       },
