@@ -2,7 +2,7 @@
 
 ## Pipeline
 
-`POST /api/hunt/research` validates topic, geography, capital and filters; runs bounded providers; groups duplicate sources; extracts claims; estimates economics; ranks only when required factors have evidence. Provider output is not proof of paid demand. A completed run is archived to D1 with owner, original inputs, query interpretation, results, errors and timestamp. Keep 20 snapshots per owner; `GET /api/hunt/research-runs` loads the latest.
+`POST /api/hunt/research` validates topic, geography, capital and filters; runs bounded providers; groups duplicate sources; extracts claims; estimates economics; ranks only when required factors have evidence. Provider output is not proof of paid demand. A completed run is archived to D1 with owner, original inputs, query interpretation, results, errors and timestamp. Keep 20 snapshots per owner; `GET /api/hunt/research-runs` returns a lightweight history index and latest snapshot, while `?id=<run-id>` loads one owner-scoped result.
 
 `lib/economics.ts` reports arithmetic break-even thresholds for price, variable cost, fixed cost, and units. The Economics view keeps them collapsed and labels them as targets, not forecasts. Users must verify inputs with dated buyer and supplier evidence.
 
