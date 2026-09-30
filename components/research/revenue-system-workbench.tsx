@@ -13,6 +13,7 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
     currency === "USD" ? DEFAULT_GLOBAL_REVENUE_CONFIG : DEFAULT_INDIA_REVENUE_CONFIG
   );
   const [selectedTierId, setSelectedTierId] = useState<string>("decision_brief");
+  const [assumptions, setAssumptions] = useState(true);
 
   const metrics = calculateRevenueSystem(config);
   const isINR = config.currency === "INR";
@@ -73,6 +74,16 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
           </button>
         </div>
       </header>
+
+      <details className="revenue-sensitivity-module" open={assumptions} onToggle={(event) => setAssumptions(event.currentTarget.open)}>
+        <summary>Who pays, how we sell, and what still needs proof</summary>
+        <div className="revenue-sensitivity-content">
+          <p className="revenue-math-note">India is a plausible first market: digital business tools are spreading, while advanced analytics adoption still faces cost, skills, and trust barriers. Start with founders screening a consequential business idea; sell sourced decision briefs online, then test cohort plans with incubators and advisors. The open-source app earns through hosted convenience, paid research capacity, and human-verified field work—not secrecy of the code.</p>
+          <p className="revenue-math-note"><strong>Different:</strong> tie each recommendation to dated sources, show local assumptions and unknowns, then give the buyer a specific validation action. Similarweb sells ongoing digital competitor intelligence; DimeADozen sells one-off sourced idea reports. Their public prices prove available price anchors, not our demand. A report is a one-time purchase; only team workflows and refreshed research justify subscriptions.</p>
+          <p className="revenue-math-note"><strong>License:</strong> choose a license deliberately before public distribution. AGPL keeps network-served modifications open; a commercial license can separately sell proprietary hosted integrations or support only if you own or have rights to all included code. Licensing cannot prevent someone copying code already licensed to them; it sets conditions for compliant use.</p>
+          <p className="revenue-math-note"><strong>Proof before forecast:</strong> model values below are editable scenarios, not observed demand. Ask 10 founders and 5 incubator/advisor buyers about a recent decision and current spend; offer an actual paid pilot. Count paid orders, refunds, variable research cost, repeat purchase, and partner renewals before treating any price or volume as validated.</p>
+        </div>
+      </details>
 
       {/* Tier selector tabs */}
       <div className="revenue-tier-grid" role="tablist" aria-label="Monetization Tiers">

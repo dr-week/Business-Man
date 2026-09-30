@@ -1,4 +1,8 @@
+// Refactored System‑1 decision engine using helper utilities to eliminate duplicated signal/fatal‑flaw/instant‑moat logic.
+
 import { type ResearchOpportunity } from "./research-engine";
+import { System1Signal, System1Verdict } from "./system1-decision-engine"; // Types remain exported for external use
+import { addFatalFlawSignal, addInstantMoatSignal } from "./decisionEngineHelpers";
 
 export type System1Verdict = "go_fast" | "pause_investigate" | "hard_pass";
 
@@ -12,7 +16,8 @@ export interface System1Signal {
 export interface System1Evaluation {
   opportunityId: string;
   quickVerdict: System1Verdict;
-  confidenceScore: number; // 0 - 100
+  evidenceCoveragePercent: number;
+  missingEvidence: string[];
   speedToDecisionSeconds: number;
   fatalFlaws: string[];
   instantMoats: string[];
@@ -21,116 +26,116 @@ export interface System1Evaluation {
 }
 
 /**
- * Evaluates an opportunity using fast System-1 (LAYA) heuristics:
- * 1. Fatal Flaw Check (Pass instantly): Negative unit contribution, no buyer identified, active severe regulatory hurdle.
- * 2. Unfair Advantage Check (Investigate fast): High recurring margin, official government mandate/subsidy, zero local Indian alternative under budget.
- * 3. Deliberation Signal: Medium margin, ambiguous buyer, or conflicting evidence.
+ * Evaluates an opportunity using fast System‑1 (LAYA) heuristics.
+ * The logic mirrors the original implementation but now delegates repeated
+ * push operations to the helper utilities defined in `decisionEngineHelpers`.
  */
 export function evaluateSystem1Heuristics(opportunity: ResearchOpportunity): System1Evaluation {
   const fatalFlaws: string[] = [];
   const instantMoats: string[] = [];
   const signals: System1Signal[] = [];
 
-  // Check 1: Unit Economics / Contribution Margin
+  // ---- 1️⃣ Unit Economics / Contribution Margin ----
   if (opportunity.financials) {
     if (opportunity.financials.contribution <= 0) {
-      fatalFlaws.push("Negative or zero unit contribution margin (selling at a loss per customer).");
-      signals.push({
+      addFatalFlawSignal(fatalFlaws, signals, {
         ruleName: "Unit Margin Viability",
-        verdict: "hard_pass",
         weight: 35,
         triggerReason: "Selling price is lower than or equal to variable cost per unit.",
+        message: "Negative or zero unit contribution margin (selling at a loss per customer).",
       });
     } else if (opportunity.financials.scenarios[1]?.margin && opportunity.financials.scenarios[1].margin >= 50) {
-      instantMoats.push(`High base operating margin (${opportunity.financials.scenarios[1].margin.toFixed(0)}%).`);
-      signals.push({
+      const msg = `High base operating margin (${opportunity.financials.scenarios[1].margin.toFixed(0)}%).`;
+      addInstantMoatSignal(instantMoats, signals, {
         ruleName: "High Margin Moat",
-        verdict: "go_fast",
         weight: 25,
         triggerReason: `Base scenario indicates >50% operating margin (${opportunity.financials.scenarios[1].margin.toFixed(0)}%).`,
+        message: msg,
       });
     }
   }
 
-  // Check 2: Payback Period Speed
+  // ---- 2️⃣ Payback Period Speed ----
   if (opportunity.financials?.paybackMonth) {
     if (opportunity.financials.paybackMonth <= 6) {
-      instantMoats.push(`Rapid payback period (${opportunity.financials.paybackMonth} months).`);
-      signals.push({
+      const msg = `Rapid payback period (${opportunity.financials.paybackMonth} months).`;
+      addInstantMoatSignal(instantMoats, signals, {
         ruleName: "Rapid Capital Recovery",
-        verdict: "go_fast",
         weight: 20,
         triggerReason: `Payback is under 6 months (${opportunity.financials.paybackMonth} mos), minimizing capital risk.`,
+        message: msg,
       });
     } else if (opportunity.financials.paybackMonth > 24) {
-      fatalFlaws.push(`Long capital lockup (${opportunity.financials.paybackMonth} months payback).`);
-      signals.push({
+      const msg = `Long capital lockup (${opportunity.financials.paybackMonth} months payback).`;
+      addFatalFlawSignal(fatalFlaws, signals, {
         ruleName: "Capital Lockup",
-        verdict: "pause_investigate",
         weight: 15,
         triggerReason: `Payback exceeds 24 months, high risk of cash depletion before profitability.`,
+        message: msg,
       });
     }
   }
 
-  // Check 3: Buyer Specificity
+  // ---- 3️⃣ Buyer Specificity ----
   if (!opportunity.buyer || opportunity.buyer.toLowerCase().includes("everyone") || opportunity.buyer.toLowerCase().includes("consumers")) {
-    fatalFlaws.push("Vague or missing target buyer persona.");
-    signals.push({
+    const msg = "Vague or missing target buyer persona.";
+    addFatalFlawSignal(fatalFlaws, signals, {
       ruleName: "Buyer Persona Specificity",
-      verdict: "pause_investigate",
       weight: 20,
       triggerReason: "Target customer is generic or unspecialized, indicating weak ICP definition.",
+      message: msg,
     });
   } else if (opportunity.buyer.length > 10) {
-    instantMoats.push(`Niche B2B buyer defined: "${opportunity.buyer}".`);
-    signals.push({
+    const msg = `Niche B2B buyer defined: "${opportunity.buyer}".`;
+    addInstantMoatSignal(instantMoats, signals, {
       ruleName: "Qualified ICP",
-      verdict: "go_fast",
       weight: 15,
       triggerReason: `Specific B2B buyer profile identified.`,
+      message: msg,
     });
   }
 
-  // Check 4: Contradicting Claims / Negative Research
+  // ---- 4️⃣ Contradicting Claims / Negative Research ----
   const contradictingClaims = opportunity.claims?.filter((c) => c.direction === "contradicts") || [];
   if (contradictingClaims.length >= 2) {
-    fatalFlaws.push(`${contradictingClaims.length} active contradicting claims discovered in primary research.`);
-    signals.push({
+    const msg = `${contradictingClaims.length} active contradicting claims discovered in primary research.`;
+    addFatalFlawSignal(fatalFlaws, signals, {
       ruleName: "Negative Research Consensus",
-      verdict: "hard_pass",
       weight: 30,
       triggerReason: `Multiple direct contradicting evidence points exist in source literature.`,
+      message: msg,
     });
   }
 
-  // Check 5: Gap Clarity
+  // ---- 5️⃣ Gap Clarity ----
   if (opportunity.gap && opportunity.gap.length > 15) {
-    instantMoats.push(`Distinct wedge: "${opportunity.gap}".`);
-    signals.push({
+    const msg = `Distinct wedge: "${opportunity.gap}".`;
+    addInstantMoatSignal(instantMoats, signals, {
       ruleName: "Clear Market Gap",
-      verdict: "go_fast",
       weight: 15,
       triggerReason: "Specific defensible gap against incumbents is articulated.",
+      message: msg,
     });
   }
 
-  // Determine overall verdict
+  // ---- Overall verdict calculation (unchanged) ----
   let quickVerdict: System1Verdict = "pause_investigate";
-  let confidenceScore = 60;
+  const missingEvidence: string[] = [];
+  if (!opportunity.buyer?.trim()) missingEvidence.push("Specific target buyer");
+  if (!opportunity.financials) missingEvidence.push("Unit economics");
+  if (opportunity.sources.length === 0) missingEvidence.push("Traceable sources");
+  if (opportunity.claims.length === 0) missingEvidence.push("Buyer or market evidence");
+  const evidenceCoveragePercent = Math.round(((4 - missingEvidence.length) / 4) * 100);
 
   const hardPassCount = signals.filter((s) => s.verdict === "hard_pass").length;
   const goFastCount = signals.filter((s) => s.verdict === "go_fast").length;
 
   if (hardPassCount >= 1 || fatalFlaws.length >= 2) {
     quickVerdict = "hard_pass";
-    confidenceScore = Math.min(95, 70 + hardPassCount * 10);
   } else if (goFastCount >= 2 && fatalFlaws.length === 0) {
     quickVerdict = "go_fast";
-    confidenceScore = Math.min(90, 65 + goFastCount * 10);
   } else {
     quickVerdict = "pause_investigate";
-    confidenceScore = 55;
   }
 
   const heuristicSummary = quickVerdict === "hard_pass"
@@ -142,7 +147,8 @@ export function evaluateSystem1Heuristics(opportunity: ResearchOpportunity): Sys
   return {
     opportunityId: opportunity.id,
     quickVerdict,
-    confidenceScore,
+    evidenceCoveragePercent,
+    missingEvidence,
     speedToDecisionSeconds: 0.05,
     fatalFlaws,
     instantMoats,

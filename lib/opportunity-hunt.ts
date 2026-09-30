@@ -35,6 +35,8 @@ export type Lead = {
   validationNote?: string;
   validationSourceUrl?: string;
   validationObservedAt?: string;
+  validationPaymentAmount?: number | null;
+  validationPaymentCurrency?: string;
 };
 
 export type HuntEvidence = {

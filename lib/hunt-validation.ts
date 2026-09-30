@@ -28,9 +28,13 @@ export const leadPatch = leadInput.partial().extend({
   validationNote: detail.optional(),
   validationSourceUrl: z.union([z.literal(""), z.string().url().max(2000).refine((value) => /^https:\/\//i.test(value))]).optional(),
   validationObservedAt: z.union([z.literal(""), isoDate]).optional(),
+  validationPaymentAmount: z.number().finite().positive().max(1_000_000_000_000).nullable().optional(),
+  validationPaymentCurrency: z.string().regex(/^[A-Z]{3}$/).optional(),
 }).refine((value) => Object.keys(value).length > 0)
   .refine((value) => value.validationStatus === undefined || value.validationStatus === "unverified" || Boolean(value.validationObservedAt && (value.validationNote?.trim() || value.validationSourceUrl?.trim())), {
     message: "Add an observation date and a note or proof link.", path: ["validationStatus"],
+  }).refine((value) => !["paid_pilot", "repeat_purchase"].includes(value.validationStatus ?? "") || (value.validationPaymentAmount != null && value.validationPaymentAmount > 0 && Boolean(value.validationPaymentCurrency)), {
+    message: "Add the actual payment amount and currency.", path: ["validationPaymentAmount"],
   });
 
 export const evidenceInput = z.object({

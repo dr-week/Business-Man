@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import type { Economics } from "../lib/economics";
 
 /** Lean schema: factual evidence is separate from AI-derived scoring. */
@@ -56,6 +56,8 @@ export const huntLeads = sqliteTable("hunt_leads", {
   validationNote: text("validation_note").notNull().default(""),
   validationSourceUrl: text("validation_source_url").notNull().default(""),
   validationObservedAt: text("validation_observed_at").notNull().default(""),
+  validationPaymentAmount: real("validation_payment_amount"),
+  validationPaymentCurrency: text("validation_payment_currency").notNull().default("INR"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [

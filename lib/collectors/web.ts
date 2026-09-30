@@ -2,11 +2,13 @@ import { z } from "zod";
 import type { SourceSignal } from "@/lib/discovery";
 
 const source = z.object({
-  id: z.string().max(100), provider: z.string().max(100), title: z.string().max(240), excerpt: z.string().max(1200),
+  id: z.string().max(100), provider: z.string().max(100), kind: z.enum(["discussion", "official", "buyer", "supplier"]).optional(), authorId: z.string().max(200).optional(), title: z.string().max(240), excerpt: z.string().max(1200),
   url: z.string().url().refine((url) => new URL(url).protocol === "https:"), publishedAt: z.string().max(40),
-  retrievedAt: z.string().datetime({ offset: true }), comments: z.number().int().nonnegative(),
+  retrievedAt: z.string().datetime({ offset: true }),
+  engagement: z.object({ metric: z.enum(["comments", "answers"]), count: z.number().int().nonnegative() }).optional(),
+  comments: z.number().int().nonnegative().optional(),
   facts: z.object({ tables: z.array(z.array(z.string().max(180)).max(6)).max(30), products: z.array(z.object({ name: z.string().max(200), price: z.string().max(40), currency: z.string().max(8) })).max(50) }).optional(),
-});
+}).refine((value) => value.engagement !== undefined || value.comments !== undefined, "Missing engagement metric");
 const result = z.object({ results: z.array(z.unknown()).max(3) });
 function isSafeHttps(value: string): boolean {
   try {
@@ -39,7 +41,10 @@ export function parseCollectorResults(payload: unknown): { sources: SourceSignal
       continue;
     }
     const item = parsed.data;
-    if (item.status === "ok" && item.signal) sources.push(item.signal);
+    if (item.status === "ok" && item.signal) {
+      const { comments, ...signal } = item.signal;
+      sources.push({ ...signal, engagement: signal.engagement ?? { metric: "comments", count: comments ?? 0 } });
+    }
     else errors.push(`${sourceHost(item.url)}: ${item.reason ?? (item.status === "ok" ? "No usable content" : item.status)}`);
   }
   return { sources, errors };

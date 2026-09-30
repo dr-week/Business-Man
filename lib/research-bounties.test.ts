@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createBountySchema,
+  collaborationBountyRecordSchema,
   submitContributionSchema,
   calculateBountySplit,
   evaluateConsensusSignals,
@@ -16,12 +17,12 @@ describe("research-bounties", () => {
         falsificationTarget: "Verify if local solar farms in Bhadla pay > ₹15/panel for water cleaning",
         rewardAmount: 5000,
         currency: "INR",
-        sponsorId: "sponsor-101",
         expiresInDays: 14,
       };
       const parsed = createBountySchema.parse(input);
       expect(parsed.rewardAmount).toBe(5000);
       expect(parsed.opportunityId).toBe("opp-solar-robot");
+      expect(createBountySchema.safeParse({ ...input, sponsorId: "spoofed" }).success).toBe(false);
     });
 
     it("rejects invalid URL in peer contribution", () => {
@@ -35,6 +36,22 @@ describe("research-bounties", () => {
         sourceUrl: "http://insecure-site.com", // must be https
       };
       expect(() => submitContributionSchema.parse(input)).toThrow();
+    });
+
+    it("keeps sponsor account identifiers out of the shared bounty view", () => {
+      const bounty = collaborationBountyRecordSchema.parse({
+        id: "bounty-1",
+        opportunityId: "opp-1",
+        opportunityName: "Local service",
+        falsificationTarget: "Verify the quoted supplier price",
+        rewardAmount: 1000,
+        currency: "INR",
+        sponsorId: "private-account-id",
+        status: "open",
+        createdAt: "2026-09-30T00:00:00.000Z",
+        expiresAt: null,
+      });
+      expect(bounty).not.toHaveProperty("sponsorId");
     });
 
     it("accepts valid peer contribution with valid https URL", () => {
@@ -74,6 +91,25 @@ describe("research-bounties", () => {
       expect(consensus.disconfirmsCount).toBe(0);
       expect(consensus.dominantVerdict).toBe("untested");
       expect(consensus.consensusScore).toBe(50);
+    });
+
+    it("does not count pending submissions as consensus evidence", () => {
+      const pending: PeerContributionItem[] = [{
+        id: "pending-1",
+        opportunityId: "opp-1",
+        contributorHandle: "@new_user",
+        contributorRole: "customer",
+        evidenceType: "customer_quote",
+        claimSummary: "A pending claim has not been reviewed yet.",
+        verdict: "confirms",
+        status: "submitted",
+        bountyAwarded: 0,
+        createdAt: "2026-09-30T00:00:00.000Z",
+      }];
+      const consensus = evaluateConsensusSignals(pending);
+      expect(consensus.confirmsCount).toBe(0);
+      expect(consensus.disconfirmsCount).toBe(0);
+      expect(consensus.dominantVerdict).toBe("untested");
     });
 
     it("penalizes consensus score heavily when disconfirming evidence is submitted", () => {

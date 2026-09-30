@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { evaluateSystem1Heuristics } from "./system1-decision-engine";
-import type { ResearchOpportunity } from "./research-engine";
+import { blankFinancials, type ResearchOpportunity } from "./research-engine";
 
 describe("system1-decision-engine", () => {
   it("delivers immediate hard_pass on negative unit contribution margin", () => {
@@ -30,7 +30,7 @@ describe("system1-decision-engine", () => {
         ],
       },
       claims: [],
-      assumptions: {} as any,
+      assumptions: blankFinancials({ topic: "Delivery Drone Rental", geography: "India", budget: 500000, currency: "INR" }),
       factors: [],
       missing: [],
       sources: [],
@@ -69,7 +69,7 @@ describe("system1-decision-engine", () => {
         ],
       },
       claims: [],
-      assumptions: {} as any,
+      assumptions: blankFinancials({ topic: "Solar Robot Dry Cleaner", geography: "India", budget: 250000, currency: "INR" }),
       factors: [],
       missing: [],
       sources: [],

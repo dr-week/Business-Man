@@ -47,8 +47,11 @@ describe("marketing-automation", () => {
     expect(campaign.linkedinPost).toContain("CleanTech");
     expect(campaign.coldOutreachEmail.subject).toContain("Dust soiling");
     expect(campaign.coldOutreachEmail.body).toContain("Dust soiling");
-    expect(campaign.productHuntPitch.tagline).toContain("Automated Solar Panel Dry Cleaning Robot");
+    expect(campaign.productHuntPitch.tagline).toContain("Source-linked business opportunity research");
     expect(campaign.weeklyDistributionCadence).toHaveLength(5);
+    expect(campaign.weeklyDistributionCadence[1].action).toContain("do not scrape or bulk-message");
+    expect(campaign.weeklyDistributionCadence[3].successMeasure).toContain("Actual payments");
+    expect(campaign.weeklyDistributionCadence[4].successMeasure).toContain("no response is not a positive signal");
     const generatedCopy = [campaign.viralHook, ...campaign.xThread.map((item) => item.text), campaign.linkedinPost, campaign.coldOutreachEmail.body, campaign.productHuntPitch.makerComment].join("\n");
     expect(generatedCopy).toContain("estimates, not actual results");
     expect(generatedCopy).not.toContain("90% of people");

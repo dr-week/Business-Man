@@ -4,7 +4,7 @@ export const discoveryInput = z.union([
   z.object({ query: z.string().trim().min(2).max(100), location: z.string().trim().max(100).default(""), budget: z.number().nonnegative().max(1_000_000_000).optional() }).strict(),
   z.object({ saveId: z.string().regex(/^\d{1,12}$/) }).strict(),
 ]);
-export type SourceSignal = { id: string; provider: string; kind?: "discussion" | "official" | "buyer" | "supplier"; authorId?: string; title: string; excerpt: string; url: string; publishedAt: string; retrievedAt: string; comments: number; facts?: { tables: string[][]; products: { name: string; price: string; currency: string }[] } };
+export type SourceSignal = { id: string; provider: string; kind?: "discussion" | "official" | "buyer" | "supplier"; authorId?: string; title: string; excerpt: string; url: string; publishedAt: string; retrievedAt: string; engagement?: { metric: "comments" | "answers"; count: number }; /** Legacy saved research; new collectors use engagement. */ comments?: number; facts?: { tables: string[][]; products: { name: string; price: string; currency: string }[] } };
 export type OpportunityFinding = { name: string; problem: string; buyer: "Unknown"; gap: "Unknown"; business: "Unqualified"; investment: "Unknown"; monthlyProfit: "Unknown"; strength: "Unrated"; confidence: "Low"; sources: SourceSignal[]; missing: string[] };
 const hit = z.object({ objectID: z.string().regex(/^\d+$/), author: z.string().optional(), title: z.string(), story_text: z.string().nullable(), created_at: z.string().datetime(), num_comments: z.number().nonnegative().nullable() });
 
@@ -36,7 +36,7 @@ export async function collectSignals(query?: string, id?: string, signal?: Abort
     id: item.objectID, provider: "Ask HN" as const, kind: "discussion" as const, authorId: item.author, title: item.title.slice(0, 240),
     excerpt: (item.story_text ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 1200),
     url: `https://news.ycombinator.com/item?id=${item.objectID}`,
-    publishedAt: item.created_at, retrievedAt, comments: item.num_comments ?? 0,
+    publishedAt: item.created_at, retrievedAt, engagement: { metric: "comments" as const, count: item.num_comments ?? 0 },
   }])).values()];
 }
 
@@ -74,7 +74,7 @@ export async function collectStackOverflow(query: string, signal?: AbortSignal):
     title: item.title.replace(/&#(\d+);/g, (_, code: string) => String.fromCharCode(Number(code))).slice(0, 240),
     excerpt: (item.body ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 1200),
     url: item.link, publishedAt: new Date(item.creation_date * 1000).toISOString(),
-    retrievedAt, comments: item.answer_count,
+    retrievedAt, engagement: { metric: "answers" as const, count: item.answer_count },
   }));
 }
 
@@ -97,5 +97,5 @@ export function analyzeSignals(signals: SourceSignal[]): OpportunityFinding[] {
   return groups.map((sources) => {
     const first = sources[0];
     return { name: first.title, problem: first.excerpt || first.title, buyer: "Unknown" as const, gap: "Unknown" as const, business: "Unqualified" as const, investment: "Unknown" as const, monthlyProfit: "Unknown" as const, strength: "Unrated" as const, confidence: "Low" as const, sources, missing: ["Named buyer and payment evidence", "Alternative solutions and their gap", "Location-specific demand", "Priced unit economics and funding"] };
-  }).sort((a, b) => b.sources.length - a.sources.length || b.sources.reduce((n, s) => n + s.comments, 0) - a.sources.reduce((n, s) => n + s.comments, 0));
+  }).sort((a, b) => b.sources.length - a.sources.length);
 }

@@ -43,6 +43,13 @@
       "when": 1790707236058,
       "tag": "0005_counter-evidence-kind",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1790791000000,
+      "tag": "0006_research_bounties_validation_payment",
+      "breakpoints": true
     }
   ]
 }

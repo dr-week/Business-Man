@@ -161,14 +161,15 @@ export function MarketingAutomationPanel({
 
       {activeChannel === "cadence" && (
         <div style={{ display: "grid", gap: "8px" }}>
-          <span style={{ fontSize: "12px", color: "#aaa99b" }}>Zero-Ad-Spend Weekly Validation Cadence</span>
+          <span style={{ fontSize: "12px", color: "#aaa99b" }}>Five-Day Buyer Validation Experiment · Suggested actions only</span>
           {campaign.weeklyDistributionCadence.map((c) => (
-            <div key={c.day} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "#10140e", border: "1px solid #2e3525", borderRadius: "6px", fontSize: "12px" }}>
+            <div key={c.day} style={{ display: "grid", gap: "6px", padding: "8px 12px", background: "#10140e", border: "1px solid #2e3525", borderRadius: "6px", fontSize: "12px" }}>
               <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                 <strong style={{ color: "var(--gold)", minWidth: "75px" }}>{c.day}</strong>
                 <span style={{ color: "#8b937e", fontSize: "11px", border: "1px solid #35392e", borderRadius: "4px", padding: "2px 6px" }}>{c.platform}</span>
                 <span style={{ color: "#dcd8c9" }}>{c.action}</span>
               </div>
+              <small style={{ color: "#aaa99b", paddingLeft: "85px" }}>Measure: {c.successMeasure}</small>
             </div>
           ))}
         </div>

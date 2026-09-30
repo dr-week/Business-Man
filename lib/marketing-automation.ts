@@ -29,6 +29,7 @@ export interface MarketingCampaign {
     day: string;
     action: string;
     platform: string;
+    successMeasure: string;
   }[];
   fiveDayCadence: {
     day: string;
@@ -102,11 +103,11 @@ The figures are scenario estimates, and the demand hypothesis still needs buyer 
   };
 
   const weeklyDistributionCadence = [
-    { day: "Monday", platform: "X / Twitter", action: "Post 5-tweet teardown thread highlighting the supply-demand gap." },
-    { day: "Tuesday", platform: "LinkedIn", action: "Publish executive commentary targeting category leaders & incubators." },
-    { day: "Wednesday", platform: "Cold Outreach", action: "Send 15 targeted emails/DMs using the 1-page intelligence brief hook." },
-    { day: "Thursday", platform: "Community", action: "Share findings on relevant subreddits / Discord server discussions." },
-    { day: "Friday", platform: "Review Gate", action: "Count qualitative buyer replies: 3+ warm responses = proceed to validation pilot." },
+    { day: "Day 1", platform: "Research", action: `Write one falsifiable buyer hypothesis for ${targetAudience}; list the evidence that would disprove it.`, successMeasure: "One named buyer role and one disconfirming signal." },
+    { day: "Day 2", platform: "Opt-in channel", action: "Share a short research question in a relevant community or ask for warm introductions. Respect community rules; do not scrape or bulk-message members.", successMeasure: "Qualified replies from the named buyer segment." },
+    { day: "Day 3", platform: "Buyer interviews", action: "Ask willing buyers about their last real occurrence, current workaround, and cost. Avoid pitching before understanding the problem.", successMeasure: "Dated notes with role, geography, workaround, and recent example." },
+    { day: "Day 4", platform: "Paid pilot", action: "Offer a specific scope and price to qualified buyers; record offers separately from actual payments.", successMeasure: "Actual payments separately from offers; record currency and amount." },
+    { day: "Day 5", platform: "Review gate", action: "Compare observed evidence with the pre-set continue/revise/stop threshold; update the opportunity record.", successMeasure: "Decision and next test recorded; no response is not a positive signal." },
   ];
 
   return {

@@ -268,6 +268,12 @@
 .research-validation-plan dt { color:#aaa99b; }
 .research-validation-plan dd { margin:0; color:#d8d6c7; }
 .research-validation-plan > small { display:block; color:#aaa99b; font-size:11px; margin-top:10px; }
+.validation-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:16px 0; padding:14px; border:1px solid #35392e; border-radius:8px; background:#121610; }
+.validation-summary > div { display:grid; gap:4px; }
+.validation-summary strong { color:var(--cream); font-size:18px; overflow-wrap:anywhere; }
+.validation-summary span,.validation-summary small { color:var(--muted); font-size:11px; }
+.validation-summary > small { grid-column:1/-1; }
+@media(max-width:650px) { .validation-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .research-claim { padding:10px 0; border-top:1px solid #35392e; }
 .research-claim a { text-decoration:underline; }
 .research-default-charts,.research-more-charts > div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; padding:0 20px 20px; }

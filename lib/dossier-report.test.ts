@@ -65,7 +65,10 @@ describe("dossier report generator", () => {
     expect(report).toContain("### 1. EXECUTIVE SUMMARY & STRATEGIC THESIS");
     expect(report).toContain("### 2. OPPORTUNITY SCORECARD & COMPARATIVE MATRIX");
     expect(report).toContain("### 3. OPPORTUNITY DEEP-DIVES & RISK MITIGATION");
-    expect(report).toContain("### 4. RECOMMENDED NEXT MOVES (DAYS 1–21)");
+    expect(report).toContain("### 4. Suggested Validation Actions (not completed work)");
+    expect(report).toContain("Linked Source Records (not independently verified)");
+    expect(report).toContain("not actual results or forecasts");
+    expect(report).toContain("require human review and execution");
 
     expect(report).toContain("Agent Commerce Adapters");
     expect(report).toContain("Platforms");

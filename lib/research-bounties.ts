@@ -29,7 +29,6 @@ export const createBountySchema = z.object({
   falsificationTarget: z.string().trim().min(10).max(500),
   rewardAmount: z.number().int().min(0).max(500000).default(0),
   currency: z.string().trim().min(3).max(5).default("INR"),
-  sponsorId: z.string().trim().min(1).max(100),
   expiresInDays: z.number().int().min(1).max(90).default(14),
 }).strict();
 
@@ -86,6 +85,40 @@ export interface ResearchBountyItem {
   contributionsCount: number;
 }
 
+export const collaborationContributionRecordSchema = z.object({
+  id: z.string(),
+  bountyId: z.string().nullable(),
+  opportunityId: z.string(),
+  contributorHandle: z.string(),
+  contributorRole,
+  evidenceType,
+  claimSummary: z.string(),
+  verdict: contributionVerdict,
+  sourceUrl: z.string().nullable(),
+  status: z.enum(["submitted", "peer_verified", "rejected", "bounty_awarded"]),
+  createdAt: z.string(),
+});
+
+export const collaborationBountyRecordSchema = z.object({
+  id: z.string(),
+  opportunityId: z.string(),
+  opportunityName: z.string(),
+  falsificationTarget: z.string(),
+  rewardAmount: z.number(),
+  currency: z.string(),
+  status: bountyStatus,
+  createdAt: z.string(),
+  expiresAt: z.string().nullable(),
+});
+
+export const opportunityCollaborationResponseSchema = z.object({
+  bounties: z.array(collaborationBountyRecordSchema),
+  contributions: z.array(collaborationContributionRecordSchema),
+});
+
+export type CollaborationContributionRecord = z.infer<typeof collaborationContributionRecordSchema>;
+export type CollaborationBountyRecord = z.infer<typeof collaborationBountyRecordSchema>;
+
 /**
  * Calculates platform split and payouts for peer-verified research bounties.
  * Platform retains a 15% verification escrow fee, paying 85% to the verified contributor.
@@ -113,7 +146,8 @@ export function evaluateConsensusSignals(contributions: PeerContributionItem[]):
   consensusScore: number; // 0 to 100
   dominantVerdict: ContributionVerdict | "untested";
 } {
-  if (!contributions.length) {
+  const reviewed = contributions.filter((contribution) => contribution.status === "peer_verified" || contribution.status === "bounty_awarded");
+  if (!reviewed.length) {
     return {
       confirmsCount: 0,
       disconfirmsCount: 0,
@@ -127,7 +161,7 @@ export function evaluateConsensusSignals(contributions: PeerContributionItem[]):
   let disconfirms = 0;
   let warns = 0;
 
-  for (const c of contributions) {
+  for (const c of reviewed) {
     if (c.verdict === "confirms") confirms++;
     else if (c.verdict === "disconfirms") disconfirms++;
     else if (c.verdict === "warns") warns++;

@@ -79,6 +79,13 @@ export function System1TriagePanel({ opportunity }: { opportunity: ResearchOppor
         {evalResult.heuristicSummary}
       </p>
 
+      <div style={{ marginBottom: "10px", padding: "8px 10px", background: "#171b13", border: "1px solid #303827", borderRadius: "4px" }}>
+        <strong style={{ color: "var(--gold)", fontSize: "11px" }}>Evidence coverage: {evalResult.evidenceCoveragePercent}%</strong>
+        <span style={{ display: "block", marginTop: "3px", color: "#aaa99b", fontSize: "11px" }}>
+          Coverage shows which inputs exist; it is not a probability of success. {evalResult.missingEvidence.length > 0 ? `Missing: ${evalResult.missingEvidence.join(", ")}.` : "All four screening inputs are present; verify their quality and recency."}
+        </span>
+      </div>
+
       {evalResult.fatalFlaws.length > 0 && (
         <div style={{ marginBottom: "8px", padding: "8px 10px", background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "4px" }}>
           <strong style={{ color: "#f87171", fontSize: "11px", display: "block", marginBottom: "4px" }}>Fatal Flaws Detected (Instant Kill-Switch):</strong>

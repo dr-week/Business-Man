@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { SourceDiscovery } from "@/components/source-discovery";
 import { ValidationOutcome } from "@/components/research/validation-outcome";
+import { ValidationSummary } from "@/components/research/validation-summary";
 import { OfficialSourceLibrary } from "@/components/research/official-source-library";
 import "../hunt.scss";
 import { OpportunityEconomics } from "@/components/opportunity-economics";
@@ -136,7 +137,7 @@ export default function HuntPage() {
     setSaved((current) => current.map((item) => item.id === lead.id ? lead : item));
   }
 
-  async function saveValidation(outcome: Pick<Lead, "validationStatus" | "validationNote" | "validationSourceUrl" | "validationObservedAt">) {
+  async function saveValidation(outcome: Pick<Lead, "validationStatus" | "validationNote" | "validationSourceUrl" | "validationObservedAt" | "validationPaymentAmount" | "validationPaymentCurrency">) {
     if (!selected) return;
     const { lead } = await jsonRequest<{ lead: Lead }>(`/api/hunt/leads/${encodeURIComponent(selected.id)}`, { method: "PATCH", body: JSON.stringify(outcome) });
     setSaved((current) => current.map((item) => item.id === lead.id ? lead : item));
@@ -204,6 +205,7 @@ export default function HuntPage() {
       <button className="hunt-create-submit" disabled={busy} type="submit">Create</button>
     </form>}
     {!adding && !selectedId && <section className="hunt-comparison" aria-label="Opportunity comparison">
+      {view === "Saved" && loaded && <ValidationSummary leads={saved} />}
       <div className="hunt-controls">
         <label className="hunt-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" aria-label="Search opportunities" /></label>
         <select className="hunt-category" aria-label="Category" value={lane} onChange={(event) => setLane(event.target.value as Lane | "All")}><option value="All">All categories</option>{LANES.map((item) => <option key={item}>{item}</option>)}</select>

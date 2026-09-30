@@ -8,6 +8,7 @@ import { collectWebPages } from "@/lib/collectors/web";
 import { collectGitHubAlternatives } from "@/lib/collectors/github-alternatives";
 import { attachCandidateAlternatives } from "@/lib/market-alternatives";
 import { collectBraveWebResults } from "@/lib/collectors/brave-search";
+import type { WebResearchResult } from "@/lib/collectors/brave-search";
 import { env } from "cloudflare:workers";
 import { getDb } from "@/db";
 import { saveResearchRun } from "@/lib/research-run-store";
@@ -16,7 +17,7 @@ import { createResearchGate } from "@/lib/research-gate";
 import { createBoundedCache } from "@/lib/bounded-cache";
 
 const researchGate = createResearchGate(2, 6);
-const cache = createBoundedCache<{ query: ReturnType<typeof prepareResearchQuery>; result: ReturnType<typeof analyzeResearch>; errors: string[] }>(8, 1_048_576);
+const cache = createBoundedCache<{ query: ReturnType<typeof prepareResearchQuery>; result: ReturnType<typeof analyzeResearch>; errors: string[]; webResearch: WebResearchResult[] }>(8, 1_048_576);
 export async function POST(request: Request) {
   if (isCrossOrigin(request)) return Response.json({ error: "Cross-origin request denied." }, { status: 403 });
   const owner = await ownerId();
@@ -35,10 +36,7 @@ export async function POST(request: Request) {
   const key = JSON.stringify([owner, input]);
   const hit = cache.get(key);
   if (hit) {
-    const webSearch = await collectBraveWebResults(hit.query.searchTerms, input.geography, env.BRAVE_SEARCH_API_KEY, request.signal).then((value) => ({ value, error: null })).catch(() => ({ value: [], error: "Web search unavailable" }));
-    if (request.signal.aborted) return Response.json({ error: "Research cancelled." }, { status: 499 });
-    const providerErrors = [...hit.errors, ...(webSearch.error ? [webSearch.error] : [])];
-    return Response.json({ query: hit.query, opportunities: hit.result, providerErrors, webResearch: webSearch.value, webSearchConfigured: !!env.BRAVE_SEARCH_API_KEY, cached: true }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json({ query: hit.query, opportunities: hit.result, providerErrors: hit.errors, webResearch: hit.webResearch, webSearchConfigured: !!env.BRAVE_SEARCH_API_KEY, cached: true }, { headers: { "Cache-Control": "no-store" } });
   }
   if (!input.useOriginalQuery) query = await classifyQuery(query, { url: env.LAYA_URL, key: env.LAYA_API_KEY }, request.signal);
   if (request.signal.aborted) return Response.json({ error: "Research cancelled." }, { status: 499 });
@@ -72,7 +70,7 @@ export async function POST(request: Request) {
   } catch {
     providerErrors.push("Research completed, but saving to your archive failed.");
   }
-  cache.set(key, { query, result: opportunities, errors: providerErrors }, 10 * 60_000);
+  cache.set(key, { query, result: opportunities, errors: providerErrors, webResearch: webSearch.value }, 10 * 60_000);
   return Response.json({ query, opportunities, providerErrors, webResearch: webSearch.value, webSearchConfigured: !!env.BRAVE_SEARCH_API_KEY, cached: false, runId }, { headers: { "Cache-Control": "no-store" } });
   } finally { release?.(); }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Download, FileText } from "lucide-react";
+import { Download } from "lucide-react";
 import type { FinancialAssumptions, ResearchInput, ResearchOpportunity } from "@/lib/research-engine";
 import { ValidationPlan } from "@/components/research/validation-plan";
 import { ValidationChecklist } from "@/components/research/validation-checklist";
@@ -358,7 +358,7 @@ export function OpportunityDetailSection({
 
         {view !== "economics" && (
           <details className="research-module">
-            <summary>Open-Source Collaboration & Bounties · decentralized field validation</summary>
+            <summary>Shared evidence · community bounty proposals</summary>
             <ResearchCollaborationPanel opportunity={active} currency={input?.currency ?? currency} />
           </details>
         )}

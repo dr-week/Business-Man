@@ -10,6 +10,32 @@ import {
 } from "@/lib/research-bounties";
 import { readLimitedJson } from "@/lib/read-limited-json";
 
+const sharedBountyFields = {
+  id: researchBounties.id,
+  opportunityId: researchBounties.opportunityId,
+  opportunityName: researchBounties.opportunityName,
+  falsificationTarget: researchBounties.falsificationTarget,
+  rewardAmount: researchBounties.rewardAmount,
+  currency: researchBounties.currency,
+  status: researchBounties.status,
+  createdAt: researchBounties.createdAt,
+  expiresAt: researchBounties.expiresAt,
+};
+
+const sharedContributionFields = {
+  id: researchContributions.id,
+  bountyId: researchContributions.bountyId,
+  opportunityId: researchContributions.opportunityId,
+  contributorHandle: researchContributions.contributorHandle,
+  contributorRole: researchContributions.contributorRole,
+  evidenceType: researchContributions.evidenceType,
+  claimSummary: researchContributions.claimSummary,
+  verdict: researchContributions.verdict,
+  sourceUrl: researchContributions.sourceUrl,
+  status: researchContributions.status,
+  createdAt: researchContributions.createdAt,
+};
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const opportunityId = url.searchParams.get("opportunityId");
@@ -19,10 +45,10 @@ export async function GET(request: Request) {
     const db = getDb();
 
     if (bountyId) {
-      const [bounty] = await db.select().from(researchBounties).where(eq(researchBounties.id, bountyId)).limit(1);
+      const [bounty] = await db.select(sharedBountyFields).from(researchBounties).where(eq(researchBounties.id, bountyId)).limit(1);
       if (!bounty) return Response.json({ error: "Bounty not found." }, { status: 404 });
 
-      const contributions = await db.select().from(researchContributions)
+      const contributions = await db.select(sharedContributionFields).from(researchContributions)
         .where(eq(researchContributions.bountyId, bountyId))
         .orderBy(desc(researchContributions.createdAt))
         .limit(50);
@@ -37,12 +63,12 @@ export async function GET(request: Request) {
     }
 
     if (opportunityId) {
-      const bounties = await db.select().from(researchBounties)
+      const bounties = await db.select(sharedBountyFields).from(researchBounties)
         .where(eq(researchBounties.opportunityId, opportunityId))
         .orderBy(desc(researchBounties.createdAt))
         .limit(20);
 
-      const contributions = await db.select().from(researchContributions)
+      const contributions = await db.select(sharedContributionFields).from(researchContributions)
         .where(eq(researchContributions.opportunityId, opportunityId))
         .orderBy(desc(researchContributions.createdAt))
         .limit(50);
@@ -57,7 +83,7 @@ export async function GET(request: Request) {
     }
 
     // Default: list recent active bounties
-    const recentBounties = await db.select().from(researchBounties)
+    const recentBounties = await db.select(sharedBountyFields).from(researchBounties)
       .orderBy(desc(researchBounties.createdAt))
       .limit(30);
 
@@ -89,6 +115,18 @@ export async function POST(request: Request) {
       const parsed = submitContributionSchema.safeParse(raw);
       if (!parsed.success) {
         return Response.json({ error: "Invalid contribution submission." }, { status: 400 });
+      }
+
+      if (parsed.data.bountyId) {
+        const [bounty] = await db.select({
+          opportunityId: researchBounties.opportunityId,
+          status: researchBounties.status,
+          expiresAt: researchBounties.expiresAt,
+        }).from(researchBounties).where(eq(researchBounties.id, parsed.data.bountyId)).limit(1);
+        const expired = bounty?.expiresAt ? Date.parse(bounty.expiresAt) <= Date.now() : false;
+        if (!bounty || bounty.opportunityId !== parsed.data.opportunityId || bounty.status !== "open" || expired) {
+          return Response.json({ error: "This bounty is unavailable for the selected opportunity." }, { status: 400 });
+        }
       }
 
       const id = crypto.randomUUID();
