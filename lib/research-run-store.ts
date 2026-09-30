@@ -1,4 +1,4 @@
-import { and, desc, eq, notInArray } from "drizzle-orm";
+import { and, desc, eq, ne, notInArray } from "drizzle-orm";
 import type { getDb } from "@/db";
 import { researchRuns } from "@/db/schema";
 
@@ -29,7 +29,7 @@ export function getLatestResearchRun(db: ReturnType<typeof getDb>, ownerId: stri
     .limit(1);
 }
 
-/** Save and retain the newest owner-scoped runs in one D1 transaction. */
+/** Insert first, then retain the new run plus the 19 newest older runs. */
 export async function saveResearchRun(db: ReturnType<typeof getDb>, run: typeof researchRuns.$inferInsert) {
   if ((run.schemaVersion ?? RESEARCH_RUN_SCHEMA_VERSION) !== RESEARCH_RUN_SCHEMA_VERSION) {
     throw new Error("Unsupported research snapshot schema version");
@@ -37,10 +37,10 @@ export async function saveResearchRun(db: ReturnType<typeof getDb>, run: typeof 
   const runBytes = new TextEncoder().encode(JSON.stringify(run)).byteLength;
   if (runBytes > MAX_RUN_BYTES) throw new Error("Research snapshot exceeds the D1 row budget");
   const retained = db.select({ id: researchRuns.id }).from(researchRuns)
-    .where(eq(researchRuns.ownerId, run.ownerId))
-    .orderBy(desc(researchRuns.createdAt), desc(researchRuns.id)).limit(MAX_RETAINED_RUNS);
+    .where(and(eq(researchRuns.ownerId, run.ownerId), ne(researchRuns.id, run.id)))
+    .orderBy(desc(researchRuns.createdAt), desc(researchRuns.id)).limit(MAX_RETAINED_RUNS - 1);
   await db.batch([
     db.insert(researchRuns).values(run),
-    db.delete(researchRuns).where(and(eq(researchRuns.ownerId, run.ownerId), notInArray(researchRuns.id, retained))),
+    db.delete(researchRuns).where(and(eq(researchRuns.ownerId, run.ownerId), ne(researchRuns.id, run.id), notInArray(researchRuns.id, retained))),
   ]);
 }

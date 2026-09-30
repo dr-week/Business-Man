@@ -15,7 +15,7 @@ describe("research run storage", () => {
     expect(query.params).toEqual(["owner-1", 20]);
   });
 
-  it("batches insertion and owner-scoped retention", async () => {
+  it("retains the inserted run and the 19 newest prior runs", async () => {
     const db = drizzle({} as D1Database, { schema });
     const batch = vi.spyOn(db, "batch").mockResolvedValue([] as never);
     await saveResearchRun(db, {
@@ -33,7 +33,9 @@ describe("research run storage", () => {
     expect(query.sql).toContain("not in");
     expect(query.sql).toContain("limit ?");
     expect(query.params).toContain("owner-1");
-    expect(query.params).toContain(20);
+    expect(query.params).toContain(19);
+    expect(query.params).toContain("run-1");
+    expect(query.sql.match(/"research_runs"\."id" <> \?/g)).toHaveLength(2);
   });
 
   it("rejects snapshots above the D1 row budget before writing", async () => {

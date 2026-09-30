@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   const runId = crypto.randomUUID();
   try {
     await saveResearchRun(getDb(), {
-      id: runId, ownerId: owner, schemaVersion: RESEARCH_RUN_SCHEMA_VERSION, topic: input.topic, geography: input.geography, currency: input.currency,
+      id: runId, ownerId: owner, schemaVersion: RESEARCH_RUN_SCHEMA_VERSION, topic: input.topic, geography: input.geography, currency: input.currency, createdAt: new Date().toISOString(),
       input: input as Record<string, unknown>,
       result: { query, opportunities, providerErrors },
     });
