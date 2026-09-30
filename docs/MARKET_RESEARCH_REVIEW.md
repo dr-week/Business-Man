@@ -23,6 +23,12 @@ Users: founders/operators, business-development teams, investors, franchise buye
 
 Forum discussions are small, self-selected samples. Respondents question generic AI-only reports and value interviews, actual buyer behavior, and evidence that reduces a consequential risk. Test with interviews plus a paid pilot/deposit; do not treat votes, stated intent, or competitor list prices as market size or sales proof. Self-serve checkout/community content fits low-ticket reports; advisors may be a route to repeat B2B use. Both channels remain unvalidated.
 
+## Businessman revenue system
+
+Keep Businessman’s revenue model separate from the researched business’s economics. A future Revenue module should make explicit: end user, payer, decision/job, current paid workaround, offer, sales channel, price evidence, and conversion experiment. Strategyzer’s workflow links customer segments to value propositions, channels, and revenue streams; customer/channel assumptions need field validation ([Business Model Canvas](https://www.strategyzer.com/library/the-business-model-canvas), [Customer Development](https://steveblank.com/category/customer-development-manifesto/)).
+
+Current monetization hypothesis: free opportunity preview → one-time sourced decision report around $9–$20 → report bundles; advisor/accelerator subscription only after repeat team use is proven. These are competitor price anchors, not forecasts. Formula: `paid reports × price + team seats × monthly price + assisted validation fees`. Do not forecast units until a checkout or paid pilot produces evidence. Test channels: direct web via search/community content for reports; advisor/accelerator partnerships for repeated research. Both remain unvalidated.
+
 ## “Business maxxxing”
 
 Search found no established business-software category or strong demand evidence for this exact phrase. Interpret it as business outcome optimization, not a validated market trend. Useful product behavior: expose evidence-backed break-even thresholds and next validation actions; avoid guaranteed growth claims or opaque “maximize” scores. Broader “maxxing” coverage describes a general self-optimization meme, not verified buyer demand ([Forbes workplace coverage](https://www.forbes.com/sites/bryanrobinson/2026/05/07/why-the-career-maxxing-trend-is-everywhere-in-the-workplace/)).
