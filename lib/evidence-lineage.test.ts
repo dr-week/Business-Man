@@ -18,6 +18,13 @@ describe("evidence lineage", () => {
   it("keeps distinct accounts independent", () => {
     expect(independentSourceCount([source("1", "Forum", "We pay for inventory service every month."), source("2", "Forum", "Our team bought a stock tracking subscription last year.")])).toBe(2);
   });
+  it("does not inflate a factor score with several claims from one source", () => {
+    const one = source("1", "Forum", "We pay for inventory service every month and rely on it for all locations.");
+    expect(independentClaimCount([
+      claim("1", "We pay for inventory service every month."),
+      { ...claim("1", "Our team relies on the paid inventory service across locations."), id: "claim-2" },
+    ], [one])).toBe(1);
+  });
   it("does not count tracking-link variants of one short source twice", () => {
     const first = source("1", "Web", "Inventory service");
     const second = { ...source("2", "Web", "Inventory service"), url: "https://www.example.com/1?utm_source=mail#pricing" };

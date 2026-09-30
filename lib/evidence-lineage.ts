@@ -33,9 +33,11 @@ export function independentSourceCount(sources: SourceSignal[]): number {
 
 export function independentClaimCount(claims: Claim[], sources: SourceSignal[]): number {
   const byId = new Map(sources.map((source) => [source.id, source]));
-  return new Set(claims.map((claim) => {
-    const text = normalize(claim.text);
-    const source = byId.get(claim.sourceIds[0]);
-    return text.length >= 24 ? text : source ? sourceLineageKey(source) : claim.id;
-  })).size;
+  const origins = new Set<string>();
+  for (const claim of claims) {
+    const linked = claim.sourceIds.map((id) => byId.get(id)).filter((source): source is SourceSignal => Boolean(source));
+    if (linked.length) for (const source of linked) origins.add(sourceLineageKey(source));
+    else origins.add(`claim:${claim.id}`);
+  }
+  return origins.size;
 }
