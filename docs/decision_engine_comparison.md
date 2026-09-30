@@ -6,7 +6,7 @@ The goal was to address the **duplication** improvement target for the **Decisio
 ## Projects Compared
 | Project | Core Feature Set | Duplication Handling | License | Pricing / Premium Add‑ons |
 |--------|-----------------|---------------------|---------|---------------------------|
-| **Our LAYA System‑1** (this repo) | Fast heuristic evaluation for market opportunities, lazy‑loaded engine, modular helpers. | **Refactored** – duplicated `signals.push` / `fatalFlaws.push` / `instantMoats.push` logic consolidated into `decisionEngineHelpers.ts`. | MIT (core) + JWT‑guarded premium. | Premium PDF export, advanced competitor scoring (subscription). |
+| **Our decision engine** (this repo) | Evidence-led opportunity assessment; optional LAYA query triage is not an investment score. | See current implementation; no license claim is made here. | No root repository license; selected routes have JWT checks. | No paid feature or subscription is established by a route guard. |
 | **OpenDecision** (GitHub `github.com/OpenDecision/open-decision`) | Rule‑based decision trees, plugin architecture. | Uses a **single `addRule`** function – already deduplicated. | Apache‑2.0 | Free core, enterprise support. |
 | **RuleRunner** (GitHub `github.com/RuleRunner/engine`) | Declarative rule DSL, auto‑generated reports. | Provides **`RuleBuilder`** to avoid duplicated rule definitions. | MIT | Free, optional paid UI themes. |
 

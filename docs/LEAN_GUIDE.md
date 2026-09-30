@@ -6,7 +6,7 @@ A concise, contributor‑focused guide describing the **modular** architecture o
 ## Core Principles
 - **Modularity** – each capability lives in its own folder (`lib/`, `components/`, `app/api/`).
 - **Lean Documentation** – only document what a newcomer needs to get started; avoid exhaustive API lists.
-- **Licensing status** – no root license is present; do not describe this repository as AGPL/open source or promise premium feature gates until ownership, dependency licenses, and a license are reviewed. A token gate controls hosted entitlements; it does not prevent copying code users are licensed to receive.
+- **Licensing status** – no root license is present; do not claim an open-source license or treat a token gate as one. See [licensing status and dependency audit](LICENSING.md).
 - **Randomised Development Cycle** – each run picks a random combo of Work Type, Module, Target, Source, Validation to keep work fresh.
 
 ## Monetization boundary

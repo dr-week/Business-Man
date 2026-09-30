@@ -50,3 +50,7 @@ npm run build
 ## Contributing
 
 Read [contribution rules](docs/CONTRIBUTION.md) before changing a module. Start with [developer docs](docs/README.md); the [market review](docs/MARKET_RESEARCH_REVIEW.md) tracks competing products, source/API limits, and OSS candidates.
+
+## License
+
+No repository license has been selected. Review [licensing status](docs/LICENSING.md) before reusing or distributing this code.
