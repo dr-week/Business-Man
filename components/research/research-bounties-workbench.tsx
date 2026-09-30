@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Users, ShieldAlert, Award, Plus, CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
+import { Users, Plus, ExternalLink } from "lucide-react";
 import type { ResearchOpportunity } from "@/lib/research-engine";
 import {
   calculateBountySplit,
@@ -277,6 +277,20 @@ export function ResearchBountiesWorkbench({
                 <option value="disconfirms">❌ Disconfirms (Breaks Model)</option>
                 <option value="confirms">✅ Confirms (Validated)</option>
                 <option value="warns">⚠️ Warns (Operational Friction)</option>
+              </select>
+            </label>
+            <label style={{ display: "grid", gap: "4px", fontSize: "11px", color: "var(--muted)" }}>
+              <span>Evidence Type:</span>
+              <select
+                value={evidenceType}
+                onChange={(e) => setEvidenceType(e.target.value as EvidenceType)}
+                style={{ padding: "6px 8px", background: "#121510", border: "1px solid #3c4632", borderRadius: "6px", color: "var(--cream)" }}
+              >
+                <option value="counter_pricing">Counter Pricing</option>
+                <option value="local_supplier">Local Supplier</option>
+                <option value="pilot_refusal">Pilot Refusal</option>
+                <option value="regulatory_hurdle">Regulatory Hurdle</option>
+                <option value="unmet_demand">Unmet Demand</option>
               </select>
             </label>
           </div>

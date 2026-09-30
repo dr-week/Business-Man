@@ -1,6 +1,6 @@
 "use client";
 
-import { Zap, AlertOctagon, CheckCircle2, HelpCircle } from "lucide-react";
+import { Zap, AlertOctagon, HelpCircle } from "lucide-react";
 import { evaluateSystem1Heuristics } from "@/lib/system1-decision-engine";
 import type { ResearchOpportunity } from "@/lib/research-engine";
 

@@ -9,43 +9,23 @@ import dynamic from "next/dynamic";
 import { Download, ExternalLink, Search, Square, GitCompareArrows, Star, Store, BriefcaseBusiness, FileText } from "lucide-react";
 
 import type { Lead } from "@/lib/opportunity-hunt";
-import { ValidationPlan } from "@/components/research/validation-plan";
-import { ValidationChecklist } from "@/components/research/validation-checklist";
 import { MarketInspection } from "@/components/research/market-inspection";
-import { EvidenceMap } from "@/components/research/evidence-map";
 import { ResearchFocusCard } from "@/components/research/research-focus-card";
 import { SourceLedger } from "@/components/research/source-ledger";
 import { WebCandidates } from "@/components/research/web-candidates";
-import { CounterEvidence } from "@/components/research/counter-evidence";
-import { MarketingAutomationPanel } from "@/components/research/marketing-automation-panel";
-import { ResearchCollaborationPanel } from "@/components/research/research-collaboration-panel";
 import { OpportunityDetailSection } from "@/components/research/opportunity-detail-section";
 
-import { calculateFinancials, recalculateOpportunity, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity, type Provenance } from "@/lib/research-engine";
+import { recalculateOpportunity, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity } from "@/lib/research-engine";
 import { downloadDossierReport } from "@/lib/dossier-report";
 import { TRENDING_PROMPTS } from "@/lib/trending-prompts";
 import type { ResearchFocus, ResearchFocusSource } from "@/lib/research-focus";
 import type { WebResearchResult } from "@/lib/collectors/brave-search";
-import { estimatePriceFromBenchmark, priceBenchmarks } from "@/lib/price-benchmarks";
 import { independentSourceCount } from "@/lib/evidence-lineage";
 import { parseFirstImpressions, recordFirstImpression, type FirstImpression } from "@/lib/first-impressions";
-
-
 
 const Charts = dynamic(() => import("./research-charts"), { ssr: false });
 
 const storageKey = "businessman.research.v2";
-const fields = [
-
-  ["price", "Selling price"], ["variableCost", "Variable cost"], ["fixedCost", "Monthly fixed cost"],
-
-  ["setupCost", "Setup"], ["equipmentCost", "Equipment"], ["openingInventory", "Opening inventory"], ["reserve", "Working capital reserve"],
-
-  ["lowVolume", "Low monthly volume"], ["baseVolume", "Base monthly volume"], ["highVolume", "High monthly volume"],
-
-] as const;
-
-type Field = typeof fields[number][0];
 
 const money = (value: number | null | undefined, currency: string) => value == null ? "â€”" : new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
 
