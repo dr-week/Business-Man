@@ -41,7 +41,7 @@ const importedOpportunity = z.object({
   }));
 });
 const researchBackup = z.object({
-  format: z.literal("businessman-research-run"), formatVersion: z.literal(1),
+  format: z.literal("businessman-research-run"), formatVersion: z.literal(1), exportedAt: z.string().datetime().optional(),
   run: z.object({
     schemaVersion: z.literal(RESEARCH_RUN_SCHEMA_VERSION), topic: z.string().min(2).max(1000),
     geography: z.string().min(2).max(100), currency: z.string().regex(/^[A-Z]{3}$/),

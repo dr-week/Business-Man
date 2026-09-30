@@ -6,7 +6,7 @@ import { listResearchRuns, parseResearchBackup, saveResearchRun } from "./resear
 describe("research run storage", () => {
   it("imports a supported backup as a new owner-scoped snapshot", () => {
     const row = parseResearchBackup({
-      format: "businessman-research-run", formatVersion: 1,
+      format: "businessman-research-run", formatVersion: 1, exportedAt: "2026-09-30T10:00:00.000Z",
       run: {
         id: "old-run", ownerId: "old-owner", schemaVersion: 1,
         topic: "Cafe demand", geography: "Goa, India", currency: "INR", createdAt: "2026-09-20T10:00:00.000Z",
