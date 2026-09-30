@@ -15,7 +15,7 @@ import { SourceLedger } from "@/components/research/source-ledger";
 import { WebCandidates } from "@/components/research/web-candidates";
 import { OpportunityDetailSection } from "@/components/research/opportunity-detail-section";
 
-import { recalculateOpportunity, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity } from "@/lib/research-engine";
+import { recalculateOpportunity, researchInput, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity } from "@/lib/research-engine";
 import { downloadDossierReport } from "@/lib/dossier-report";
 import { TRENDING_PROMPTS } from "@/lib/trending-prompts";
 import type { ResearchFocus, ResearchFocusSource } from "@/lib/research-focus";
@@ -150,6 +150,25 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
     finally { setRestoringRun(""); }
   }
 
+  async function refreshSavedRun(id: string) {
+    setRestoringRun(id);
+    try {
+      const response = await fetch(`/api/hunt/research-runs?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+      const body: unknown = await response.json();
+      if (!response.ok || typeof body !== "object" || body === null || !("run" in body)) throw new Error("Could not load saved research inputs.");
+      const run = body.run as { input?: unknown };
+      const parsed = researchInput.safeParse(run.input);
+      if (!parsed.success) throw new Error("Saved research inputs are no longer supported.");
+      const saved = parsed.data;
+      setTopic(saved.topic); setGeography(saved.geography); setBudget(saved.budget == null ? "" : String(saved.budget));
+      setCurrency(saved.currency); setSourceUrls((saved.sourceUrls ?? []).join("\n"));
+      setMinimumInvestment(String(saved.minimumInvestment ?? 0));
+      setIndustry(saved.industry ?? ""); setBusinessModel(saved.businessModel ?? ""); setCustomer(saved.customer ?? ""); setDriver(saved.driver ?? "");
+      await research(null, saved.useOriginalQuery, saved.topic, saved, true);
+    } catch (error) { onError(error instanceof Error ? error.message : "Could not refresh saved research."); }
+    finally { setRestoringRun(""); }
+  }
+
   useEffect(() => {
     if (topic) return;
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -222,11 +241,11 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
   const active = opportunities.find((item) => item.id === selected);
 
-  async function research(event: React.FormEvent | null, useOriginalQuery = false, overrideTopic?: string) {
+  async function research(event: React.FormEvent | null, useOriginalQuery = false, overrideTopic?: string, savedInput?: ResearchInput, forceRefresh = false) {
 
     event?.preventDefault(); if (busy) return;
 
-    const next: ResearchInput = { topic: (overrideTopic ?? topic).trim(), useOriginalQuery, geography: geography.trim(), budget: budget === "" ? null : Number(budget), minimumInvestment: minimumInvestment === "" ? 0 : Number(minimumInvestment), currency,
+    const next: ResearchInput = savedInput ?? { topic: (overrideTopic ?? topic).trim(), useOriginalQuery, geography: geography.trim(), budget: budget === "" ? null : Number(budget), minimumInvestment: minimumInvestment === "" ? 0 : Number(minimumInvestment), currency,
 
       sourceUrls: sourceUrls.split(/\r?\n/).map((url) => url.trim()).filter(Boolean),
       ...(industry ? { industry } : {}), ...(businessModel ? { businessModel } : {}), ...(customer ? { customer } : {}), ...(driver ? { driver } : {}) };
@@ -239,7 +258,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
     try {
 
-      const response = await fetch("/api/hunt/research", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next), signal: controller.signal });
+      const response = await fetch(`/api/hunt/research${forceRefresh ? "?refresh=1" : ""}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next), signal: controller.signal });
 
       const data = await response.json() as { error?: string; runId?: string; query?: { brief: string; original: string; searchTerms: string; classifier: string; researchFocus: ResearchFocus; researchFocusSource: ResearchFocusSource; suggestions: { word: string; options: string[] }[] }; opportunities: ResearchOpportunity[]; providerErrors: string[]; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean };
 
@@ -250,6 +269,10 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       setSelected(null); setCompare([]); persist(next, data.opportunities, data.runId ?? null);
 
       setProgress(data.opportunities.length ? data.opportunities.length + " findings grouped and qualified" : data.webResearch?.length ? data.webResearch.length + " web results ready to review; no scored leads yet" : "No findings; broaden the topic or location");
+      void fetch("/api/hunt/research-runs?list=1", { cache: "no-store" })
+        .then(async (history) => history.ok ? history.json() as Promise<{ runs?: typeof savedRuns }> : null)
+        .then((history) => { if (Array.isArray(history?.runs)) setSavedRuns(history.runs); })
+        .catch(() => { /* A completed search remains usable if history refresh fails. */ });
 
     } catch (error) { if (!controller.signal.aborted) { onError((error as Error).message); setProgress(""); } else setProgress("Research cancelled"); }
 
@@ -289,7 +312,8 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       <summary>Saved research ({savedRuns.length})</summary>
       {savedRuns.length ? <ul>{savedRuns.map((saved) => <li key={saved.id}>
         <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small></span>
-        <button type="button" disabled={!!restoringRun || saved.schemaVersion !== 1} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === 1 ? "Restore" : "Update needed"}</button>
+        <button type="button" disabled={!!restoringRun || busy || saved.schemaVersion !== 1} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === 1 ? "Restore" : "Update needed"}</button>
+        {saved.schemaVersion === 1 && <button type="button" disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</button>}
       </li>)}</ul> : <p>Run research while signed in to build your history.</p>}
     </details>
 

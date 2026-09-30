@@ -32,7 +32,7 @@ Submit -> prepare query -> fetch -> group evidence -> compare.
 - HN, Stack Overflow, GitHub alternatives, Brave web, Places, Census, and optional supplied webpages run as independent collectors. Optional providers require server credentials; provider limits and failure handling live in `lib/collectors/`.
 - Research gate: 2 active and 6 queued requests per isolate; cancellation removes queued work, queue full returns 503.
 - Discussion, web snippets, place listings, repository activity, and establishment counts remain distinct from buyer proof. Places/Census are refreshed per research action; web results are transient.
-- Completed research: owner-scoped D1 snapshots; save and 20-run retention share one batch. `GET /api/hunt/research-runs` returns newest-first history (max 20); startup restores newest run. Browser snapshot remains fallback; assumption edits stay local until a rerun.
+- Completed research: owner-scoped D1 snapshots; save and 20-run retention share one batch. `GET /api/hunt/research-runs` returns newest-first history (max 20); startup restores newest run. The history's **Refresh sources** action reruns saved inputs and bypasses the 10-minute research cache; it saves a new snapshot and keeps the previous result. Browser snapshot remains fallback; assumption edits stay local until a rerun.
 - Optional supplied webpages: [collector](../services/collector/README.md).
 - Legacy dossiers and evidence: owner-scoped D1, `/hunt/legacy`.
 - Preserve URL, provider, dates, excerpt, and claim provenance. Discussion activity never proves sales.

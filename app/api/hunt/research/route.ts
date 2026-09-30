@@ -28,13 +28,14 @@ export async function POST(request: Request) {
   const parsed = researchInput.safeParse(body);
   if (!parsed.success) return Response.json({ error: "Check the topic, location, and investment range." }, { status: 400 });
   const input = parsed.data;
+  const forceRefresh = new URL(request.url).searchParams.get("refresh") === "1";
   let release: (() => void) | undefined;
   try { release = await researchGate.acquire(request.signal); }
   catch (error) { return Response.json({ error: request.signal.aborted ? "Research cancelled." : (error as Error).message }, { status: request.signal.aborted ? 499 : 503 }); }
   try {
   let query = prepareResearchQuery(input.topic, { geography: input.geography, original: input.useOriginalQuery });
   const key = JSON.stringify([owner, input]);
-  const hit = cache.get(key);
+  const hit = forceRefresh ? undefined : cache.get(key);
   if (hit) {
     return Response.json({ query: hit.query, opportunities: hit.result, providerErrors: hit.errors, webResearch: hit.webResearch, webSearchConfigured: !!env.BRAVE_SEARCH_API_KEY, cached: true }, { headers: { "Cache-Control": "no-store" } });
   }
