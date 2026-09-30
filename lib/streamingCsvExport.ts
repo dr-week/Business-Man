@@ -1,41 +1,17 @@
-import { Readable } from 'stream';
-import { stringify } from 'csv-stringify';
-import type { ResearchBounty } from '../db/schema';
+import { Readable } from "node:stream";
+import { researchBounties } from "../db/schema";
 
-/**
- * Returns a Node.js Readable stream that emits CSV rows for the supplied bounty records.
- * The stream is generated lazily – rows are stringified on‑demand, keeping memory usage
- * constant regardless of the number of records (suitable for > 100k rows).
- */
-export function createBountyCsvStream(bounties: Iterable<ResearchBounty>) : Readable {
-  const stringifier = stringify({ header: true, columns: [
-    "id",
-    "title",
-    "description",
-    "createdAt",
-    "status",
-    "sector",
-    "estimatedRevenue",
-  ]});
+type ResearchBounty = typeof researchBounties.$inferSelect;
+const columns = ["id", "opportunityId", "opportunityName", "falsificationTarget", "rewardAmount", "currency", "status", "createdAt", "expiresAt"] as const;
+const cell = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
 
-  const source = new Readable({
-    objectMode: true,
-    async read() {
-      for (const bounty of bounties) {
-        this.push([
-          bounty.id,
-          bounty.title,
-          bounty.description,
-          bounty.createdAt?.toISOString() ?? "",
-          bounty.status,
-          bounty.sector ?? "",
-          bounty.estimatedRevenue?.toString() ?? "",
-        ]);
-      }
-      this.push(null);
+/** Yield CSV rows lazily so export formatting adds constant buffering. */
+export function createBountyCsvStream(bounties: Iterable<ResearchBounty>): Readable {
+  function* rows() {
+    yield `${columns.map(cell).join(",")}\r\n`;
+    for (const bounty of bounties) {
+      yield `${columns.map((column) => cell(bounty[column])).join(",")}\r\n`;
     }
-  });
-
-  // Pipe the object stream into the CSV stringifier and return the final readable stream.
-  return source.pipe(stringifier);
+  }
+  return Readable.from(rows());
 }

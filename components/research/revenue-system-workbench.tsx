@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import { MarketPositioning } from "@/components/research/market-positioning";
 import {
   DEFAULT_INDIA_REVENUE_CONFIG,
@@ -8,6 +9,19 @@ import {
   calculateRevenueSystem,
   type RevenueModelInput,
 } from "@/lib/revenue-system";
+
+const saleSchema = z.object({
+  id: z.string(), offerId: z.string(), paymentLinkId: z.string(),
+  amountMinor: z.number().int().nonnegative(), paidAmountMinor: z.number().int().nonnegative(),
+  currency: z.string().length(3), status: z.string(), createdAt: z.string(), paidAt: z.string().nullable(),
+});
+const salesResponseSchema = z.object({ sales: z.array(saleSchema) });
+const checkoutResponseSchema = z.object({ url: z.string().url(), amountMinor: z.number().int().positive() });
+const capturedResponseSchema = z.object({ captured: z.boolean() });
+const responseErrorSchema = z.object({ error: z.string() });
+const responseJson = async (response: Response): Promise<unknown> => response.json().catch(() => null);
+const errorMessage = (value: unknown, fallback: string) => responseErrorSchema.safeParse(value).data?.error ?? fallback;
+type RevenueSale = z.infer<typeof saleSchema>;
 
 export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string }) {
   const [config, setConfig] = useState<RevenueModelInput>(
@@ -19,7 +33,7 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
     { loading: false, error: "", url: "", amount: 0 },
   );
   const [checkoutCopied, setCheckoutCopied] = useState(false);
-  const [sales, setSales] = useState<Array<{ id: string; offerId: string; paymentLinkId: string; amountMinor: number; paidAmountMinor: number; currency: string; status: string; createdAt: string; paidAt: string | null }>>([]);
+  const [sales, setSales] = useState<RevenueSale[]>([]);
   const [salesLoading, setSalesLoading] = useState(true);
   const [salesError, setSalesError] = useState("");
   const [fulfillingSale, setFulfillingSale] = useState("");
@@ -30,10 +44,11 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
     const controller = new AbortController();
     fetch("/api/revenue/sales", { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
-        const data = await response.json().catch(() => null);
-        if (!response.ok) throw new Error(data?.error ?? "Could not load sales.");
-        if (!Array.isArray(data?.sales)) throw new Error("Sales response was invalid.");
-        if (!controller.signal.aborted) setSales(data.sales);
+        const data = await responseJson(response);
+        if (!response.ok) throw new Error(errorMessage(data, "Could not load sales."));
+        const parsed = salesResponseSchema.safeParse(data);
+        if (!parsed.success) throw new Error("Sales response was invalid.");
+        if (!controller.signal.aborted) setSales(parsed.data.sales);
       })
       .catch((error) => { if (!controller.signal.aborted) setSalesError(error instanceof Error ? error.message : "Could not load sales."); })
       .finally(() => { if (!controller.signal.aborted) setSalesLoading(false); });
@@ -48,8 +63,8 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ saleId }),
       });
-      const data = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(data?.error ?? "Could not update fulfillment.");
+      const data = await responseJson(response);
+      if (!response.ok) throw new Error(errorMessage(data, "Could not update fulfillment."));
       setSales((current) => current.map((sale) => sale.id === saleId ? { ...sale, status: "fulfilled" } : sale));
     } catch (error) {
       setSalesError(error instanceof Error ? error.message : "Could not update fulfillment.");
@@ -65,9 +80,11 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ saleId }),
       });
-      const data = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(data?.error ?? "Could not check payment status.");
-      if (data?.captured) {
+      const data = await responseJson(response);
+      if (!response.ok) throw new Error(errorMessage(data, "Could not check payment status."));
+      const parsed = capturedResponseSchema.safeParse(data);
+      if (!parsed.success) throw new Error("Payment status response was invalid.");
+      if (parsed.data.captured) {
         setSales((current) => current.map((sale) => sale.id === saleId ? { ...sale, status: "paid", paidAmountMinor: sale.amountMinor } : sale));
         setSalesNotice("Payment confirmed by Razorpay. Sale is ready for delivery.");
       } else {
@@ -120,13 +137,12 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ offerId }),
       });
-      const data = await response.json().catch(() => null);
-      if (!response.ok || typeof data?.url !== "string" || typeof data?.amountMinor !== "number") {
-        throw new Error(data?.error ?? "Could not create a payment link.");
-      }
-      const amount = data.amountMinor / 100;
+      const data = await responseJson(response);
+      const parsed = checkoutResponseSchema.safeParse(data);
+      if (!response.ok || !parsed.success) throw new Error(errorMessage(data, "Could not create a payment link."));
+      const amount = parsed.data.amountMinor / 100;
       setConfig((prev) => ({ ...prev, tiers: prev.tiers.map((tier) => tier.id === offerId ? { ...tier, price: amount } : tier) }));
-      setCheckout({ loading: false, error: "", url: data.url, amount });
+      setCheckout({ loading: false, error: "", url: parsed.data.url, amount });
     } catch (error) {
       setCheckout({ loading: false, error: error instanceof Error ? error.message : "Could not create a payment link.", url: "", amount: 0 });
     }

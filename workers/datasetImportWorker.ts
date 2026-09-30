@@ -1,55 +1,43 @@
-// workers/datasetImportWorker.ts
-// Worker that imports an external CSV dataset (e.g., Indian startup data) and stores it locally.
-// This fills the "missing feature" of loading user‑provided data for analysis.
-
-import { promises as fs } from "fs";
+import { promises as fs } from "node:fs";
 import { dirname } from "node:path";
-import fetch from "node-fetch";
-import csv from "csv-parser";
+import Papa from "papaparse";
 
-/**
- * Download a CSV file from a public URL, parse it, and write the records to a JSON file.
- *
- * @param sourceUrl URL of the CSV dataset (must be publicly accessible).
- * @param outputPath Path where the parsed JSON will be saved (e.g., "data/datasets/startups.json").
- */
-export async function importCsvDataset(sourceUrl: string, outputPath: string): Promise<void> {
-  // Simple validation of the URL.
-  if (!sourceUrl.startsWith("http")) {
-    throw new Error("sourceUrl must be an http(s) URL");
+const MAX_CSV_BYTES = 5 * 1024 * 1024;
+
+async function readLimitedBody(response: Response): Promise<string> {
+  if (!response.body) throw new Error("CSV response had no body");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const chunks: string[] = [];
+  let bytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > MAX_CSV_BYTES) throw new Error("CSV exceeds the 5 MB import limit");
+      chunks.push(decoder.decode(value, { stream: true }));
+    }
+    chunks.push(decoder.decode());
+    return chunks.join("");
+  } finally {
+    await reader.cancel();
   }
-
-  // Stream the response body through csv‑parser.
-  const response = await fetch(sourceUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
-  }
-
-  const records: Record<string, string>[] = [];
-  const csvStream = response.body?.pipe(csv());
-  if (!csvStream) {
-    throw new Error("Unable to pipe CSV stream");
-  }
-
-  csvStream.on("data", (row: unknown) => records.push(row as Record<string, string>));
-  await new Promise((resolve, reject) => {
-    csvStream.on("end", resolve);
-    csvStream.on("error", reject);
-  });
-
-  // Ensure the directory exists.
-  await fs.mkdir(dirname(outputPath), { recursive: true });
-  // Write pretty‑printed JSON.
-  await fs.writeFile(outputPath, JSON.stringify(records, null, 2), "utf-8");
-
-  console.log(`✅ Imported ${records.length} rows to ${outputPath}`);
 }
 
-// Demo mode – run directly for quick verification.
-if (import.meta.url.endsWith(process.argv[1])) {
-  const demoUrl = process.env.DEMO_DATASET_URL || "https://raw.githubusercontent.com/datasets/startup-companies/master/data/startup_companies.csv";
-  const out = "./data/datasets/demo_startups.json";
-  importCsvDataset(demoUrl, out)
-    .then(() => console.log("Demo import completed"))
-    .catch((e) => console.error(e));
+/** Import a public HTTPS CSV, with a bounded response size and typed parsing. */
+export async function importCsvDataset(sourceUrl: string, outputPath: string): Promise<void> {
+  const url = new URL(sourceUrl);
+  if (url.protocol !== "https:" || url.hostname === "localhost" || url.hostname.endsWith(".localhost")) {
+    throw new Error("sourceUrl must use a public HTTPS host");
+  }
+  const response = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(15_000) });
+  if (!response.ok) throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
+  const contentLength = Number(response.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > MAX_CSV_BYTES) throw new Error("CSV exceeds the 5 MB import limit");
+
+  const parsed = Papa.parse<Record<string, string>>(await readLimitedBody(response), { header: true, skipEmptyLines: true });
+  if (parsed.errors.length) throw new Error(`CSV parse failed at row ${parsed.errors[0].row ?? "unknown"}`);
+  await fs.mkdir(dirname(outputPath), { recursive: true });
+  await fs.writeFile(outputPath, JSON.stringify(parsed.data), "utf-8");
 }

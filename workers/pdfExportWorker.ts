@@ -3,7 +3,7 @@
 // This module demonstrates a high‑value, monetizable feature guarded by the license guard.
 
 import { promises as fs } from "fs";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { degrees, PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { verifyLicenseToken } from "../lib/licenseGuard.js"; // path relative to workers folder
 
 /**
@@ -77,11 +77,6 @@ export async function generatePremiumPdf(
   // Serialize the PDF to bytes and write to disk.
   const pdfBytes = await pdfDoc.save();
   await fs.writeFile(outputPath, pdfBytes);
-}
-
-/** Helper to convert degrees for pdf-lib */
-function degrees(angle: number) {
-  return (angle * Math.PI) / 180;
 }
 
 // If executed directly, run a demo (useful for manual verification).

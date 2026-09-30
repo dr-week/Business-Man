@@ -72,8 +72,9 @@ export function ValidationReport() {
     setError("");
     fetch("/api/reporting/validation-summary", { signal: controller.signal, cache: "no-store" })
       .then(async (response) => {
-        const data = await response.json().catch(() => null);
-        if (!response.ok) throw new Error(data?.error ?? "Could not load validation report.");
+        const data: unknown = await response.json().catch(() => null);
+        const errorMessage = z.object({ error: z.string() }).safeParse(data).data?.error;
+        if (!response.ok) throw new Error(errorMessage ?? "Could not load validation report.");
         const parsed = reportSchema.safeParse(data);
         if (!parsed.success) throw new Error("The report returned an invalid response.");
         if (!controller.signal.aborted) setReport(parsed.data);

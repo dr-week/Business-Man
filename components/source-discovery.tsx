@@ -23,7 +23,10 @@ import { independentSourceCount } from "@/lib/evidence-lineage";
 import { parseFirstImpressions, recordFirstImpression, type FirstImpression } from "@/lib/first-impressions";
 
 const Charts = dynamic(() => import("./research-charts"), { ssr: false });
-const MarketInspection = dynamic(() => import("@/components/research/market-inspection").then((module) => module.MarketInspection), { ssr: false });
+const MarketInspection = dynamic(
+  () => import("@/components/research/market-inspection").then((module) => module.MarketInspection),
+  { ssr: false, loading: () => <div className="research-empty" role="status">Loading market research…</div> },
+);
 
 const storageKey = "businessman.research.v2";
 
@@ -113,7 +116,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   useEffect(() => {
     let active = true;
     fetch("/api/hunt/research-runs", { cache: "no-store" })
-      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation> } }[] }> : null)
+      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; schemaVersion?: number; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation> } }[] }> : null)
       .then((data) => {
         const latest = data?.runs?.[0];
         if (!active || latest?.schemaVersion !== 1 || !latest.input || !Array.isArray(latest.result?.opportunities)) return;

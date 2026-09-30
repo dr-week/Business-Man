@@ -1,31 +1,11 @@
-import { ResearchBounty } from "../db/schema";
+import { researchBounties } from "../db/schema";
 
+type ResearchBounty = typeof researchBounties.$inferSelect;
+const columns = ["id", "opportunityId", "opportunityName", "falsificationTarget", "rewardAmount", "currency", "status", "createdAt", "expiresAt"] as const;
 const cell = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
 
-/**
- * Generate a CSV string from an array of ResearchBounty records.
- * Only a subset of fields that are meaningful for market analysis are exported.
- */
+/** Export only fields in the current bounty schema. */
 export function generateBountyCsv(bounties: ResearchBounty[]): string {
-  const columns = [
-    "id",
-    "title",
-    "description",
-    "createdAt",
-    "status",
-    "sector",
-    "estimatedRevenue",
-  ];
-
-  const data = bounties.map((b) => [
-    b.id,
-    b.title,
-    b.description,
-    b.createdAt?.toISOString() ?? "",
-    b.status,
-    b.sector ?? "",
-    b.estimatedRevenue?.toString() ?? "",
-  ]);
-
-  return [columns, ...data].map((row) => row.map(cell).join(",")).join("\r\n");
+  const rows = bounties.map((bounty) => columns.map((column) => bounty[column]));
+  return [columns, ...rows].map((row) => row.map(cell).join(",")).join("\r\n");
 }
