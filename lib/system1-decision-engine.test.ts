@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { evaluateSystem1Heuristics } from "./system1-decision-engine";
-import type { ResearchOpportunity } from "./research-engine";
+import { blankFinancials, type ResearchOpportunity } from "./research-engine";
 
 describe("system1-decision-engine", () => {
   it("delivers immediate hard_pass on negative unit contribution margin", () => {
@@ -30,7 +30,7 @@ describe("system1-decision-engine", () => {
         ],
       },
       claims: [],
-      assumptions: {} as any,
+      assumptions: blankFinancials({ topic: "Delivery Drone Rental", geography: "India", budget: 500000, currency: "INR" }),
       factors: [],
       missing: [],
       sources: [],
@@ -68,11 +68,11 @@ describe("system1-decision-engine", () => {
           { name: "High", profit: 450000, units: 15, margin: 70, revenue: 750000, variableCosts: 150000, fixedCosts: 150000 },
         ],
       },
-      claims: [],
-      assumptions: {} as any,
+      claims: [{ id: "claim-1", text: "Operators report recurring demand.", direction: "supports", sourceIds: ["source-1"], publishedAt: "2026-09-29" }],
+      assumptions: blankFinancials({ topic: "Solar Robot Dry Cleaner", geography: "India", budget: 250000, currency: "INR" }),
       factors: [],
       missing: [],
-      sources: [],
+      sources: [{ id: "source-1", provider: "Buyer interviews", kind: "buyer", authorId: "buyer-1", title: "Solar operator interviews", excerpt: "Operators report recurring demand.", url: "https://example.com/interviews", publishedAt: "2026-09-29", retrievedAt: "2026-09-30T00:00:00.000Z", comments: 0 }],
     };
 
     const evalResult = evaluateSystem1Heuristics(opp);
@@ -80,5 +80,34 @@ describe("system1-decision-engine", () => {
     expect(evalResult.instantMoats.length).toBeGreaterThanOrEqual(2);
     expect(evalResult.fatalFlaws).toHaveLength(0);
     expect(evalResult.heuristicSummary).toContain("High Momentum signal");
+    expect(evalResult.evidenceCoveragePercent).toBe(100);
+    expect(evalResult.missingEvidence).toEqual([]);
+
+    const unsupported = evaluateSystem1Heuristics({ ...opp, claims: [], sources: [] });
+    expect(unsupported.quickVerdict).toBe("pause_investigate");
+    expect(unsupported.evidenceCoveragePercent).toBe(67);
+    expect(unsupported.missingEvidence).toContain("Source-linked supporting claim");
+
+    const unlinked = evaluateSystem1Heuristics({
+      ...opp,
+      sources: [{ ...opp.sources[0], id: "different-source" }],
+    });
+    expect(unlinked.quickVerdict).toBe("pause_investigate");
+    expect(unlinked.missingEvidence).toContain("Source-linked supporting claim");
+
+    const claims = ["claim-a", "claim-b"].map((id) => ({
+      id, text: "Buyers reject the proposed price.", direction: "contradicts" as const,
+      sourceIds: ["source-1"], publishedAt: "2026-09-29",
+    }));
+    const repeatedSource = evaluateSystem1Heuristics({ ...opp, claims });
+    expect(repeatedSource.quickVerdict).toBe("pause_investigate");
+    expect(repeatedSource.fatalFlaws).not.toContain("2 independent sources contradict this opportunity.");
+    const independentSources = evaluateSystem1Heuristics({
+      ...opp,
+      claims: claims.map((claim, index) => ({ ...claim, sourceIds: [`source-${index + 1}`] })),
+      sources: [...opp.sources, { ...opp.sources[0], id: "source-2", url: "https://example.com/interviews-2" }],
+    });
+    expect(independentSources.quickVerdict).toBe("hard_pass");
+    expect(independentSources.fatalFlaws).toContain("2 independent sources contradict this opportunity.");
   });
 });

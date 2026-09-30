@@ -118,6 +118,12 @@ Check each dependency's license and notices before copying code. Prefer small SC
 
 The repository currently documents an ~88 MB package plus a separately acquired ~324 MB model. That model cannot fit inside Cloudflare Workers’ 128 MB per-isolate memory limit; keep inference behind the existing optional remote adapter or host it as a separate service. Do not load model weights in the research Worker.
 
+### Product decision gate
+
+Idea-validation vendors sell quick scores and source-cited reports; trend tools sell recurring monitoring. A credible wedge is an explainable India-focused screen that shows evidence links and the next buyer-validation step, not another success-probability score. DPIIT reports 200,000+ recognized startups, but that is a prospect pool, not demand for this app. Test a one-off sourced brief with founders, then repeat-use workflows with advisors/incubators. [DimeADozen pricing](https://www.dimeadozen.ai/pricing), [Exploding Topics pricing](https://explodingtopics.com/pricing), [Startup India 2026](https://www.startupindia.gov.in/national-startup-day-2026/).
+
+In code, `go_fast` now requires a specific buyer, unit economics, and a supporting claim linked to a collected source. Negative consensus requires claims linked to two distinct sources. Missing evidence forces investigation; coverage is an input checklist, never success odds. This is a product rule, not validation of LAYA or a proven investment model.
+
 ## Next modules
 
 1. Challenge/program listings now link from the source directory; results remain manual until a stable API is confirmed. Record host, problem, eligibility, deadline, incentive, and source date. A prize or pilot offer is not recurring buyer demand.
