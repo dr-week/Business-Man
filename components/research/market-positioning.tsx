@@ -16,12 +16,12 @@ const alternatives = [
     label: "Plan features",
   },
   {
-    name: "LaunchRight India",
-    buyer: "Indian founder buying a validation report",
-    offer: "India-focused report with scoring, scenarios, and launch plan",
-    price: "₹2,999 one-time",
-    url: "https://www.launchrightindia.com/",
-    label: "Published price",
+    name: "Moshpit",
+    buyer: "Founder running pre-build demand tests",
+    offer: "Research, approved experiments, spend caps, and test monitoring",
+    price: "$99/month",
+    url: "https://www.moshpit.in/pricing",
+    label: "Published plan",
   },
 ] as const;
 
