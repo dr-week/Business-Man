@@ -34,4 +34,14 @@ describe("candidate alternatives", () => {
       "https://github.com/example-old/restaurant-inventory",
     ]);
   });
+
+  it("collapses URL variants for one repository and keeps its freshest record", () => {
+    const [original] = analyzeResearch(input, [source]);
+    const [result] = attachCandidateAlternatives([original], [
+      { name: "example/restaurant-inventory", url: "https://github.com/Example/restaurant-inventory.git/", description: "restaurant inventory management", stars: 12, pushedAt: "2025-01-01", license: "MIT" },
+      { name: "example/restaurant-inventory", url: "https://github.com/example/restaurant-inventory", description: "restaurant inventory management", stars: 20, pushedAt: "2026-08-01", license: "MIT" },
+    ]);
+    expect(result.candidateAlternatives).toHaveLength(1);
+    expect(result.candidateAlternatives?.[0]).toMatchObject({ url: "https://github.com/example/restaurant-inventory", stars: 20, pushedAt: "2026-08-01" });
+  });
 });
