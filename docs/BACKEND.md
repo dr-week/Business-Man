@@ -11,6 +11,7 @@
 | `lib/research-engine.ts` | Input schema, grouping, scoring |
 | `lib/validation-plan.ts`, `components/research/validation-plan.tsx` | One prioritized evidence action; remaining questions collapsed |
 | `lib/economics.ts` | Scenario calculations |
+| `lib/revenue-models.ts` | Revenue archetypes, working capital cycle, India scale targets, and stress testing |
 | `lib/investment-risks.ts` | Budget and downside flags from explicit inputs |
 | `app/api/hunt/leads/` | Authenticated owner-scoped dossiers/evidence |
 | `db/schema.ts`, `drizzle/` | D1 schema/migrations |
