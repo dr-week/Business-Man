@@ -37,7 +37,7 @@ Current API notes: [Google Trends API](https://developers.google.com/search/apis
 | Brave Search | Cross-check web claims | Search rank is not evidence quality. |
 | GitHub | Open-source alternatives and activity | Stars/issues are not market share or buyer demand. |
 | Google Places | Local competitor candidates | Incomplete coverage; ranking and reviews are not market size. |
-| US Census API | US population/business context | US-only; demographic counts are not demand. |
+| [US Census CBP](https://www.census.gov/data/datasets/2023/econ/cbp/2023-cbp.html) | US employer establishments; state counts by broad industry, ZIP counts for all industries (NAICS 00) | 2023 reference year; ZIP counts are not industry-specific or demand. |
 | User URLs | Direct source extraction | Respect access limits; retain source URL/date. |
 
 References: [Google Places API](https://developers.google.com/maps/documentation/places/web-service/overview), [Census developer APIs](https://www.census.gov/data/developers.html), [D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/), [Drizzle migrations](https://orm.drizzle.team/docs/migrations).
