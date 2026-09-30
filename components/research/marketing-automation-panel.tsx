@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Megaphone, Copy, Check, Linkedin, Mail, Calendar } from "lucide-react";
+import { Megaphone, Copy, Check, Mail, Calendar } from "lucide-react";
 import { generateMarketingCampaign } from "@/lib/marketing-automation";
 import type { ResearchOpportunity } from "@/lib/research-engine";
 
@@ -47,7 +47,7 @@ export function MarketingAutomationPanel({
             className={`archetype-btn ${activeChannel === "linkedin" ? "is-selected" : ""}`}
             onClick={() => setActiveChannel("linkedin")}
           >
-            <Linkedin size={12} style={{ display: "inline", marginRight: "4px" }} /> LinkedIn
+            in LinkedIn
           </button>
           <button
             type="button"

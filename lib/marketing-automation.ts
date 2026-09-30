@@ -16,11 +16,21 @@ export interface MarketingCampaign {
     body: string;
     callToAction: string;
   };
+  coldEmail: {
+    subject: string;
+    body: string;
+    callToAction: string;
+  };
   productHuntPitch: {
     tagline: string;
     makerComment: string;
   };
   weeklyDistributionCadence: {
+    day: string;
+    action: string;
+    platform: string;
+  }[];
+  fiveDayCadence: {
     day: string;
     action: string;
     platform: string;
@@ -37,7 +47,7 @@ export function generateMarketingCampaign(opportunity: ResearchOpportunity, curr
   const monthlyProfit = opportunity.financials?.scenarios[1]?.profit != null
     ? `${currency} ${opportunity.financials.scenarios[1].profit.toLocaleString("en-IN")}/mo`
     : "High recurring margin";
-  const testMove = opportunity.nextTest || "Interview 10 target buyers before building";
+  const testMove = opportunity.gap || "Interview 10 target buyers before building";
 
   const targetAudience = opportunity.buyer || "Founders, operators, and niche businesses";
   const distributionChannels = [
@@ -47,7 +57,7 @@ export function generateMarketingCampaign(opportunity: ResearchOpportunity, curr
     "Product Hunt / Launch PHOENIX Showcase",
   ];
 
-  const viralHook = `Why 90% of people will start another generic agency or AI wrapper in 2026—and fail—while the real money is hiding in ${name}.`;
+  const viralHook = `Why 90% of people will start another generic agency or AI wrapper in 2026—and fail—while the real money is hiding in ${name} (${category}).`;
 
   const xThread = [
     {
@@ -88,8 +98,8 @@ Key takeaway: Don't guess what people want. Track where platform changes and man
 Full market dossier generated via Businessman Intelligence Desk. What are your thoughts on this space?`;
 
   const coldOutreachEmail = {
-    subject: `Quick question regarding ${name.toLowerCase()}`,
-    body: `Hi {{firstName}},\n\nI noticed you are leading operations in ${category}. Quick question:\n\nAre you currently facing bottlenecks with ${problem}?\n\nWe recently mapped the economics and supply gaps for ${name} (showing potential to unlock ${monthlyProfit} in operational savings).\n\nNot pitching anything—just sharing our 1-page intelligence brief with 5 operators in this space. Mind if I send the PDF overview your way?\n\nBest,\n[Your Name]`,
+    subject: `Quick question regarding ${problem.slice(0, 30)}...`,
+    body: `Hi {{firstName}},\n\nI noticed you are leading operations in ${category}. Quick question:\n\nAre you currently facing bottlenecks with ${problem}?\n\nWe recently mapped the economics and supply gaps for ${name} (showing potential to unlock ${monthlyProfit} in operational savings).\n\nKey gap we identified: ${testMove}.\n\nNot pitching anything—just sharing our 1-page intelligence brief with 5 operators in this space. Mind if I send the PDF overview your way?\n\nBest,\n[Your Name]`,
     callToAction: "Reply 'Yes' to receive the 1-page briefing dossier.",
   };
 
@@ -115,7 +125,9 @@ Full market dossier generated via Businessman Intelligence Desk. What are your t
     xThread,
     linkedinPost,
     coldOutreachEmail,
+    coldEmail: coldOutreachEmail,
     productHuntPitch,
     weeklyDistributionCadence,
+    fiveDayCadence: weeklyDistributionCadence,
   };
 }
