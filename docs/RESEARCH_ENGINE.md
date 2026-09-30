@@ -4,6 +4,8 @@
 
 `POST /api/hunt/research` validates topic, geography, capital and filters; runs bounded providers; groups duplicate sources; extracts claims; estimates economics; ranks only when required factors have evidence. Provider output is not proof of paid demand. A completed run is archived to D1 with owner, original inputs, query interpretation, results, errors and timestamp. Keep 20 snapshots per owner; `GET /api/hunt/research-runs` loads the latest.
 
+Use **Saved research → Download backup** for a portable JSON snapshot. **Import backup** validates format v1 and the research input, assigns a new archive ID to the signed-in owner, and applies the same 20-run retention limit. Upload limit: 1.9 MB.
+
 `lib/economics.ts` reports arithmetic break-even thresholds for price, variable cost, fixed cost, and units. The Economics view keeps them collapsed and labels them as targets, not forecasts. Users must verify inputs with dated buyer and supplier evidence.
 
 `lib/source-grouping.ts` deduplicates canonical HTTP(S) URLs (tracking parameters, query order, fragment, and `www` ignored) and merges similar titles. Invalid or credentialed URLs retain records by provider/id rather than colliding. Source caps bound CPU and memory; grouping is heuristic, not proof two reports share an origin.
