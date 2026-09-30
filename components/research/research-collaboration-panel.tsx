@@ -10,6 +10,7 @@ import {
   type EvidenceType,
   createDefaultBountyFromOpportunity,
   calculateCommunityReputationImpact,
+  calculateBountySplit,
 } from "@/lib/research-collaboration";
 import type { ResearchOpportunity } from "@/lib/research-engine";
 
@@ -116,14 +117,14 @@ export function ResearchCollaborationPanel({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", flexWrap: "wrap" }}>
           <div>
             <strong style={{ color: "var(--gold)" }}>Falsification Target: </strong>
-            <span>"{bounty.falsificationTarget}"</span>
+            <span>&ldquo;{bounty.falsificationTarget}&rdquo;</span>
           </div>
           <div style={{ fontSize: "11px", color: "var(--gold)", background: "#10140e", padding: "2px 8px", borderRadius: "4px", border: "1px solid #2e3626" }}>
             Payout: {bounty.currency} {calculateBountySplit(bounty.rewardAmount).contributorPayout.toLocaleString("en-IN")} · Escrow Fee (15%): {bounty.currency} {calculateBountySplit(bounty.rewardAmount).platformEscrowFee.toLocaleString("en-IN")}
           </div>
         </div>
         <div style={{ fontSize: "11px", color: "#8a957d", marginTop: "4px" }}>
-          Submit verified local pricing, supplier alternatives, or customer refusal data to claim attribution & verification bounties.
+          Submit verified local pricing, supplier alternatives, or customer refusal data to claim attribution &amp; verification bounties.
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Users, ShieldAlert, Award, PlusCircle, ExternalLink, ThumbsUp, ThumbsDown, AlertTriangle } from "lucide-react";
+import { Users, Award, PlusCircle, ExternalLink, ThumbsUp, ThumbsDown, AlertTriangle } from "lucide-react";
 import type { ResearchOpportunity } from "@/lib/research-engine";
 import {
   calculatePeerConsensus,

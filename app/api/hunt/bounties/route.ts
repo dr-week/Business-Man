@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { researchBounties, researchContributions } from "@/db/schema";
 import { apiError, isCrossOrigin, ownerId } from "@/lib/hunt-api";
@@ -7,7 +7,6 @@ import {
   submitContributionSchema,
   evaluateConsensusSignals,
   type PeerContributionItem,
-  type ResearchBountyItem,
 } from "@/lib/research-bounties";
 import { readLimitedJson } from "@/lib/read-limited-json";
 
