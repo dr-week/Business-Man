@@ -7,16 +7,39 @@ import { researchInput } from "@/lib/research-engine";
 const MAX_RETAINED_RUNS = 20;
 const MAX_RUN_BYTES = 1_900_000;
 export const RESEARCH_RUN_SCHEMA_VERSION = 1;
+const evidenceId = z.string().min(1).max(200);
+const sourceSignal = z.object({
+  id: evidenceId, provider: z.string().min(1).max(200), title: z.string().min(1).max(1000),
+  url: z.string().url().max(2000), publishedAt: z.string(), retrievedAt: z.string(),
+}).passthrough();
+const claim = z.object({
+  id: evidenceId, text: z.string().min(1).max(5000), direction: z.enum(["supports", "contradicts", "context"]), sourceIds: z.array(evidenceId).min(1).max(200),
+}).passthrough();
+const factor = z.object({
+  name: z.string().min(1).max(100), weight: z.number().finite().min(0).max(100),
+  score: z.number().finite().min(0).max(10).nullable(), evidenceIds: z.array(evidenceId).max(500), rule: z.string().min(1).max(2000),
+}).passthrough();
 const importedOpportunity = z.object({
   id: z.string().min(1).max(200), name: z.string().min(1).max(300), category: z.string().max(200),
   geography: z.string().max(200), buyer: z.string().max(500).nullable(), problem: z.string().max(5000),
   offering: z.string().max(5000).nullable(), alternatives: z.array(z.string().max(500)).max(100),
   gap: z.string().max(5000).nullable(), risks: z.array(z.string().max(2000)).max(100),
-  sources: z.array(z.record(z.string(), z.unknown())).max(200), claims: z.array(z.record(z.string(), z.unknown())).max(500),
-  assumptions: z.record(z.string(), z.unknown()), factors: z.array(z.record(z.string(), z.unknown())).max(50),
+  sources: z.array(sourceSignal).max(200), claims: z.array(claim).max(500),
+  assumptions: z.record(z.string(), z.unknown()), factors: z.array(factor).max(50),
   strength: z.number().finite().nullable(), confidence: z.enum(["Low", "Medium", "High"]),
   financials: z.record(z.string(), z.unknown()).nullable(), missing: z.array(z.string().max(500)).max(100),
-}).passthrough();
+}).passthrough().superRefine((opportunity, context) => {
+  const sourceIds = new Set(opportunity.sources.map((source) => source.id));
+  const claimIds = new Set(opportunity.claims.map((item) => item.id));
+  if (sourceIds.size !== opportunity.sources.length) context.addIssue({ code: "custom", path: ["sources"], message: "Duplicate source ids" });
+  if (claimIds.size !== opportunity.claims.length) context.addIssue({ code: "custom", path: ["claims"], message: "Duplicate claim ids" });
+  opportunity.claims.forEach((item, index) => item.sourceIds.forEach((id) => {
+    if (!sourceIds.has(id)) context.addIssue({ code: "custom", path: ["claims", index, "sourceIds"], message: "Claim references a source outside this opportunity" });
+  }));
+  opportunity.factors.forEach((factor, index) => factor.evidenceIds.forEach((id) => {
+    if (!claimIds.has(id)) context.addIssue({ code: "custom", path: ["factors", index, "evidenceIds"], message: "Factor references a claim outside this opportunity" });
+  }));
+});
 const researchBackup = z.object({
   format: z.literal("businessman-research-run"), formatVersion: z.literal(1),
   run: z.object({

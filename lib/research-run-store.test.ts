@@ -31,6 +31,30 @@ describe("research run storage", () => {
     }, "owner-1")).toThrow("Backup metadata does not match");
   });
 
+  it("rejects imported evidence whose claim or factor points outside the snapshot", () => {
+    const opportunity = {
+      id: "hotel-service", name: "Hotel service", category: "Hospitality", geography: "Goa, India", buyer: null,
+      problem: "A recurring service issue", offering: null, alternatives: [], gap: null, risks: [],
+      sources: [{ id: "source-1", provider: "Open dataset", title: "Hospitality dataset", url: "https://example.com/data", publishedAt: "2026-01-01", retrievedAt: "2026-09-30" }],
+      claims: [{ id: "claim-1", text: "Registration totals are published by district.", direction: "context", sourceIds: ["source-1"] }], assumptions: {},
+      factors: [{ name: "Paid demand", weight: 25, score: null, evidenceIds: ["claim-1"], rule: "Needs buyer evidence." }], strength: null, confidence: "Low", financials: null, missing: [],
+    };
+    const backup = {
+      format: "businessman-research-run", formatVersion: 1,
+      run: {
+        schemaVersion: 1, topic: "Hotel service", geography: "Goa, India", currency: "INR", createdAt: "2026-09-20T10:00:00.000Z",
+        input: { topic: "Hotel service", geography: "Goa, India", currency: "INR", budget: null }, result: { opportunities: [opportunity] },
+      },
+    };
+    expect(() => parseResearchBackup(backup, "owner-1")).not.toThrow();
+
+    opportunity.claims[0].sourceIds = ["missing-source"];
+    expect(() => parseResearchBackup(backup, "owner-1")).toThrow("Backup format is invalid");
+    opportunity.claims[0].sourceIds = ["source-1"];
+    opportunity.factors[0].evidenceIds = ["missing-claim"];
+    expect(() => parseResearchBackup(backup, "owner-1")).toThrow("Backup format is invalid");
+  });
+
   it("loads only the latest snapshot for its owner", () => {
     const db = drizzle({} as D1Database, { schema });
     const query = listResearchRuns(db, "owner-1").toSQL();
