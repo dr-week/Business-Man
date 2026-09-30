@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { inr } from "@/lib/economics";
 
 export type ArchetypeId = "saas_b2b" | "d2c_ecommerce" | "marketplace" | "consulting_service" | "info_product";
 

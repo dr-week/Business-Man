@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Calculator, Save, Sparkles, TrendingUp, AlertTriangle } from "lucide-react";
+import { Calculator, Save, Sparkles, TrendingUp } from "lucide-react";
 import { calculateEconomics, economicsInput, emptyEconomics, inr, type Economics } from "@/lib/economics";
 import {
   BUSINESS_ARCHETYPES,
