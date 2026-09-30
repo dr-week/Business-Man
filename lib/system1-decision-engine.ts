@@ -12,8 +12,8 @@ export interface System1Signal {
 export interface System1Evaluation {
   opportunityId: string;
   quickVerdict: System1Verdict;
-  confidenceScore: number; // 0 - 100
-  speedToDecisionSeconds: number;
+  evidenceCoveragePercent: number;
+  missingEvidence: string[];
   fatalFlaws: string[];
   instantMoats: string[];
   reasons: System1Signal[];
@@ -30,6 +30,7 @@ export function evaluateSystem1Heuristics(opportunity: ResearchOpportunity): Sys
   const fatalFlaws: string[] = [];
   const instantMoats: string[] = [];
   const signals: System1Signal[] = [];
+  const availableSourceIds = new Set(opportunity.sources.map((source) => source.id));
 
   // Check 1: Unit Economics / Contribution Margin
   if (opportunity.financials) {
@@ -94,13 +95,14 @@ export function evaluateSystem1Heuristics(opportunity: ResearchOpportunity): Sys
 
   // Check 4: Contradicting Claims / Negative Research
   const contradictingClaims = opportunity.claims?.filter((c) => c.direction === "contradicts") || [];
-  if (contradictingClaims.length >= 2) {
-    fatalFlaws.push(`${contradictingClaims.length} active contradicting claims discovered in primary research.`);
+  const contradictionSourceIds = new Set(contradictingClaims.flatMap((claim) => claim.sourceIds).filter((id) => availableSourceIds.has(id)));
+  if (contradictionSourceIds.size >= 2) {
+    fatalFlaws.push(`${contradictionSourceIds.size} independent sources contradict this opportunity.`);
     signals.push({
       ruleName: "Negative Research Consensus",
       verdict: "hard_pass",
       weight: 30,
-      triggerReason: `Multiple direct contradicting evidence points exist in source literature.`,
+      triggerReason: `Contradictory claims link to ${contradictionSourceIds.size} distinct collected sources.`,
     });
   }
 
@@ -115,35 +117,39 @@ export function evaluateSystem1Heuristics(opportunity: ResearchOpportunity): Sys
     });
   }
 
-  // Determine overall verdict
+  // Input presence is a completeness check, not a probability of success.
+  const hasLinkedSupportingClaim = opportunity.claims.some((claim) =>
+    claim.direction === "supports" && claim.sourceIds.some((id) => availableSourceIds.has(id))
+  );
+  const missingEvidence: string[] = [];
+  if (!opportunity.buyer?.trim()) missingEvidence.push("Specific target buyer");
+  if (!opportunity.financials) missingEvidence.push("Unit economics");
+  if (!hasLinkedSupportingClaim) missingEvidence.push("Source-linked supporting claim");
+  const evidenceCoveragePercent = Math.round(((3 - missingEvidence.length) / 3) * 100);
+
+  // Positive heuristics cannot fast-track an idea until core inputs have traceable evidence.
   let quickVerdict: System1Verdict = "pause_investigate";
-  let confidenceScore = 60;
 
   const hardPassCount = signals.filter((s) => s.verdict === "hard_pass").length;
   const goFastCount = signals.filter((s) => s.verdict === "go_fast").length;
 
   if (hardPassCount >= 1 || fatalFlaws.length >= 2) {
     quickVerdict = "hard_pass";
-    confidenceScore = Math.min(95, 70 + hardPassCount * 10);
-  } else if (goFastCount >= 2 && fatalFlaws.length === 0) {
+  } else if (goFastCount >= 2 && fatalFlaws.length === 0 && missingEvidence.length === 0) {
     quickVerdict = "go_fast";
-    confidenceScore = Math.min(90, 65 + goFastCount * 10);
-  } else {
-    quickVerdict = "pause_investigate";
-    confidenceScore = 55;
   }
 
   const heuristicSummary = quickVerdict === "hard_pass"
     ? `System-1 Screen: Immediate Pass recommended. Found ${fatalFlaws.length} fatal flaws including: ${fatalFlaws[0] || "unfavorable unit economics"}.`
     : quickVerdict === "go_fast"
     ? `System-1 Screen: High Momentum signal. Strong moats identified: ${instantMoats[0] || "solid margin and clear ICP"}.`
-    : `System-1 Screen: Deliberate deeper (System-2 required). Ambiguous unit economics or untested buyer willingness to pay.`;
+    : `System-1 Screen: Deliberate deeper (System-2 required). ${missingEvidence.length ? `Missing: ${missingEvidence.join(", ")}.` : "Resolve ambiguous economics or buyer willingness to pay."}`;
 
   return {
     opportunityId: opportunity.id,
     quickVerdict,
-    confidenceScore,
-    speedToDecisionSeconds: 0.05,
+    evidenceCoveragePercent,
+    missingEvidence,
     fatalFlaws,
     instantMoats,
     reasons: signals,
