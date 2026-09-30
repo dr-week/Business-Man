@@ -123,7 +123,7 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
           <dd>{selectedTier.channel.replace(/_/g, " ")}</dd>
 
           <dt>Monthly Volume Assumption</dt>
-          <dd><strong>{selectedTier.estimatedMonthlyUnits} units / month</strong></dd>
+          <dd><strong>{selectedTier.estimatedMonthlyUnits} scenario units / month</strong></dd>
 
           <dt>Variable Unit Cost</dt>
           <dd>{formatMoney(selectedTier.variableCostPerUnit)} (API compute / enrichment / checkout)</dd>
@@ -141,6 +141,7 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
       <details className="revenue-sensitivity-module" open>
         <summary>Monetization sensitivity & break-even math</summary>
         <div className="revenue-sensitivity-content">
+          <p className="revenue-math-note"><strong>No payment data is connected.</strong> Monthly unit volumes start at zero; change them only to model a stated scenario. Current monthly profit is not observed revenue or a demand forecast.</p>
           <p className="revenue-math-note">
             Calculated as: <code>Monthly Revenue = Σ (Tier Units × Net Price)</code>.
             Contribution = Net Revenue − Variable costs. Fixed cost covers serverless edge, D1 database, and domain maintenance.
@@ -173,7 +174,7 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
             {config.tiers.filter((t) => t.offerType !== "free").map((tier) => (
               <div key={`units-${tier.id}`} className="revenue-input-group">
                 <label>
-                  <span>{tier.name} (Units)</span>
+                  <span>{tier.name} (Scenario units / month)</span>
                   <strong>{tier.estimatedMonthlyUnits}</strong>
                 </label>
                 <input

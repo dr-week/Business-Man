@@ -7,21 +7,31 @@ import {
 } from "./revenue-system";
 
 describe("revenue system module", () => {
-  it("provides valid default India configuration with 4 tiers and positive unit contributions", () => {
+  it("keeps both default configurations honest when no payment data exists", () => {
     expect(revenueModelInput.safeParse(DEFAULT_INDIA_REVENUE_CONFIG).success).toBe(true);
     expect(DEFAULT_INDIA_REVENUE_CONFIG.tiers).toHaveLength(4);
 
     const summary = calculateRevenueSystem(DEFAULT_INDIA_REVENUE_CONFIG);
     expect(summary.currency).toBe("INR");
-    expect(summary.totalGrossRevenue).toBeGreaterThan(0);
-    expect(summary.totalNetRevenue).toBeLessThanOrEqual(summary.totalGrossRevenue);
-    expect(summary.totalContribution).toBeGreaterThan(0);
-    expect(summary.isProfitable).toBe(true);
-    expect(summary.breakEvenMonthlyNetRevenue).not.toBeNull();
+    expect(DEFAULT_INDIA_REVENUE_CONFIG.tiers.every((tier) => tier.estimatedMonthlyUnits === 0)).toBe(true);
+    expect(summary.totalGrossRevenue).toBe(0);
+    expect(summary.totalContribution).toBe(0);
+    expect(summary.isProfitable).toBe(false);
+    expect(summary.breakEvenMonthlyNetRevenue).toBeNull();
+    expect(summary.tierBreakdown.find((tier) => tier.id === "decision_brief")?.breakEvenUnits).toBeGreaterThan(0);
+
+    const global = calculateRevenueSystem(DEFAULT_GLOBAL_REVENUE_CONFIG);
+    expect(global.currency).toBe("USD");
+    expect(global.totalNetRevenue).toBe(0);
+    expect(global.isProfitable).toBe(false);
   });
 
   it("calculates refunds, variable costs, and contribution margin accurately", () => {
-    const summary = calculateRevenueSystem(DEFAULT_INDIA_REVENUE_CONFIG);
+    const scenario = {
+      ...DEFAULT_INDIA_REVENUE_CONFIG,
+      tiers: DEFAULT_INDIA_REVENUE_CONFIG.tiers.map((tier) => tier.id === "decision_brief" ? { ...tier, estimatedMonthlyUnits: 35 } : tier),
+    };
+    const summary = calculateRevenueSystem(scenario);
     const briefTier = summary.tierBreakdown.find((t) => t.id === "decision_brief");
     expect(briefTier).toBeDefined();
 
@@ -68,7 +78,7 @@ describe("revenue system module", () => {
     expect(revenueModelInput.safeParse(DEFAULT_GLOBAL_REVENUE_CONFIG).success).toBe(true);
     const summary = calculateRevenueSystem(DEFAULT_GLOBAL_REVENUE_CONFIG);
     expect(summary.currency).toBe("USD");
-    expect(summary.isProfitable).toBe(true);
+    expect(summary.isProfitable).toBe(false);
     expect(summary.tierBreakdown).toHaveLength(4);
   });
 });
