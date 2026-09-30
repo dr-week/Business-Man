@@ -57,6 +57,13 @@
       "when": 1790795827610,
       "tag": "0007_product_revenue",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1790797331706,
+      "tag": "0008_research_run_schema_version",
+      "breakpoints": true
     }
   ]
 }

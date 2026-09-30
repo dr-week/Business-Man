@@ -11,7 +11,7 @@ import { collectBraveWebResults } from "@/lib/collectors/brave-search";
 import type { WebResearchResult } from "@/lib/collectors/brave-search";
 import { env } from "cloudflare:workers";
 import { getDb } from "@/db";
-import { saveResearchRun } from "@/lib/research-run-store";
+import { RESEARCH_RUN_SCHEMA_VERSION, saveResearchRun } from "@/lib/research-run-store";
 import { readLimitedJson } from "@/lib/read-limited-json";
 import { createResearchGate } from "@/lib/research-gate";
 import { createBoundedCache } from "@/lib/bounded-cache";
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   const runId = crypto.randomUUID();
   try {
     await saveResearchRun(getDb(), {
-      id: runId, ownerId: owner, topic: input.topic, geography: input.geography, currency: input.currency,
+      id: runId, ownerId: owner, schemaVersion: RESEARCH_RUN_SCHEMA_VERSION, topic: input.topic, geography: input.geography, currency: input.currency,
       input: input as Record<string, unknown>,
       result: { query, opportunities, providerErrors },
     });

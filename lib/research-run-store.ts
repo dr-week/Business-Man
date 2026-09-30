@@ -4,10 +4,11 @@ import { researchRuns } from "@/db/schema";
 
 const MAX_RETAINED_RUNS = 20;
 const MAX_RUN_BYTES = 1_900_000;
+export const RESEARCH_RUN_SCHEMA_VERSION = 1;
 
 /** Return a small owner-scoped history index without loading saved result payloads. */
 export function listResearchRuns(db: ReturnType<typeof getDb>, ownerId: string) {
-  return db.select({ id: researchRuns.id, topic: researchRuns.topic, geography: researchRuns.geography, currency: researchRuns.currency, createdAt: researchRuns.createdAt }).from(researchRuns)
+  return db.select({ id: researchRuns.id, schemaVersion: researchRuns.schemaVersion, topic: researchRuns.topic, geography: researchRuns.geography, currency: researchRuns.currency, createdAt: researchRuns.createdAt }).from(researchRuns)
     .where(eq(researchRuns.ownerId, ownerId))
     .orderBy(desc(researchRuns.createdAt), desc(researchRuns.id))
     .limit(MAX_RETAINED_RUNS);
@@ -30,6 +31,9 @@ export function getLatestResearchRun(db: ReturnType<typeof getDb>, ownerId: stri
 
 /** Save and retain the newest owner-scoped runs in one D1 transaction. */
 export async function saveResearchRun(db: ReturnType<typeof getDb>, run: typeof researchRuns.$inferInsert) {
+  if ((run.schemaVersion ?? RESEARCH_RUN_SCHEMA_VERSION) !== RESEARCH_RUN_SCHEMA_VERSION) {
+    throw new Error("Unsupported research snapshot schema version");
+  }
   const runBytes = new TextEncoder().encode(JSON.stringify(run)).byteLength;
   if (runBytes > MAX_RUN_BYTES) throw new Error("Research snapshot exceeds the D1 row budget");
   const retained = db.select({ id: researchRuns.id }).from(researchRuns)

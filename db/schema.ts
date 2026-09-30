@@ -85,6 +85,7 @@ export const huntEvidence = sqliteTable("hunt_evidence", {
 export const researchRuns = sqliteTable("research_runs", {
   id: text("id").primaryKey(),
   ownerId: text("owner_id").notNull(),
+  schemaVersion: integer("schema_version").notNull().default(1),
   topic: text("topic").notNull(),
   geography: text("geography").notNull(),
   currency: text("currency").notNull(),

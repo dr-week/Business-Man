@@ -19,10 +19,12 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
     { loading: false, error: "", url: "", amount: 0 },
   );
   const [checkoutCopied, setCheckoutCopied] = useState(false);
-  const [sales, setSales] = useState<Array<{ id: string; offerId: string; amountMinor: number; paidAmountMinor: number; currency: string; status: string; createdAt: string; paidAt: string | null }>>([]);
+  const [sales, setSales] = useState<Array<{ id: string; offerId: string; paymentLinkId: string; amountMinor: number; paidAmountMinor: number; currency: string; status: string; createdAt: string; paidAt: string | null }>>([]);
   const [salesLoading, setSalesLoading] = useState(true);
   const [salesError, setSalesError] = useState("");
   const [fulfillingSale, setFulfillingSale] = useState("");
+  const [reconcilingSale, setReconcilingSale] = useState("");
+  const [salesNotice, setSalesNotice] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -52,6 +54,28 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
     } catch (error) {
       setSalesError(error instanceof Error ? error.message : "Could not update fulfillment.");
     } finally { setFulfillingSale(""); }
+  }
+
+  async function checkPaymentStatus(saleId: string) {
+    setReconcilingSale(saleId);
+    setSalesError("");
+    setSalesNotice("");
+    try {
+      const response = await fetch("/api/revenue/reconcile", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ saleId }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.error ?? "Could not check payment status.");
+      if (data?.captured) {
+        setSales((current) => current.map((sale) => sale.id === saleId ? { ...sale, status: "paid", paidAmountMinor: sale.amountMinor } : sale));
+        setSalesNotice("Payment confirmed by Razorpay. Sale is ready for delivery.");
+      } else {
+        setSalesNotice("Razorpay has not confirmed a captured payment yet.");
+      }
+    } catch (error) {
+      setSalesError(error instanceof Error ? error.message : "Could not check payment status.");
+    } finally { setReconcilingSale(""); }
   }
 
   const metrics = calculateRevenueSystem(config);
@@ -143,6 +167,7 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
         <div className="revenue-sensitivity-content" aria-live="polite">
           {salesLoading && <p role="status">Loading sales…</p>}
           {salesError && <p role="alert">{salesError}</p>}
+          {salesNotice && <p role="status">{salesNotice}</p>}
           {!salesLoading && !sales.length && !salesError && <p className="revenue-math-note">No sales yet. Payment links appear here; a verified payment webhook moves them into fulfillment.</p>}
           {sales.map((sale) => <div className="revenue-sale-row" key={sale.id}>
             <div><strong>{sale.offerId === "decision_brief" ? "Evidence Decision Brief" : sale.offerId === "assisted_validation" ? "Assisted Field Validation" : sale.offerId}
@@ -150,6 +175,9 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
             <strong>{new Intl.NumberFormat(undefined, { style: "currency", currency: sale.currency, maximumFractionDigits: 0 }).format((sale.paidAmountMinor || sale.amountMinor) / 100)}</strong>
             {sale.status === "paid" && <button type="button" className="hunt-icon-action" disabled={fulfillingSale === sale.id} onClick={() => markSaleFulfilled(sale.id)}>
               {fulfillingSale === sale.id ? "Saving…" : "Mark delivered"}
+            </button>}
+            {sale.status === "link_created" && !sale.paymentLinkId.startsWith("pending_") && <button type="button" className="hunt-icon-action" disabled={reconcilingSale === sale.id} onClick={() => checkPaymentStatus(sale.id)}>
+              {reconcilingSale === sale.id ? "Checking…" : "Check payment"}
             </button>}
           </div>)}
           <small>Only signature-verified payments count as paid. Mark delivery after completing the research brief or field work; this does not contact the buyer.</small>

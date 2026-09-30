@@ -14,6 +14,7 @@ export async function GET() {
     const sales = await getDb().select({
       id: productRevenue.id,
       offerId: productRevenue.offerId,
+      paymentLinkId: productRevenue.paymentLinkId,
       amountMinor: productRevenue.amountMinor,
       paidAmountMinor: productRevenue.paidAmountMinor,
       currency: productRevenue.currency,

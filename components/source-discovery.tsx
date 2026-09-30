@@ -53,7 +53,7 @@ function exportCsv(items: ResearchOpportunity[], currency: string) {
 
 export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError, initialTopic, onOpenAnalysis, onOpenResearch = () => {} }: { view?: "research" | "analysis" | "economics" | "market" | "sources" | "starred" | "settings" | "profile"; onSaved: (lead: Lead) => void; onError: (message: string) => void; initialTopic?: string; onOpenAnalysis?: () => void; onOpenResearch?: () => void }) {
 
-  const [savedRuns, setSavedRuns] = useState<{ id: string; topic: string; geography: string; currency: string; createdAt: string }[]>([]);
+  const [savedRuns, setSavedRuns] = useState<{ id: string; schemaVersion: number; topic: string; geography: string; currency: string; createdAt: string }[]>([]);
   const [restoringRun, setRestoringRun] = useState("");
 
   const abort = useRef<AbortController | null>(null);
@@ -116,7 +116,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation> } }[] }> : null)
       .then((data) => {
         const latest = data?.runs?.[0];
-        if (!active || !latest?.input || !Array.isArray(latest.result?.opportunities)) return;
+        if (!active || latest?.schemaVersion !== 1 || !latest.input || !Array.isArray(latest.result?.opportunities)) return;
         setRunId(latest.id ?? null); setInput(latest.input); setOpportunities(latest.result.opportunities);
         setTopic(latest.input.topic); setGeography(latest.input.geography); setBudget(latest.input.budget == null ? "" : String(latest.input.budget));
         setPreparedBrief(latest.result.query?.brief ?? ""); setInterpretation(latest.result.query ?? null);
@@ -140,8 +140,8 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       const response = await fetch(`/api/hunt/research-runs?id=${encodeURIComponent(id)}`, { cache: "no-store" });
       const body: unknown = await response.json();
       if (!response.ok || typeof body !== "object" || body === null || !("run" in body)) throw new Error("Could not restore saved research.");
-      const run = body.run as { id: string; input: ResearchInput; result: { opportunities: ResearchOpportunity[]; query?: typeof interpretation } };
-      if (!run.input || !Array.isArray(run.result?.opportunities)) throw new Error("Saved research has an invalid format.");
+      const run = body.run as { id: string; schemaVersion: number; input: ResearchInput; result: { opportunities: ResearchOpportunity[]; query?: typeof interpretation } };
+      if (run.schemaVersion !== 1 || !run.input || !Array.isArray(run.result?.opportunities)) throw new Error("Saved research has an unsupported format.");
       setRunId(run.id); setInput(run.input); setOpportunities(run.result.opportunities);
       setTopic(run.input.topic); setGeography(run.input.geography); setBudget(run.input.budget == null ? "" : String(run.input.budget));
       setPreparedBrief(run.result.query?.brief ?? ""); setInterpretation(run.result.query ?? null);
@@ -289,7 +289,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       <summary>Saved research ({savedRuns.length})</summary>
       {savedRuns.length ? <ul>{savedRuns.map((saved) => <li key={saved.id}>
         <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small></span>
-        <button type="button" disabled={!!restoringRun} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : "Restore"}</button>
+        <button type="button" disabled={!!restoringRun || saved.schemaVersion !== 1} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === 1 ? "Restore" : "Update needed"}</button>
       </li>)}</ul> : <p>Run research while signed in to build your history.</p>}
     </details>
 

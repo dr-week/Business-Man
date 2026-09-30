@@ -23,6 +23,8 @@
 | `db/schema.ts`, `drizzle/` | D1 schema/migrations |
 | `app/api/news/route.ts` | Independent RSS endpoint |
 
+Saved research stores `schema_version`; bump it only with a reader or migration for older snapshots.
+
 ## Research
 
 Submit -> prepare query -> fetch -> group evidence -> compare.
