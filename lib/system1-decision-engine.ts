@@ -1,7 +1,5 @@
 // Lightweight heuristic triage. The optional Laya adapter classifies query focus; this module is rules, not Laya inference.
 
-import { type ResearchOpportunity } from "./research-engine";
-import { System1Signal, System1Verdict } from "./system1-decision-engine"; // Types remain exported for external use
 import { addFatalFlawSignal, addInstantMoatSignal } from "./decisionEngineHelpers";
 
 export type System1Verdict = "go_fast" | "pause_investigate" | "hard_pass";
@@ -25,12 +23,25 @@ export interface System1Evaluation {
   heuristicSummary: string;
 }
 
+export type System1OpportunityInput = {
+  id: string;
+  buyer: string | null;
+  gap: string | null;
+  financials: {
+    contribution: number;
+    paybackMonth: number | null;
+    scenarios: { margin: number | null }[];
+  } | null;
+  claims: { direction: string; factor?: string; sourceIds: string[] }[];
+  sources: { id: string }[];
+};
+
 /**
  * Evaluates an opportunity with explicit, reversible triage rules.
  * The logic mirrors the original implementation but now delegates repeated
  * push operations to the helper utilities defined in `decisionEngineHelpers`.
  */
-export function evaluateSystem1Heuristics(opportunity: ResearchOpportunity): System1Evaluation {
+export function evaluateSystem1Heuristics(opportunity: System1OpportunityInput): System1Evaluation {
   const startedAt = performance.now();
   const fatalFlaws: string[] = [];
   const instantMoats: string[] = [];
