@@ -166,6 +166,8 @@ export function OpportunityDetailSection({
                     ? "Unknown"
                   : breakEven == null
                     ? "Not achievable"
+                  : safetyMargin == null
+                    ? "Unknown"
                     : safetyMargin >= 0
                       ? `${Math.floor(safetyMargin)}% drop`
                       : `${Math.ceil(Math.abs(safetyMargin))}% short`}
@@ -176,6 +178,8 @@ export function OpportunityDetailSection({
                   ? "Add dated price, cost, and positive base-volume assumptions to calculate this."
                   : breakEven == null
                     ? "Contribution per unit is zero or negative, so increasing sales alone will not reach break-even."
+                  : safetyMargin == null
+                    ? "Provide a positive base-volume assumption to calculate this."
                   : safetyMargin >= 0
                     ? `Modeled sales can fall about ${Math.floor(safetyMargin)}% from ${baseVolume} ${active.assumptions.unit}s / month before reaching ${breakEven} ${active.assumptions.unit}s break-even.`
                     : `Base sales of ${baseVolume} ${active.assumptions.unit}s / month are below the ${breakEven} ${active.assumptions.unit}s break-even target.`}
