@@ -43,9 +43,11 @@ export function CounterEvidence({ runId, opportunityId }: { runId: string; oppor
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ opportunityId, question }),
       });
-      const data = await response.json() as { check?: Check; error?: string };
+      const data = await response.json() as { check?: Check; duplicate?: boolean; error?: string };
       if (!response.ok || !data.check) throw new Error(data.error ?? "Could not save check.");
-      setChecks((current) => [data.check!, ...current]); setQuestion("");
+      setChecks((current) => [data.check!, ...current.filter((check) => check.id !== data.check!.id)]);
+      setQuestion("");
+      if (data.duplicate) setMessage("That check already exists for this opportunity. Showing the saved check.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save check."); }
     finally { setBusy(false); }
   }

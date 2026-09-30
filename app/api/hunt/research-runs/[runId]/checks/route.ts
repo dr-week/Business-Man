@@ -2,7 +2,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { researchChecks, researchRuns } from "@/db/schema";
 import { apiError, isCrossOrigin, ownerId } from "@/lib/hunt-api";
-import { counterCheckInput, MAX_COUNTER_CHECKS_PER_OPPORTUNITY } from "@/lib/counter-evidence";
+import { counterCheckInput, MAX_COUNTER_CHECKS_PER_OPPORTUNITY, normalizeCounterQuestion } from "@/lib/counter-evidence";
 import { readLimitedJson } from "@/lib/read-limited-json";
 import { z } from "zod";
 
@@ -49,9 +49,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ run
     const opportunityExists = Array.isArray(result.opportunities) && result.opportunities.some((item) =>
       !!item && typeof item === "object" && "id" in item && item.id === parsed.data.opportunityId);
     if (!opportunityExists) return Response.json({ error: "Opportunity not found in this run." }, { status: 404 });
-    const existing = await getDb().select({ id: researchChecks.id }).from(researchChecks)
+    const existing = await getDb().select().from(researchChecks)
       .where(and(eq(researchChecks.runId, runId), eq(researchChecks.opportunityId, parsed.data.opportunityId), eq(researchChecks.ownerId, owner)))
       .limit(MAX_COUNTER_CHECKS_PER_OPPORTUNITY);
+    const duplicate = existing.find((check) => normalizeCounterQuestion(check.question) === normalizeCounterQuestion(parsed.data.question));
+    if (duplicate) return Response.json({ check: duplicate, duplicate: true }, { status: 200, headers: { "Cache-Control": "no-store" } });
     if (existing.length >= MAX_COUNTER_CHECKS_PER_OPPORTUNITY) return Response.json({ error: "Check limit reached." }, { status: 409 });
     const [check] = await getDb().insert(researchChecks).values({
       id: crypto.randomUUID(), ownerId: owner, runId, ...parsed.data,

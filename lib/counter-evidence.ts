@@ -10,6 +10,10 @@ export const counterCheckInput = z.object({
   question: z.string().trim().min(10).max(500),
 }).strict();
 
+export function normalizeCounterQuestion(question: string) {
+  return question.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 export const counterCheckOutcome = z.object({
   outcome: z.enum(["supports", "disconfirms", "inconclusive"]),
   evidenceKind: z.enum(["sourced_fact", "user_report", "estimate", "hypothesis"]),

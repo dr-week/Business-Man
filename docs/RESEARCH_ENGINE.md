@@ -14,6 +14,8 @@ Each linked source lineage contributes at most one independent claim to a scorin
 
 `db/schema.ts` owns the schema; append SQL migrations under `drizzle/` and apply with `npm run db:local:apply`. `lib/research-run-store.ts` batches save and 20-run owner-scoped retention; snapshots above 1.9 MB UTF-8 are rejected before D1 writes. Snapshots are immutable; edited assumptions remain browser-local until another run. `lib/bounded-cache.ts` holds owner-scoped results for 10 minutes, at most 8 entries and 1 MiB of estimated JSON size; oversized results bypass cache. The isolate gate admits 2 active and 6 waiting searches.
 
+Counter-evidence checks are owner- and run-scoped. Re-submitting the same normalized question for the same opportunity returns the existing check, so network retries do not create another row; different questions remain separate.
+
 ## Memory bounds
 
 Cloudflare Workers has a 128 MB per-isolate limit ([limits](https://developers.cloudflare.com/workers/platform/limits/)). Request/body caps: input 16 KiB; Ask HN and Stack Exchange 1 MB each; supplied page 200 KB; Brave 512 KB; Places 128 KB; GitHub 256 KB; Census 64 KB. Caps do not include parsed-object overhead.
