@@ -57,6 +57,8 @@ export function OpportunityDetailSection({
   onUpdateAssumptions: (id: string, assumptions: FinancialAssumptions) => void;
   onError: (message: string) => void;
 }) {
+  const independentOrigins = independentSourceCount(active.sources);
+  const contradictionCount = active.claims.filter((claim) => claim.direction === "contradicts").length;
   return (
     <article className="research-analysis" aria-label="Selected business analysis">
       <header>
@@ -242,12 +244,11 @@ export function OpportunityDetailSection({
         {view !== "economics" && (
           <details className="research-module">
             <summary>
-              Evidence · {active.sources.length} links, {active.claims.length} extracted claims
+              Evidence · {active.sources.length} links · {independentOrigins} distinct texts · {contradictionCount} contradictions · {active.confidence} confidence
             </summary>
             <section className="research-detail-card">
               <p>
-                {independentSourceCount(active.sources)} independent texts across {active.sources.length} links ·{" "}
-                {active.confidence} confidence
+                Distinct-text estimate across source links. This heuristic cannot verify that publishers are independent.
               </p>
               <EvidenceMap sources={active.sources} />
               <details>
