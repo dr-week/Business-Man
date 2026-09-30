@@ -112,3 +112,44 @@ export const researchChecks = sqliteTable("research_checks", {
   index("research_checks_run_opportunity_idx").on(table.runId, table.opportunityId, table.createdAt),
   index("research_checks_owner_idx").on(table.ownerId),
 ]);
+
+/**
+ * Community / peer research bounties & verification contributions.
+ * Monetization & Collaboration engine: allows decentralized analysts/operators to submit
+ * counter-evidence or on-the-ground pricing/supplier verification to earn reputation or revenue bounty shares.
+ */
+export const researchBounties = sqliteTable("research_bounties", {
+  id: text("id").primaryKey(),
+  opportunityId: text("opportunity_id").notNull(),
+  opportunityName: text("opportunity_name").notNull(),
+  falsificationTarget: text("falsification_target").notNull(), // Question to disprove/verify
+  rewardAmount: integer("reward_amount").notNull().default(0), // in INR or credits
+  currency: text("currency").notNull().default("INR"),
+  sponsorId: text("sponsor_id").notNull(),
+  status: text("status").notNull().default("open"), // open | in_review | verified | expired
+  verifiedBy: text("verified_by"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  expiresAt: text("expires_at"),
+}, (table) => [
+  index("research_bounties_status_idx").on(table.status),
+  index("research_bounties_opportunity_idx").on(table.opportunityId),
+]);
+
+export const researchContributions = sqliteTable("research_contributions", {
+  id: text("id").primaryKey(),
+  bountyId: text("bounty_id").references(() => researchBounties.id, { onDelete: "set null" }),
+  opportunityId: text("opportunity_id").notNull(),
+  contributorHandle: text("contributor_handle").notNull(),
+  contributorRole: text("contributor_role").notNull(), // local_operator | field_researcher | angel_analyst | customer
+  evidenceType: text("evidence_type").notNull(), // counter_pricing | local_supplier | regulation | pilot_refusal | customer_quote
+  claimSummary: text("claim_summary").notNull(),
+  verdict: text("verdict").notNull(), // disconfirms | confirms | warns
+  sourceUrl: text("source_url"),
+  verificationData: text("verification_data", { mode: "json" }),
+  status: text("status").notNull().default("submitted"), // submitted | peer_verified | rejected | bounty_awarded
+  bountyAwarded: integer("bounty_awarded").default(0),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("research_contributions_opp_idx").on(table.opportunityId, table.status),
+  index("research_contributions_handle_idx").on(table.contributorHandle),
+]);
