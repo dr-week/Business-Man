@@ -11,13 +11,14 @@ describe("research run storage", () => {
         id: "old-run", ownerId: "old-owner", schemaVersion: 1,
         topic: "Cafe demand", geography: "Goa, India", currency: "INR", createdAt: "2026-09-20T10:00:00.000Z",
         input: { topic: "Cafe demand", geography: "Goa, India", currency: "INR", budget: null },
-        result: { opportunities: [] },
+        result: { opportunities: [], webResearch: [{ title: "Market reference", url: "https://example.com/market", snippet: "Candidate link" }], webSearchConfigured: true },
       },
     }, "new-owner");
 
     expect(row.id).not.toBe("old-run");
     expect(row.ownerId).toBe("new-owner");
     expect(row.topic).toBe("Cafe demand");
+    expect(row.result).toMatchObject({ webResearch: [{ title: "Market reference" }], webSearchConfigured: true });
   });
 
   it("rejects backups whose metadata conflicts with the validated input", () => {

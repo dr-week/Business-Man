@@ -18,7 +18,7 @@ const countries: Record<string, string> = {
 
 export type WebResearchResult = { title: string; url: string; snippet: string };
 
-/** Search candidates only. Results are transient and excluded from scores and persistence. */
+/** Search candidates only. Snapshots may retain them, but they never count as evidence or score inputs. */
 export async function collectBraveWebResults(topic: string, geography: string, apiKey?: string, signal?: AbortSignal): Promise<WebResearchResult[]> {
   if (!apiKey) return [];
   const terms = `${topic.slice(0, 240)} ${geography.slice(0, 80)} business market`;

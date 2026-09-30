@@ -119,11 +119,12 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   useEffect(() => {
     let active = true;
     fetch("/api/hunt/research-runs", { cache: "no-store" })
-      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; schemaVersion?: number; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation> } }[] }> : null)
+      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; schemaVersion?: number; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation>; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean } }[] }> : null)
       .then((data) => {
         const latest = data?.runs?.[0];
         if (!active || latest?.schemaVersion !== 1 || !latest.input || !Array.isArray(latest.result?.opportunities)) return;
         setRunId(latest.id ?? null); setInput(latest.input); setOpportunities(latest.result.opportunities);
+        setWebResearch(latest.result.webResearch ?? []); setWebSearchConfigured(!!latest.result.webSearchConfigured);
         setTopic(latest.input.topic); setGeography(latest.input.geography); setBudget(latest.input.budget == null ? "" : String(latest.input.budget));
         setPreparedBrief(latest.result.query?.brief ?? ""); setInterpretation(latest.result.query ?? null);
       })
@@ -146,9 +147,10 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       const response = await fetch(`/api/hunt/research-runs?id=${encodeURIComponent(id)}`, { cache: "no-store" });
       const body: unknown = await response.json();
       if (!response.ok || typeof body !== "object" || body === null || !("run" in body)) throw new Error("Could not restore saved research.");
-      const run = body.run as { id: string; schemaVersion: number; input: ResearchInput; result: { opportunities: ResearchOpportunity[]; query?: typeof interpretation } };
+      const run = body.run as { id: string; schemaVersion: number; input: ResearchInput; result: { opportunities: ResearchOpportunity[]; query?: typeof interpretation; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean } };
       if (run.schemaVersion !== 1 || !run.input || !Array.isArray(run.result?.opportunities)) throw new Error("Saved research has an unsupported format.");
       setRunId(run.id); setInput(run.input); setOpportunities(run.result.opportunities);
+      setWebResearch(run.result.webResearch ?? []); setWebSearchConfigured(!!run.result.webSearchConfigured);
       setTopic(run.input.topic); setGeography(run.input.geography); setBudget(run.input.budget == null ? "" : String(run.input.budget));
       setPreparedBrief(run.result.query?.brief ?? ""); setInterpretation(run.result.query ?? null);
       onError("");

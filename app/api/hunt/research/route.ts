@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     await saveResearchRun(getDb(), {
       id: runId, ownerId: owner, schemaVersion: RESEARCH_RUN_SCHEMA_VERSION, topic: input.topic, geography: input.geography, currency: input.currency, createdAt: new Date().toISOString(),
       input: input as Record<string, unknown>,
-      result: { query, opportunities, providerErrors },
+      result: { query, opportunities, providerErrors, webResearch: webSearch.value, webSearchConfigured: !!env.BRAVE_SEARCH_API_KEY },
     });
   } catch {
     providerErrors.push("Research completed, but saving to your archive failed.");

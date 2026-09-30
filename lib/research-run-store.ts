@@ -46,7 +46,12 @@ const researchBackup = z.object({
     schemaVersion: z.literal(RESEARCH_RUN_SCHEMA_VERSION), topic: z.string().min(2).max(1000),
     geography: z.string().min(2).max(100), currency: z.string().regex(/^[A-Z]{3}$/),
     createdAt: z.string().datetime(), input: researchInput,
-    result: z.object({ opportunities: z.array(importedOpportunity).max(200), query: z.record(z.string(), z.unknown()).optional(), providerErrors: z.array(z.string().max(300)).optional() }).passthrough(),
+    result: z.object({
+      opportunities: z.array(importedOpportunity).max(200), query: z.record(z.string(), z.unknown()).optional(),
+      providerErrors: z.array(z.string().max(300)).optional(),
+      webResearch: z.array(z.object({ title: z.string().max(240), url: z.string().url().max(2000), snippet: z.string().max(600) })).max(8).optional(),
+      webSearchConfigured: z.boolean().optional(),
+    }).passthrough(),
   }).passthrough(),
 }).strict();
 
