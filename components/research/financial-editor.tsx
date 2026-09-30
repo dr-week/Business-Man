@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import type { FinancialAssumptions, Provenance, ResearchOpportunity } from "@/lib/research-engine";
 import { calculateFinancials } from "@/lib/research-engine";
 import { priceBenchmarks, estimatePriceFromBenchmark } from "@/lib/price-benchmarks";
+import { FinancialCsvImport } from "./financial-csv-import";
 
 export const fields = [
   ["price", "Selling price"],
@@ -68,6 +69,15 @@ export function FinancialEditor({
         Sales unit
         <input value={draft.unit} onChange={(event) => setDraft({ ...draft, unit: event.target.value })} />
       </label>
+
+      <FinancialCsvImport onImport={(values, filename) => setDraft((current) => {
+        const next = { ...current };
+        const date = new Date().toISOString().slice(0, 10);
+        for (const [key, value] of Object.entries(values) as [Field, number][]) {
+          next[key] = { ...current[key], value, provenance: "User-entered", date, sourceIds: [], note: `Imported from ${filename}` };
+        }
+        return next;
+      })} />
 
       <div className="research-assumption-grid">
         {fields.map(([field, label]) => (

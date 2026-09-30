@@ -539,6 +539,10 @@
 .revenue-input-group label { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--muted); }
 .revenue-input-group label strong { color:var(--cream); font-variant-numeric:tabular-nums; }
 .revenue-input-group input[type="range"] { width:100%; accent-color:var(--gold); cursor:pointer; }
+.revenue-sale-row { display:grid; grid-template-columns:minmax(0, 1fr) auto auto; align-items:center; gap:12px; padding:10px 12px; background:#141711; border:1px solid #2e3526; border-radius:6px; }
+.revenue-sale-row > div { display:grid; gap:4px; }
+.revenue-sale-row small { color:var(--muted); font-size:11px; }
+.revenue-sale-row > strong { color:var(--cream); font-variant-numeric:tabular-nums; }
 @media(max-width:850px) { .revenue-tier-grid { grid-template-columns:repeat(2, 1fr); } .revenue-metrics-summary { grid-template-columns:repeat(2, 1fr); } .revenue-input-sliders { grid-template-columns:repeat(2, 1fr); } .revenue-tier-detail-card dl { grid-template-columns:1fr; } }
 @media(max-width:550px) { .revenue-tier-grid { grid-template-columns:1fr; } .revenue-metrics-summary { grid-template-columns:1fr; } .revenue-input-sliders { grid-template-columns:1fr; } }
 
