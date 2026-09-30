@@ -3,12 +3,9 @@
 // This fills the "missing feature" of loading user‑provided data for analysis.
 
 import { promises as fs } from "fs";
+import { dirname } from "node:path";
 import fetch from "node-fetch";
 import csv from "csv-parser";
-import { pipeline } from "stream";
-import { promisify } from "util";
-
-const pipe = promisify(pipeline);
 
 /**
  * Download a CSV file from a public URL, parse it, and write the records to a JSON file.
@@ -28,20 +25,20 @@ export async function importCsvDataset(sourceUrl: string, outputPath: string): P
     throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
   }
 
-  const records: any[] = [];
+  const records: Record<string, string>[] = [];
   const csvStream = response.body?.pipe(csv());
   if (!csvStream) {
     throw new Error("Unable to pipe CSV stream");
   }
 
-  csvStream.on("data", (row) => records.push(row));
+  csvStream.on("data", (row: unknown) => records.push(row as Record<string, string>));
   await new Promise((resolve, reject) => {
     csvStream.on("end", resolve);
     csvStream.on("error", reject);
   });
 
   // Ensure the directory exists.
-  await fs.mkdir(require("path").dirname(outputPath), { recursive: true });
+  await fs.mkdir(dirname(outputPath), { recursive: true });
   // Write pretty‑printed JSON.
   await fs.writeFile(outputPath, JSON.stringify(records, null, 2), "utf-8");
 

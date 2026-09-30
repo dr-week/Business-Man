@@ -9,7 +9,7 @@ export class CSVLineTransformer extends Transform {
   constructor(public delimiter: string = ",") {
     super({ objectMode: true });
   }
-  _transform(chunk: Buffer, encoding: BufferEncoding, callback: (error?: Error | null, data?: any) => void) {
+  _transform(chunk: Buffer, encoding: BufferEncoding, callback: (error?: Error | null) => void) {
     const data = this.leftover + chunk.toString();
     const lines = data.split(/\r?\n/);
     this.leftover = lines.pop() ?? ""; // keep incomplete line for next chunk
@@ -20,7 +20,7 @@ export class CSVLineTransformer extends Transform {
     }
     callback();
   }
-  _flush(callback: (error?: Error | null, data?: any) => void) {
+  _flush(callback: (error?: Error | null) => void) {
     if (this.leftover) {
       const cols = this.leftover.split(this.delimiter).map(col => col.trim());
       this.push(cols);
