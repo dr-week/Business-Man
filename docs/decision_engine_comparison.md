@@ -32,7 +32,7 @@ The change is **neutral** for performance (as expected) because the helpers add 
 ## Validation Method – Comparison
 - **Code duplication** reduced to zero as evidenced by the line‑count diff.
 - **Unit tests** (`system1-decision-engine.test.ts`) still pass, confirming functional parity.
-- **Manual workflow**: the `ReportingDashboard` component now displays the decision‑engine results without errors, demonstrating the end‑to‑end integration.
+- **Reporting workflow**: `/hunt` mounts `ValidationReport`, backed by the owner-scoped `/api/reporting/validation-summary` endpoint. The unused demo dashboard and its imports of uninstalled Chart.js packages were removed; its sample arrays did not represent decision-engine data. A real-data check requires a signed-in account.
 
 ## Selected Refactor Summary
 We extracted the repeated signal‑creation logic into three helper functions:
