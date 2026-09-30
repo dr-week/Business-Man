@@ -65,6 +65,7 @@ export type RevenueTierSummary = {
   variableCosts: number;
   contribution: number;
   contributionMarginPercent: number | null;
+  breakEvenUnits: number | null;
 };
 
 export type RevenueModelSummary = {
@@ -213,6 +214,7 @@ export function calculateRevenueSystem(input: RevenueModelInput): RevenueModelSu
     const netRevenue = grossRevenue - refunds;
     const variableCosts = tier.variableCostPerUnit * tier.estimatedMonthlyUnits;
     const contribution = netRevenue - variableCosts;
+    const contributionPerUnit = tier.price * (1 - tier.refundRatePercent / 100) - tier.variableCostPerUnit;
     const contributionMarginPercent =
       netRevenue > 0 ? (contribution / netRevenue) * 100 : null;
 
@@ -234,6 +236,7 @@ export function calculateRevenueSystem(input: RevenueModelInput): RevenueModelSu
         contributionMarginPercent != null
           ? Math.round(contributionMarginPercent * 10) / 10
           : null,
+      breakEvenUnits: contributionPerUnit > 0 ? Math.ceil(input.monthlyFixedCosts / contributionPerUnit) : null,
     };
   });
 

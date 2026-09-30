@@ -36,6 +36,17 @@ describe("revenue system module", () => {
     // Contribution: 27126 - 2100 = 25026
     expect(briefTier?.contribution).toBe(25026);
     expect(briefTier?.contributionMarginPercent).toBeCloseTo(92.3, 1);
+    expect(briefTier?.breakEvenUnits).toBe(26);
+  });
+
+  it("reports no per-offer break-even when refunds and costs consume the price", () => {
+    const input = {
+      ...DEFAULT_INDIA_REVENUE_CONFIG,
+      monthlyFixedCosts: 10_000,
+      tiers: [{ ...DEFAULT_INDIA_REVENUE_CONFIG.tiers[1], price: 100, variableCostPerUnit: 95, refundRatePercent: 5 }],
+    };
+    const summary = calculateRevenueSystem(input);
+    expect(summary.tierBreakdown[0].breakEvenUnits).toBeNull();
   });
 
   it("handles zero sales gracefully without division-by-zero errors", () => {

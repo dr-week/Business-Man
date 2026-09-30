@@ -17,6 +17,7 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
 
   const metrics = calculateRevenueSystem(config);
   const isINR = config.currency === "INR";
+  const selectedTierMetrics = metrics.tierBreakdown.find((tier) => tier.id === selectedTierId);
 
   const formatMoney = (val: number | null) => {
     if (val === null) return "—";
@@ -126,6 +127,13 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
 
           <dt>Variable Unit Cost</dt>
           <dd>{formatMoney(selectedTier.variableCostPerUnit)} (API compute / enrichment / checkout)</dd>
+
+          <dt>Break-Even Sales (This Offer Alone)</dt>
+          <dd>{selectedTierMetrics?.breakEvenUnits == null
+            ? "No break-even at this price and variable cost"
+            : `${selectedTierMetrics.breakEvenUnits.toLocaleString()} units / month`}
+            <small>Fixed monthly cost ÷ contribution per sale after refunds.</small>
+          </dd>
         </dl>
       </div>
 

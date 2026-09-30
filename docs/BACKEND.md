@@ -11,7 +11,7 @@
 | `lib/research-engine.ts` | Input schema, grouping, scoring |
 | `lib/validation-plan.ts`, `components/research/validation-plan.tsx` | One prioritized evidence action; remaining questions collapsed |
 | `lib/economics.ts` | Scenario calculations |
-| `lib/revenue-system.ts`, `components/research/revenue-system-workbench.tsx` | Product revenue model, payer segmentation, price benchmarks, variable cost, and break-even simulator |
+| `lib/revenue-system.ts`, `components/research/revenue-system-workbench.tsx` | Product revenue model; break-even sales per offer uses price after refunds, variable cost, and fixed monthly cost |
 | `lib/marketing-automation.ts`, `components/research/marketing-automation-panel.tsx` | Zero-ad-spend growth playbooks (viral hooks, 5-tweet teardowns, executive LinkedIn posts, cold emails, 5-day cadence) |
 | `lib/system1-decision-engine.ts`, `components/research/system1-triage-panel.tsx` | LAYA/System-1 fast heuristic decision engine: instant fatal-flaw kill switches and rapid conviction filters (<50ms) |
 | `lib/research-collaboration.ts`, `components/research/research-collaboration-panel.tsx` | Decentralized open-source collaboration, peer falsification bounties, and field counter-evidence reputation scoring |
