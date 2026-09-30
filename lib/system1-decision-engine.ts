@@ -1,4 +1,4 @@
-// Refactored System‑1 decision engine using helper utilities to eliminate duplicated signal/fatal‑flaw/instant‑moat logic.
+// Lightweight heuristic triage. The optional Laya adapter classifies query focus; this module is rules, not Laya inference.
 
 import { type ResearchOpportunity } from "./research-engine";
 import { System1Signal, System1Verdict } from "./system1-decision-engine"; // Types remain exported for external use
@@ -26,11 +26,12 @@ export interface System1Evaluation {
 }
 
 /**
- * Evaluates an opportunity using fast System‑1 (LAYA) heuristics.
+ * Evaluates an opportunity with explicit, reversible triage rules.
  * The logic mirrors the original implementation but now delegates repeated
  * push operations to the helper utilities defined in `decisionEngineHelpers`.
  */
 export function evaluateSystem1Heuristics(opportunity: ResearchOpportunity): System1Evaluation {
+  const startedAt = performance.now();
   const fatalFlaws: string[] = [];
   const instantMoats: string[] = [];
   const signals: System1Signal[] = [];
@@ -124,7 +125,11 @@ export function evaluateSystem1Heuristics(opportunity: ResearchOpportunity): Sys
   if (!opportunity.buyer?.trim()) missingEvidence.push("Specific target buyer");
   if (!opportunity.financials) missingEvidence.push("Unit economics");
   if (opportunity.sources.length === 0) missingEvidence.push("Traceable sources");
-  if (opportunity.claims.length === 0) missingEvidence.push("Buyer or market evidence");
+  const sourceIds = new Set(opportunity.sources.map((source) => source.id));
+  const hasTraceablePaidDemand = opportunity.claims.some((claim) =>
+    claim.factor === "Paid demand" && claim.direction === "supports" && claim.sourceIds.some((id) => sourceIds.has(id)),
+  );
+  if (!hasTraceablePaidDemand) missingEvidence.push("Source-linked paid-demand evidence");
   const evidenceCoveragePercent = Math.round(((4 - missingEvidence.length) / 4) * 100);
 
   const hardPassCount = signals.filter((s) => s.verdict === "hard_pass").length;
@@ -132,24 +137,24 @@ export function evaluateSystem1Heuristics(opportunity: ResearchOpportunity): Sys
 
   if (hardPassCount >= 1 || fatalFlaws.length >= 2) {
     quickVerdict = "hard_pass";
-  } else if (goFastCount >= 2 && fatalFlaws.length === 0) {
+  } else if (goFastCount >= 2 && fatalFlaws.length === 0 && missingEvidence.length === 0) {
     quickVerdict = "go_fast";
   } else {
     quickVerdict = "pause_investigate";
   }
 
   const heuristicSummary = quickVerdict === "hard_pass"
-    ? `System-1 Screen: Immediate Pass recommended. Found ${fatalFlaws.length} fatal flaws including: ${fatalFlaws[0] || "unfavorable unit economics"}.`
+    ? `Heuristic screen: stop and review. Found ${fatalFlaws.length} serious issue(s), including: ${(fatalFlaws[0] || "unfavorable unit economics").replace(/[.]+$/, "")}.`
     : quickVerdict === "go_fast"
-    ? `System-1 Screen: High Momentum signal. Strong moats identified: ${instantMoats[0] || "solid margin and clear ICP"}.`
-    : `System-1 Screen: Deliberate deeper (System-2 required). Ambiguous unit economics or untested buyer willingness to pay.`;
+    ? `Heuristic screen: evidence supports running a small validation test, not making an investment. Signal: ${instantMoats[0] || "promising economics and buyer fit"}.`
+    : `Heuristic screen: investigate further. Resolve missing evidence and assumptions before treating this as an investment case.`;
 
   return {
     opportunityId: opportunity.id,
     quickVerdict,
     evidenceCoveragePercent,
     missingEvidence,
-    speedToDecisionSeconds: 0.05,
+    speedToDecisionSeconds: (performance.now() - startedAt) / 1000,
     fatalFlaws,
     instantMoats,
     reasons: signals,

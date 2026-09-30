@@ -9,21 +9,21 @@ export function System1TriageBadge({ opportunity }: { opportunity: ResearchOppor
 
   const badgeConfig = {
     go_fast: {
-      label: "FAST CONVICTION",
+      label: "TEST NEXT",
       color: "#4ade80",
       bg: "rgba(34, 197, 94, 0.12)",
       border: "rgba(34, 197, 94, 0.3)",
       icon: <Zap size={12} color="#4ade80" />,
     },
     hard_pass: {
-      label: "INSTANT PASS",
+      label: "STOP & REVIEW",
       color: "#f87171",
       bg: "rgba(239, 68, 68, 0.12)",
       border: "rgba(239, 68, 68, 0.3)",
       icon: <AlertOctagon size={12} color="#f87171" />,
     },
     pause_investigate: {
-      label: "DELIBERATE (SYSTEM-2)",
+      label: "PAUSE & INVESTIGATE",
       color: "#fbbf24",
       bg: "rgba(245, 158, 11, 0.12)",
       border: "rgba(245, 158, 11, 0.3)",
@@ -70,7 +70,7 @@ export function System1TriagePanel({ opportunity }: { opportunity: ResearchOppor
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--gold)", fontSize: "11px", fontWeight: 600, textTransform: "uppercase" }}>
-          <Zap size={13} /> LAYA / System-1 Fast Decision Engine
+          <Zap size={13} /> Fast heuristic triage
         </span>
         <System1TriageBadge opportunity={opportunity} />
       </div>
@@ -82,7 +82,7 @@ export function System1TriagePanel({ opportunity }: { opportunity: ResearchOppor
       <div style={{ marginBottom: "10px", padding: "8px 10px", background: "#171b13", border: "1px solid #303827", borderRadius: "4px" }}>
         <strong style={{ color: "var(--gold)", fontSize: "11px" }}>Evidence coverage: {evalResult.evidenceCoveragePercent}%</strong>
         <span style={{ display: "block", marginTop: "3px", color: "#aaa99b", fontSize: "11px" }}>
-          Coverage shows which inputs exist; it is not a probability of success. {evalResult.missingEvidence.length > 0 ? `Missing: ${evalResult.missingEvidence.join(", ")}.` : "All four screening inputs are present; verify their quality and recency."}
+          Coverage shows which inputs exist; it is not a probability of success. {evalResult.missingEvidence.length > 0 ? `Missing: ${evalResult.missingEvidence.join(", ")}.` : "All screening inputs are present; verify their quality and recency. A test-next signal is not an investment recommendation."}
         </span>
       </div>
 
