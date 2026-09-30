@@ -125,3 +125,57 @@ The figures are scenario estimates, and the demand hypothesis still needs buyer 
     fiveDayCadence: weeklyDistributionCadence,
   };
 }
+
+function escapeCalendarText(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/\r\n|\r|\n/g, "\\n").replace(/([;,])/g, "\\$1");
+}
+
+function foldCalendarLine(value: string): string {
+  const encoder = new TextEncoder();
+  return value.split(/\r\n|\r|\n/).map((sourceLine) => {
+    const lines: string[] = [];
+    let line = "";
+    let bytes = 0;
+    for (const character of sourceLine) {
+      const size = encoder.encode(character).byteLength;
+      if (bytes + size > 75) {
+        lines.push(line);
+        line = ` ${character}`;
+        bytes = size + 1;
+      } else {
+        line += character;
+        bytes += size;
+      }
+    }
+    lines.push(line);
+    return lines.join("\r\n");
+  }).join("\r\n");
+}
+
+export function buildValidationCalendar(campaign: MarketingCampaign, startDate = new Date()): string {
+  const events = campaign.weeklyDistributionCadence.map((item, index) => {
+    const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + index);
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
+    const formatDate = (date: Date) => `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
+    const safeId = campaign.opportunityId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80) || "research";
+    return [
+      "BEGIN:VEVENT",
+      `UID:${safeId}-validation-${formatDate(start)}-${index}@businessman.local`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "")}`,
+      `DTSTART;VALUE=DATE:${formatDate(start)}`,
+      `DTEND;VALUE=DATE:${formatDate(end)}`,
+      `SUMMARY:${escapeCalendarText(`${item.day}: Buyer validation — ${campaign.opportunityName}`)}`,
+      `DESCRIPTION:${escapeCalendarText(`${item.action}\nSuccess measure: ${item.successMeasure}\nReview evidence before deciding; generated as a suggested task.`)}`,
+      "END:VEVENT",
+    ].join("\r\n");
+  });
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Businessman//Buyer Validation Plan//EN",
+    "CALSCALE:GREGORIAN",
+    ...events,
+    "END:VCALENDAR",
+    "",
+  ].map(foldCalendarLine).join("\r\n");
+}

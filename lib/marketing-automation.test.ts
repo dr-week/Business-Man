@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateMarketingCampaign } from "./marketing-automation";
+import { buildValidationCalendar, generateMarketingCampaign } from "./marketing-automation";
 import { blankFinancials, type ResearchOpportunity } from "./research-engine";
 
 const sampleOpportunity: ResearchOpportunity = {
@@ -88,5 +88,22 @@ describe("marketing-automation", () => {
     expect(campaign.coldOutreachEmail.body).toContain("Invoicing is manual");
     expect(campaign.xThread[2].text).toContain("Not estimated");
     expect(campaign.coldOutreachEmail.body).not.toContain("Low upfront capital");
+  });
+
+  it("exports a five-day, all-day calendar with escaped text and RFC-sized UTF-8 lines", () => {
+    const campaign = {
+      ...generateMarketingCampaign(sampleOpportunity),
+      opportunityName: "Café, pilot;\nvalidation",
+    };
+    const calendar = buildValidationCalendar(campaign, new Date(2026, 9, 3));
+    const lines = calendar.split("\r\n");
+
+    expect(calendar.startsWith("BEGIN:VCALENDAR\r\nVERSION:2.0")).toBe(true);
+    expect((calendar.match(/BEGIN:VEVENT/g) ?? [])).toHaveLength(5);
+    expect(calendar).toContain("DTSTART;VALUE=DATE:20261003");
+    expect(calendar).toContain("DTEND;VALUE=DATE:20261004");
+    expect(calendar.replace(/\r\n[ \t]/g, "")).toContain("Café\\, pilot\\;\\nvalidation");
+    expect(lines.every((line) => new TextEncoder().encode(line).byteLength <= 75)).toBe(true);
+    expect(calendar.endsWith("END:VCALENDAR\r\n")).toBe(true);
   });
 });

@@ -115,6 +115,11 @@
 .archetype-btn { padding:5px 10px; font-size:11px; border-radius:5px; border:1px solid #414735; background:#121510; color:#c7c5b8; transition:all .15s ease; }
 .archetype-btn:hover { border-color:var(--gold); color:#fff; }
 .archetype-btn.is-selected { background:#343321; border-color:var(--gold); color:var(--gold); font-weight:600; }
+.marketing-calendar-export { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:12px; border:1px solid #35392e; border-radius:6px; background:#151912; }
+.marketing-calendar-export p { flex:1 1 100%; margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
+.marketing-calendar-export a { color:var(--gold); font-size:11px; text-decoration:underline; }
+.marketing-calendar-export a:focus-visible,.marketing-calendar-export button:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+@media(max-width:600px) { .marketing-calendar-export { align-items:stretch; flex-direction:column; } .marketing-calendar-export button { justify-content:center; } }
 .revenue-milestones { margin-top:20px; padding:14px; background:#1c2118; border:1px solid #363f2c; border-radius:8px; display:grid; gap:8px; }
 .milestone-title { display:inline-flex; align-items:center; gap:6px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--gold); font-weight:600; }
 .milestone-chips { display:flex; gap:10px; flex-wrap:wrap; }

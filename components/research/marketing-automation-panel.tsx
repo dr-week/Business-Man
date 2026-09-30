@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Megaphone, Copy, Check, Mail, Calendar } from "lucide-react";
-import { generateMarketingCampaign } from "@/lib/marketing-automation";
+import { Megaphone, Copy, Check, Mail, Calendar, Download } from "lucide-react";
+import { buildValidationCalendar, generateMarketingCampaign } from "@/lib/marketing-automation";
 import type { ResearchOpportunity } from "@/lib/research-engine";
 
 export function MarketingAutomationPanel({
@@ -14,12 +14,14 @@ export function MarketingAutomationPanel({
 }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [copyError, setCopyError] = useState(false);
+  const [calendarDownloaded, setCalendarDownloaded] = useState(false);
   const [activeChannel, setActiveChannel] = useState<"x" | "linkedin" | "email" | "cadence">("x");
 
   const campaign = generateMarketingCampaign(opportunity, currency);
 
   async function copyToClipboard(key: string, text: string) {
     setCopyError(false);
+    setCalendarDownloaded(false);
     try {
       await navigator.clipboard.writeText(text);
       setCopiedKey(key);
@@ -31,6 +33,20 @@ export function MarketingAutomationPanel({
   }
 
   const fullThreadText = campaign.xThread.map((t) => t.text).join("\n\n---\n\n");
+
+  function downloadValidationCalendar() {
+    const blob = new Blob([buildValidationCalendar(campaign)], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const fileId = campaign.opportunityId.replace(/[^a-zA-Z0-9_-]/g, "-").slice(0, 80) || "research";
+    link.download = `buyer-validation-${fileId}.ics`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setCopyError(false);
+    setCopiedKey(null);
+    setCalendarDownloaded(true);
+  }
 
   return (
     <div className="marketing-automation-panel" style={{ padding: "16px", background: "#171a14", border: "1px solid #35392e", borderRadius: "10px", marginTop: "14px" }}>
@@ -76,7 +92,9 @@ export function MarketingAutomationPanel({
       <p role="status" aria-live="polite" style={{ margin: "0 0 12px", color: copyError ? "#f0a39a" : "#8b937e", fontSize: "11px" }}>
         {copyError
           ? "Copy failed. Check browser clipboard permission and try again."
-          : copiedKey
+          : calendarDownloaded
+            ? "Calendar file downloaded. Import it into your calendar; tasks remain yours to review."
+            : copiedKey
             ? "Copied to clipboard. Review sources and assumptions before publishing; drafts are not posted automatically."
             : "Drafts only. Review sources and assumptions before publishing; nothing is posted automatically."}
       </p>
@@ -162,6 +180,11 @@ export function MarketingAutomationPanel({
       {activeChannel === "cadence" && (
         <div style={{ display: "grid", gap: "8px" }}>
           <span style={{ fontSize: "12px", color: "#aaa99b" }}>Five-Day Buyer Validation Experiment · Suggested actions only</span>
+          <div className="marketing-calendar-export">
+            <p>Put these buyer-validation actions on your calendar. Nothing is sent or posted automatically.</p>
+            <button type="button" className="research-submit" onClick={downloadValidationCalendar}><Download size={14} /> Download 5-day plan (.ics)</button>
+            <a href="https://support.google.com/calendar/answer/37118" target="_blank" rel="noreferrer">How to import into Google Calendar ↗</a>
+          </div>
           {campaign.weeklyDistributionCadence.map((c) => (
             <div key={c.day} style={{ display: "grid", gap: "6px", padding: "8px 12px", background: "#10140e", border: "1px solid #2e3525", borderRadius: "6px", fontSize: "12px" }}>
               <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
