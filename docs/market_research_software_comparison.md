@@ -17,6 +17,10 @@ RaiseIQ is a closer India-facing price anchor for economics work. Its listed off
 
 Likely initial buyers to interview: founders deciding whether to pursue an idea, and advisors or incubators screening several ideas. Evidence of demand requires paid pilots and repeat use; competitor pricing only establishes existing spend categories.
 
+### Reporting workflow
+
+[Visible](https://visible.vc/) sells portfolio monitoring and investor reporting with data collection and verification; [Dovetail](https://dovetail.com/solutions/research-repository/) focuses on sharing reusable customer evidence. Dovetail lists a free individual tier and custom-priced Enterprise plan ([pricing](https://dovetail.com/pricing/)). Businessman can target an earlier-stage job: export a concise market-validation brief combining research activity, buyer checks, payment signals, and explicit evidence limits. Potential payers: incubators and startup advisors reviewing cohorts; founders may pay for a polished brief. Validate with paid pilots before setting prices.
+
 ## UX and validation
 
 - Show source, date, geography, and known limits beside each claim.

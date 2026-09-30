@@ -17,9 +17,49 @@ const reportSchema = z.object({
     recordedAmountsByCurrency: z.array(z.object({ currency: z.string().length(3), amount: z.number().finite().nonnegative() })),
   }),
   businessmanPaymentRecords: z.array(z.object({ currency: z.string().length(3), capturedAmount: z.number().finite().nonnegative(), records: z.number().int().nonnegative() })),
+  generatedAt: z.string().datetime().optional(),
   note: z.string(),
 });
 type Report = z.infer<typeof reportSchema>;
+
+function downloadValidationBrief(report: Report) {
+  const formatMoney = (amount: number, currency: string) => {
+    try { return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount); }
+    catch { return `${amount.toLocaleString("en-IN")} ${currency}`; }
+  };
+  const amounts = (rows: { currency: string; amount: number }[]) => rows.length
+    ? rows.map(({ currency, amount }) => formatMoney(amount, currency)).join(", ")
+    : "None recorded";
+  const receipts = report.businessmanPaymentRecords.map(({ currency, capturedAmount }) => ({ currency, amount: capturedAmount }));
+  const body = [
+    "# Market validation brief",
+    `Generated: ${(report.generatedAt ? new Date(report.generatedAt) : new Date()).toISOString()}`,
+    "",
+    "## Research activity",
+    `- Saved research runs: ${report.savedResearchRuns}`,
+    `- Buyer checks recorded: ${report.checks.total}`,
+    `- Supporting checks: ${report.checks.outcomes.supports}`,
+    `- Disconfirming checks: ${report.checks.outcomes.disconfirms}`,
+    `- Sourced facts: ${report.checks.evidenceKinds.sourced_fact}`,
+    "",
+    "## Buyer and payment signals",
+    `- Pilot offers: ${report.buyerValidation.pilotOffers}`,
+    `- Paid pilot records: ${report.buyerValidation.paidPilotRecords}`,
+    `- Repeat purchase records: ${report.buyerValidation.repeatPurchases}`,
+    `- Owner-reported opportunity payments: ${amounts(report.buyerValidation.recordedAmountsByCurrency)}`,
+    `- BUSINESSman captured receipts: ${amounts(receipts)}`,
+    "",
+    "## Evidence limits",
+    report.note,
+    "Counts describe records in this workspace; they do not establish representative market demand or prove causation. Opportunity payments are owner-reported. BUSINESSman captured receipts are before refunds and provider fees.",
+  ].join("\n");
+  const url = URL.createObjectURL(new Blob([body], { type: "text/markdown;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `market-validation-brief-${new Date().toISOString().slice(0, 10)}.md`;
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 export function ValidationReport() {
   const [report, setReport] = useState<Report | null>(null);
@@ -57,6 +97,10 @@ export function ValidationReport() {
   ] as const;
 
   return <section aria-label="Validation reporting">
+    <div className="research-report-actions">
+      <p>Share a compact snapshot of research activity, buyer checks, and payment signals. The export includes evidence limits.</p>
+      <button className="research-submit" type="button" onClick={() => downloadValidationBrief(report)}>Download validation brief</button>
+    </div>
     <div className="research-decision-strip">
       {metrics.map(([label, value]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}
       <p>{report.note}</p>
