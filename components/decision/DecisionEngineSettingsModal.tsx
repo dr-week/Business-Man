@@ -79,7 +79,7 @@ export const DecisionEngineSettingsModal: React.FC<{
             </label>
             <Input
               id="prompt-prefix"
-              placeholder="e.g., 'Assess risk for...'
+              placeholder="e.g., 'Assess risk for...'"
               value={promptPrefix}
               onChange={(e) => setPromptPrefix(e.target.value)}
             />

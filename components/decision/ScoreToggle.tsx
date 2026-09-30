@@ -26,7 +26,7 @@ export const ScoreToggle: React.FC<ScoreToggleProps> = ({
     onChange(checked);
     toast({
       title: checked ? "Score enabled" : "Score disabled",
-      description: `Decision‑engine overlay is now ${checked ? "visible" : "hidden"}.",
+      description: `Decision‑engine overlay is now ${checked ? "visible" : "hidden"}.`,
       variant: "default",
     });
   };
