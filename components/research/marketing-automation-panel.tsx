@@ -13,14 +13,21 @@ export function MarketingAutomationPanel({
   currency?: string;
 }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [copyError, setCopyError] = useState(false);
   const [activeChannel, setActiveChannel] = useState<"x" | "linkedin" | "email" | "cadence">("x");
 
   const campaign = generateMarketingCampaign(opportunity, currency);
 
-  function copyToClipboard(key: string, text: string) {
-    navigator.clipboard.writeText(text);
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2000);
+  async function copyToClipboard(key: string, text: string) {
+    setCopyError(false);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      window.setTimeout(() => setCopiedKey((current) => current === key ? null : current), 2000);
+    } catch {
+      setCopiedKey(null);
+      setCopyError(true);
+    }
   }
 
   const fullThreadText = campaign.xThread.map((t) => t.text).join("\n\n---\n\n");
@@ -30,7 +37,7 @@ export function MarketingAutomationPanel({
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
         <div>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--gold)", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
-            <Megaphone size={14} /> Autonomous Growth & Marketing Engine
+            <Megaphone size={14} /> Marketing Draft Kit
           </span>
           <h4 style={{ margin: "4px 0 0 0", fontSize: "16px", color: "#eeeae0" }}>Distribution Kit: {campaign.opportunityName}</h4>
         </div>
@@ -65,6 +72,14 @@ export function MarketingAutomationPanel({
           </button>
         </div>
       </header>
+
+      <p role="status" aria-live="polite" style={{ margin: "0 0 12px", color: copyError ? "#f0a39a" : "#8b937e", fontSize: "11px" }}>
+        {copyError
+          ? "Copy failed. Check browser clipboard permission and try again."
+          : copiedKey
+            ? "Copied to clipboard. Review sources and assumptions before publishing; drafts are not posted automatically."
+            : "Drafts only. Review sources and assumptions before publishing; nothing is posted automatically."}
+      </p>
 
       {activeChannel === "x" && (
         <div style={{ display: "grid", gap: "10px" }}>

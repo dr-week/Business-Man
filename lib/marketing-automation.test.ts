@@ -49,6 +49,12 @@ describe("marketing-automation", () => {
     expect(campaign.coldOutreachEmail.body).toContain("Dust soiling");
     expect(campaign.productHuntPitch.tagline).toContain("Automated Solar Panel Dry Cleaning Robot");
     expect(campaign.weeklyDistributionCadence).toHaveLength(5);
+    const generatedCopy = [campaign.viralHook, ...campaign.xThread.map((item) => item.text), campaign.linkedinPost, campaign.coldOutreachEmail.body, campaign.productHuntPitch.makerComment].join("\n");
+    expect(generatedCopy).toContain("estimates, not actual results");
+    expect(generatedCopy).not.toContain("90% of people");
+    expect(generatedCopy).not.toContain("3–5 months");
+    expect(generatedCopy).not.toContain("vetted");
+    expect(campaign.coldOutreachEmail.body).not.toContain("operational savings");
   });
 
   it("handles opportunities with minimal data gracefully", () => {
@@ -77,5 +83,7 @@ describe("marketing-automation", () => {
     expect(campaign.opportunityName).toBe("Local B2B SaaS");
     expect(campaign.xThread[0].text).toContain("Local B2B SaaS");
     expect(campaign.coldOutreachEmail.body).toContain("Invoicing is manual");
+    expect(campaign.xThread[2].text).toContain("Not estimated");
+    expect(campaign.coldOutreachEmail.body).not.toContain("Low upfront capital");
   });
 });
