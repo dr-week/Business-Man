@@ -9,7 +9,6 @@ import dynamic from "next/dynamic";
 import { Download, ExternalLink, Search, Square, GitCompareArrows, Star, Store, BriefcaseBusiness, FileText } from "lucide-react";
 
 import type { Lead } from "@/lib/opportunity-hunt";
-import { MarketInspection } from "@/components/research/market-inspection";
 import { ResearchFocusCard } from "@/components/research/research-focus-card";
 import { SourceLedger } from "@/components/research/source-ledger";
 import { WebCandidates } from "@/components/research/web-candidates";
@@ -24,6 +23,7 @@ import { independentSourceCount } from "@/lib/evidence-lineage";
 import { parseFirstImpressions, recordFirstImpression, type FirstImpression } from "@/lib/first-impressions";
 
 const Charts = dynamic(() => import("./research-charts"), { ssr: false });
+const MarketInspection = dynamic(() => import("@/components/research/market-inspection").then((module) => module.MarketInspection), { ssr: false });
 
 const storageKey = "businessman.research.v2";
 
