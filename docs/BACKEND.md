@@ -12,6 +12,7 @@
 | `lib/validation-plan.ts`, `components/research/validation-plan.tsx` | One prioritized evidence action; remaining questions collapsed |
 | `lib/economics.ts` | Scenario calculations |
 | `lib/revenue-system.ts`, `components/research/revenue-system-workbench.tsx` | Product revenue model, payer segmentation, price benchmarks, variable cost, and break-even simulator |
+| `lib/marketing-automation.ts`, `components/research/marketing-automation-panel.tsx` | Zero-ad-spend growth playbooks (viral hooks, 5-tweet teardowns, executive LinkedIn posts, cold emails, 5-day cadence) |
 | `lib/dossier-report.ts` | Executive market dossier generator, Markdown/Report export with scorecard, unit economics and 21-day action plan |
 | `lib/investment-risks.ts` | Budget and downside flags from explicit inputs |
 | `app/api/hunt/leads/` | Authenticated owner-scoped dossiers/evidence |
