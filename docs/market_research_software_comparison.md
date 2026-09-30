@@ -24,4 +24,6 @@ Likely initial buyers to interview: founders deciding whether to pursue an idea,
 - Let a user inspect counter-evidence before recommending an action.
 - Test whether users complete a brief and pay for it; do not infer demand from macro indicators, downloads, or public pricing.
 
+India's [Startup India Seed Fund evaluation](https://seedfund.startupindia.gov.in/faq) explicitly asks whether an application fills a real market gap. [Dovetail's research repository](https://dovetail.com/solutions/research-repository/) positions shared, reusable evidence as a team workflow. Product implication: let founders and incubator reviewers restore prior market checks and compare decisions over time. These sources establish workflow fit, not paid demand; validate with incubator pilots.
+
 The market view now renders a linked comparison from official product pages. Pricing is a checked snapshot, not an automatically refreshed feed.

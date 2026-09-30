@@ -53,6 +53,9 @@ function exportCsv(items: ResearchOpportunity[], currency: string) {
 
 export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError, initialTopic, onOpenAnalysis, onOpenResearch = () => {} }: { view?: "research" | "analysis" | "economics" | "market" | "sources" | "starred" | "settings" | "profile"; onSaved: (lead: Lead) => void; onError: (message: string) => void; initialTopic?: string; onOpenAnalysis?: () => void; onOpenResearch?: () => void }) {
 
+  const [savedRuns, setSavedRuns] = useState<{ id: string; topic: string; geography: string; currency: string; createdAt: string }[]>([]);
+  const [restoringRun, setRestoringRun] = useState("");
+
   const abort = useRef<AbortController | null>(null);
   const [stars, setStars] = useState<string[]>([]);
 
@@ -121,6 +124,31 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       .catch(() => { /* Local snapshot remains available when archive is unavailable. */ });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/hunt/research-runs?list=1", { cache: "no-store" })
+      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: typeof savedRuns }> : null)
+      .then((data) => { if (active && Array.isArray(data?.runs)) setSavedRuns(data.runs); })
+      .catch(() => { /* Saved history remains optional when the archive is unavailable. */ });
+    return () => { active = false; };
+  }, []);
+
+  async function restoreSavedRun(id: string) {
+    setRestoringRun(id);
+    try {
+      const response = await fetch(`/api/hunt/research-runs?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+      const body: unknown = await response.json();
+      if (!response.ok || typeof body !== "object" || body === null || !("run" in body)) throw new Error("Could not restore saved research.");
+      const run = body.run as { id: string; input: ResearchInput; result: { opportunities: ResearchOpportunity[]; query?: typeof interpretation } };
+      if (!run.input || !Array.isArray(run.result?.opportunities)) throw new Error("Saved research has an invalid format.");
+      setRunId(run.id); setInput(run.input); setOpportunities(run.result.opportunities);
+      setTopic(run.input.topic); setGeography(run.input.geography); setBudget(run.input.budget == null ? "" : String(run.input.budget));
+      setPreparedBrief(run.result.query?.brief ?? ""); setInterpretation(run.result.query ?? null);
+      onError("");
+    } catch (error) { onError(error instanceof Error ? error.message : "Could not restore saved research."); }
+    finally { setRestoringRun(""); }
+  }
 
   useEffect(() => {
     if (topic) return;
@@ -256,6 +284,14 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       {busy && <button className="hunt-icon-action" type="button" title="Cancel research" aria-label="Cancel research" onClick={() => abort.current?.abort()}><Square size={14} /></button>}
 
     </form>
+
+    <details hidden={view !== "research" && view !== "analysis"} className="saved-research-history">
+      <summary>Saved research ({savedRuns.length})</summary>
+      {savedRuns.length ? <ul>{savedRuns.map((saved) => <li key={saved.id}>
+        <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small></span>
+        <button type="button" disabled={!!restoringRun} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : "Restore"}</button>
+      </li>)}</ul> : <p>Run research while signed in to build your history.</p>}
+    </details>
 
     <div hidden={view !== "research" || !!opportunities.length} className="research-intro">
       <div className="research-mode" role="tablist" aria-label="Research goal">
