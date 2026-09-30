@@ -2,6 +2,7 @@ import type { ResearchOpportunity } from "@/lib/research-engine";
 import type { LocalCompetitor } from "@/lib/collectors/places";
 import type { CensusMarketSignal } from "@/lib/collectors/census-market";
 import { MarketFootprint } from "./market-footprint";
+import { IndiaMarketContext } from "./india-market-context";
 
 export function MarketPanel({ opportunity, competitors, placesConfigured, footprint }: {
   opportunity: ResearchOpportunity;
@@ -20,6 +21,7 @@ export function MarketPanel({ opportunity, competitors, placesConfigured, footpr
         <p>{placesConfigured ? "No matching listings returned." : "Google Places is not configured."}</p>}
       {footprint && <MarketFootprint value={footprint} />}
     </section>
+    {/\bindia\b/i.test(opportunity.geography) && <IndiaMarketContext />}
     <section className="research-detail-card"><h3>Alternatives</h3><dl>
       <dt>Current</dt><dd>{opportunity.alternatives.length ? opportunity.alternatives.join(", ") : "Unknown"}</dd>
       <dt>Gap</dt><dd>{opportunity.gap ?? "Unknown"}</dd>

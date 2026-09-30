@@ -1,32 +1,13 @@
-# Market Research API
+# India market context
 
-## Overview
-The endpoint `GET /api/market-research` returns a JSON snapshot of key Indian business‑analytics market metrics. It currently pulls:
-- **GDP (current US$)** – overall market size potential.
-- **Internet penetration (%)** – proxy for SaaS adoption.
-- **Startup counts** – total startups and those focused on analytics.
+`GET /api/market-research` fetches India’s latest available GDP and internet-use observations from the World Bank Indicators API. It requests a ten-year window and selects the latest non-null value. Each value includes its indicator, observation year, and source URL. Requests time out after eight seconds; successful responses can be cached for six hours.
 
-## Response Example
-```json
-{
-  "market": "India Business-Analytics (Open-Source)",
-  "metrics": {
-    "gdpCurrentUS$": 3170000000000,
-    "internetPenetrationPct": 47.4,
-    "startupCount": 12457,
-    "analyticsStartups": 842
-  },
-  "generatedAt": "2026-09-30T17:12:00.000Z"
-}
-```
+These national indicators are context only. They do not measure analytics-product demand, addressable customers, willingness to pay, or revenue. Use founder interviews and paid pilots for those questions.
 
-## Usage
-```ts
-import useSWR from 'swr';
-const { data, error } = useSWR('/api/market-research');
-```
+The API requires no key. See the [World Bank API guide](https://datahelpdesk.worldbank.org/knowledgebase/articles/889392).
 
-## Future Enhancements
-- Add more granular metrics (industry‑specific revenue, regional adoption).
-- Cache results in Cloudflare KV for 12 h to reduce external API calls.
-- Provide a GraphQL wrapper for selective field fetching.
+## Product gap to test
+
+- [Tracxn](https://tracxn.com/pricing) sells curated company/funding discovery, team research, reports, and API/data packs; Lite is limited and commercial pricing is sales-led.
+- [Dovetail](https://dovetail.com/pricing/) organizes a team’s own calls, documents, and surveys, with a free individual plan and custom Enterprise pricing.
+- BUSINESSman can test a narrower job: connect a proposed Indian business to dated local signals, counter-evidence, buyer checks, and break-even assumptions. Macro indicators, company counts, listings, and research scores do not prove demand; founders and advisors still need to pay for a brief or pilot before we claim fit.
