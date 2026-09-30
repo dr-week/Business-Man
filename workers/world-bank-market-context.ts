@@ -5,6 +5,7 @@ const source = "https://api.worldbank.org/v2/country/IN/indicator";
 const indicators = {
   gdpCurrentUsd: { code: "NY.GDP.MKTP.CD", label: "GDP (current US$)" },
   internetUsersPercent: { code: "IT.NET.USER.ZS", label: "Individuals using the Internet (% of population)" },
+  fdiNetInflowsUsd: { code: "BX.KLT.DINV.CD.WD", label: "Foreign direct investment, net inflows (current US$)" },
 } as const;
 
 const observationSchema = z.object({

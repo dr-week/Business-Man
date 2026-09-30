@@ -7,7 +7,7 @@ const metricSchema = z.object({
   label: z.string(), value: z.number().finite().nullable(), year: z.number().int().nullable(), sourceUrl: z.string().url(),
 });
 const contextSchema = z.object({
-  metrics: z.object({ gdpCurrentUsd: metricSchema, internetUsersPercent: metricSchema }),
+  metrics: z.object({ gdpCurrentUsd: metricSchema, internetUsersPercent: metricSchema, fdiNetInflowsUsd: metricSchema }),
   caveat: z.string(),
 });
 type Context = z.infer<typeof contextSchema>;
@@ -37,11 +37,13 @@ export function IndiaMarketContext() {
 
   const gdp = context.metrics.gdpCurrentUsd;
   const internet = context.metrics.internetUsersPercent;
+  const fdi = context.metrics.fdiNetInflowsUsd;
   return <aside className="india-market-context" aria-label="India market context">
     <h3>India context · World Bank</h3>
     <div>
       <a href={gdp.sourceUrl} target="_blank" rel="noreferrer"><strong>{gdp.value == null ? "No current value" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 2 }).format(gdp.value)}</strong><span>GDP · {gdp.year ?? "year unavailable"} ↗</span></a>
       <a href={internet.sourceUrl} target="_blank" rel="noreferrer"><strong>{internet.value == null ? "No current value" : `${internet.value}%`}</strong><span>Internet users · {internet.year ?? "year unavailable"} ↗</span></a>
+      <a href={fdi.sourceUrl} target="_blank" rel="noreferrer"><strong>{fdi.value == null ? "No current value" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 2 }).format(fdi.value)}</strong><span>Net FDI inflows · {fdi.year ?? "year unavailable"} ↗</span></a>
     </div>
     <small>{context.caveat}</small>
   </aside>;
