@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { licenseGuard } from "@/lib/licenseGuard";
 import { getDb } from "@/db";
 import { researchBounties } from "@/db/schema";
+import { eq } from "drizzle-orm";
 /**
  * Export a detailed PDF report for a bounty (premium feature).
  * The request must include a valid premium license token in the Authorization header.

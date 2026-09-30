@@ -14,7 +14,7 @@ describe("research route", () => {
   it("returns one grouped finding with both sources and no fabricated score or profit", async () => {
     const request = new Request("http://localhost/api/hunt/research", { method: "POST", body: JSON.stringify({ topic: "inventory", geography: "Goa, India", budget: 100000 }) });
     const response = await POST(request);
-    const data = await response.json() as { opportunities: { sources: unknown[]; strength: number | null; financials: unknown }[] };
+    const data = await response.json() as { opportunities: { sources: unknown[]; strength: number | null; financials: unknown }[]; webResearch: { title: string; url: string; snippet: string }[] };
     expect(response.status).toBe(200);
     expect(data.opportunities).toHaveLength(1);
     expect(data.opportunities[0].sources).toHaveLength(2);
