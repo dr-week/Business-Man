@@ -1,6 +1,6 @@
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, gt, inArray, sum } from "drizzle-orm";
 import { getDb } from "@/db";
-import { researchChecks, researchRuns } from "@/db/schema";
+import { huntLeads, researchChecks, researchRuns } from "@/db/schema";
 import { apiError, ownerId } from "@/lib/hunt-api";
 
 const OUTCOMES = ["open", "supports", "disconfirms", "inconclusive"] as const;
@@ -12,12 +12,18 @@ export async function GET() {
 
   try {
     const db = getDb();
-    const [runCount, outcomeRows, evidenceRows] = await Promise.all([
+    const [runCount, outcomeRows, evidenceRows, leadStatuses, paymentRows] = await Promise.all([
       db.select({ total: count() }).from(researchRuns).where(eq(researchRuns.ownerId, owner)),
       db.select({ key: researchChecks.outcome, total: count() }).from(researchChecks)
         .where(eq(researchChecks.ownerId, owner)).groupBy(researchChecks.outcome),
       db.select({ key: researchChecks.evidenceKind, total: count() }).from(researchChecks)
         .where(eq(researchChecks.ownerId, owner)).groupBy(researchChecks.evidenceKind),
+      db.select({ key: huntLeads.validationStatus, total: count() }).from(huntLeads)
+        .where(eq(huntLeads.ownerId, owner)).groupBy(huntLeads.validationStatus),
+      db.select({ currency: huntLeads.validationPaymentCurrency, amount: sum(huntLeads.validationPaymentAmount), records: count() })
+        .from(huntLeads)
+        .where(and(eq(huntLeads.ownerId, owner), inArray(huntLeads.validationStatus, ["paid_pilot", "repeat_purchase"]), gt(huntLeads.validationPaymentAmount, 0)))
+        .groupBy(huntLeads.validationPaymentCurrency),
     ]);
 
     const aggregate = (rows: { key: string | null; total: number }[], keys: readonly string[]) => {
@@ -28,12 +34,19 @@ export async function GET() {
 
     const outcomes = aggregate(outcomeRows, OUTCOMES);
     const evidenceKinds = aggregate(evidenceRows, EVIDENCE_KINDS);
+    const statuses = aggregate(leadStatuses, ["pilot_offered", "paid_pilot", "repeat_purchase"]);
     return Response.json({
       savedResearchRuns: runCount[0]?.total ?? 0,
       checks: { total: Object.values(outcomes).reduce((sum, value) => sum + value, 0), outcomes, evidenceKinds },
-      paidTransactions: null,
+      buyerValidation: {
+        pilotOffers: statuses.pilot_offered,
+        paidPilotRecords: paymentRows.reduce((total, row) => total + row.records, 0),
+        repeatPurchases: statuses.repeat_purchase,
+        recordedAmountsByCurrency: paymentRows.map((row) => ({ currency: row.currency, amount: Number(row.amount ?? 0) })),
+      },
+      businessmanPaymentRecords: null,
       generatedAt: new Date().toISOString(),
-      note: "Counts reflect your saved records. Evidence and outcomes are user-reported, not independently verified. Payment data is not connected.",
+      note: "Research checks and buyer-validation outcomes reflect your saved, owner-reported records; payment amounts are not independently verified. BUSINESSman checkout revenue is not connected.",
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return apiError(error); }
 }

@@ -10,6 +10,13 @@ const reportSchema = z.object({
     outcomes: z.object({ open: z.number().int().nonnegative(), supports: z.number().int().nonnegative(), disconfirms: z.number().int().nonnegative(), inconclusive: z.number().int().nonnegative() }),
     evidenceKinds: z.object({ sourced_fact: z.number().int().nonnegative(), user_report: z.number().int().nonnegative(), estimate: z.number().int().nonnegative(), hypothesis: z.number().int().nonnegative() }),
   }),
+  buyerValidation: z.object({
+    pilotOffers: z.number().int().nonnegative(),
+    paidPilotRecords: z.number().int().nonnegative(),
+    repeatPurchases: z.number().int().nonnegative(),
+    recordedAmountsByCurrency: z.array(z.object({ currency: z.string().length(3), amount: z.number().finite().nonnegative() })),
+  }),
+  businessmanPaymentRecords: z.null(),
   note: z.string(),
 });
 type Report = z.infer<typeof reportSchema>;
@@ -54,6 +61,17 @@ export function ValidationReport() {
       {metrics.map(([label, value]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}
       <p>{report.note}</p>
     </div>
-    <p className="research-report-payment">Payment tracking: not connected. These counts do not prove willingness to pay.</p>
+    <details className="research-report-payment">
+      <summary>Buyer validation from saved opportunities</summary>
+      <div className="research-decision-strip">
+        <div><strong>{report.buyerValidation.pilotOffers}</strong><span>Pilots offered</span></div>
+        <div><strong>{report.buyerValidation.paidPilotRecords}</strong><span>Paid pilot records</span></div>
+        <div><strong>{report.buyerValidation.repeatPurchases}</strong><span>Repeat purchase records</span></div>
+        <div><strong>{report.buyerValidation.recordedAmountsByCurrency.length
+          ? report.buyerValidation.recordedAmountsByCurrency.map(({ currency, amount }) => new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(amount)).join(" · ")
+          : "—"}</strong><span>Recorded amounts, by currency</span></div>
+      </div>
+      <p>These are user-reported payments for researched opportunities, not independently verified or BUSINESSman revenue. BUSINESSman checkout is not connected.</p>
+    </details>
   </section>;
 }
