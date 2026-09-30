@@ -1,5 +1,6 @@
 import { ResearchBounty } from "../db/schema";
-import { stringify } from "csv-stringify/sync";
+
+const cell = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
 
 /**
  * Generate a CSV string from an array of ResearchBounty records.
@@ -26,5 +27,5 @@ export function generateBountyCsv(bounties: ResearchBounty[]): string {
     b.estimatedRevenue?.toString() ?? "",
   ]);
 
-  return stringify(data, { header: true, columns });
+  return [columns, ...data].map((row) => row.map(cell).join(",")).join("\r\n");
 }

@@ -38,6 +38,8 @@ Suggested initial price test: ₹999 for a founder brief and ₹9,999 for a faci
 
 This checkout has no root `LICENSE`, so it is not currently licensed as open source. GitHub states that absent a license, default copyright applies and others have no general permission to reproduce, distribute, or make derivatives; public GitHub users can still view and fork under GitHub's site terms ([GitHub licensing guide](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)).
 
+The hosted export gate now verifies an expiring, signed premium token and fails closed without a strong `LICENSE_SECRET`. It has no checkout, token-issuing, revocation, or customer-entitlement workflow; it is not a software license or a sellable paid plan.
+
 Decide ownership and inspect dependency licenses before publishing. If the goal is open source with network-use reciprocity, evaluate AGPL-3.0: modified hosted versions must offer their corresponding source to remote users. It permits commercial use and does not stop a compliant fork or guarantee revenue ([GNU AGPL](https://www.gnu.org/licenses/agpl-3.0.html), [GNU FAQ](https://www.gnu.org/licenses/gpl-faq.en.html)). A permissive license makes reuse easier but also easier to repackage. Dual licensing or proprietary add-ons require rights to every included contribution; do not promise this before contributor terms and copyright ownership are settled. Sell service and evidence quality, not exclusivity over published code.
 
 ## UI/UX and next decision

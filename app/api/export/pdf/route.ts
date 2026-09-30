@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
     const pdfDoc = await PDFDocument.create();
     const timesRoman = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-    const page = pdfDoc.addPage();
+    let page = pdfDoc.addPage();
     const { width, height } = page.getSize();
     const margin = 50;
     let y = height - margin;

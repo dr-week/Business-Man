@@ -4,7 +4,13 @@ export const discoveryInput = z.union([
   z.object({ query: z.string().trim().min(2).max(100), location: z.string().trim().max(100).default(""), budget: z.number().nonnegative().max(1_000_000_000).optional() }).strict(),
   z.object({ saveId: z.string().regex(/^\d{1,12}$/) }).strict(),
 ]);
-export type SourceSignal = { id: string; provider: string; kind?: "discussion" | "official" | "buyer" | "supplier"; authorId?: string; title: string; excerpt: string; url: string; publishedAt: string; retrievedAt: string; engagement?: { metric: "comments" | "answers"; count: number }; /** Legacy saved research; new collectors use engagement. */ comments?: number; facts?: { tables: string[][]; products: { name: string; price: string; currency: string }[] } };
+export type SourceSignal = {
+  id: string; provider: string; kind?: "discussion" | "official" | "buyer" | "supplier"; authorId?: string;
+  title: string; excerpt: string; url: string; publishedAt: string; retrievedAt: string;
+  engagement?: { metric: "comments" | "answers"; count: number };
+  /** Legacy saved research; new collectors use engagement. */ comments?: number;
+  facts?: { tables: string[][]; products: { name: string; price: string; currency: string }[] };
+};
 export type OpportunityFinding = { name: string; problem: string; buyer: "Unknown"; gap: "Unknown"; business: "Unqualified"; investment: "Unknown"; monthlyProfit: "Unknown"; strength: "Unrated"; confidence: "Low"; sources: SourceSignal[]; missing: string[] };
 const hit = z.object({ objectID: z.string().regex(/^\d+$/), author: z.string().optional(), title: z.string(), story_text: z.string().nullable(), created_at: z.string().datetime(), num_comments: z.number().nonnegative().nullable() });
 

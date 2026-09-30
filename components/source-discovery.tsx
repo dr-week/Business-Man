@@ -29,9 +29,9 @@ const storageKey = "businessman.research.v2";
 
 const money = (value: number | null | undefined, currency: string) => value == null ? "â€”" : new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
 
-function persist(input: ResearchInput, opportunities: ResearchOpportunity[]) {
+function persist(input: ResearchInput, opportunities: ResearchOpportunity[], runId: string | null) {
 
-  try { localStorage.setItem(storageKey, JSON.stringify({ input, opportunities })); } catch { /* storage unavailable */ }
+  try { localStorage.setItem(storageKey, JSON.stringify({ input, opportunities, runId })); } catch { /* storage unavailable */ }
 
 }
 
@@ -137,10 +137,11 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
     try {
 
-      const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null") as { input?: ResearchInput; opportunities?: ResearchOpportunity[] } | null;
+      const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null") as { input?: ResearchInput; opportunities?: ResearchOpportunity[]; runId?: string | null } | null;
 
       if (!saved?.input || !Array.isArray(saved.opportunities)) return;
 
+      if (typeof saved.runId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(saved.runId)) setRunId(saved.runId);
       setInput(saved.input); setOpportunities(saved.opportunities);
 
       setTopic(saved.input.topic); setSourceUrls((saved.input.sourceUrls ?? []).join("\n"));
@@ -218,7 +219,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
       setRunId(data.runId ?? null); setPreparedBrief(data.query?.brief ?? ""); setInterpretation(data.query ?? null); setInput(next); setOpportunities(data.opportunities); setProviderErrors(data.providerErrors); setWebResearch(data.webResearch ?? []); setWebSearchConfigured(!!data.webSearchConfigured);
 
-      setSelected(null); setCompare([]); persist(next, data.opportunities);
+      setSelected(null); setCompare([]); persist(next, data.opportunities, data.runId ?? null);
 
       setProgress(data.opportunities.length ? data.opportunities.length + " findings grouped and qualified" : data.webResearch?.length ? data.webResearch.length + " web results ready to review; no scored leads yet" : "No findings; broaden the topic or location");
 
@@ -236,7 +237,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
       const next = current.map((item) => item.id === id ? recalculateOpportunity({ ...item, assumptions }, input.budget) : item);
 
-      persist(input, next); return next;
+      persist(input, next, runId); return next;
 
     });
 

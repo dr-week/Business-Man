@@ -12,23 +12,22 @@
  * locally in a `.env` file.
  */
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { jwtVerify } from "jose";
 
 /**
  * Verify the license token.
  * @param token JWT token string
  * @returns boolean – true if token is valid and contains premium claim.
  */
-export function verifyLicenseToken(token: string): boolean {
+export async function verifyLicenseToken(token: string): Promise<boolean> {
+  if (!token || token.length > 8192) return false;
   try {
     const secret = process.env.LICENSE_SECRET;
-    if (!secret) {
-      console.warn("LICENSE_SECRET is not defined – all premium routes will be blocked");
-      return false;
-    }
-    const payload = jwt.verify(token, secret) as Record<string, unknown>;
-    return payload.premium === true;
-  } catch (e) {
+    if (!secret || new TextEncoder().encode(secret).byteLength < 32) return false;
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret), { algorithms: ["HS256"] });
+    const expiresAt = payload.exp;
+    return payload.premium === true && typeof expiresAt === "number" && Number.isSafeInteger(expiresAt) && expiresAt > Date.now() / 1000;
+  } catch {
     return false;
   }
 }
@@ -44,11 +43,11 @@ export function verifyLicenseToken(token: string): boolean {
  */
 export async function licenseGuard(req: NextRequest): Promise<NextResponse | null> {
   const auth = req.headers.get("authorization");
-  if (!auth || !auth.startsWith("Bearer ")) {
+  const token = auth?.match(/^Bearer\s+(\S+)$/i)?.[1];
+  if (!token) {
     return NextResponse.json({ error: "Missing or malformed Authorization header" }, { status: 401 });
   }
-  const token = auth.replace(/^Bearer\s+/i, "");
-  const ok = verifyLicenseToken(token);
+  const ok = await verifyLicenseToken(token);
   if (!ok) {
     return NextResponse.json({ error: "Invalid or non‑premium license token" }, { status: 403 });
   }
