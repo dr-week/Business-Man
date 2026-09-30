@@ -260,6 +260,12 @@
 .saved-research-history li span,.saved-research-history li small { display:block; min-width:0; color:#d6d2c4; font-size:12px; }
 .saved-research-history li small,.saved-research-history p { margin-top:4px; color:#aaa99b; font-size:11px; }
 .saved-research-history li button { flex:none; padding:6px 9px; border:1px solid #414735; border-radius:5px; color:#d1b476; }
+.saved-research-actions { position:relative; flex:none; }
+.saved-research-actions > summary { cursor:pointer; padding:6px 9px; border:1px solid #414735; border-radius:5px; color:#d1b476; font-size:12px; list-style:none; }
+.saved-research-actions > summary::-webkit-details-marker { display:none; }
+.saved-research-actions[open] > div { position:absolute; z-index:2; right:0; top:calc(100% + 5px); display:grid; gap:4px; min-width:140px; padding:6px; border:1px solid #414735; border-radius:6px; background:#171a14; box-shadow:0 8px 20px #0008; }
+.saved-research-actions[open] > div a { padding:7px 9px; color:#d1b476; font-size:12px; text-decoration:none; }
+.saved-research-actions[open] > div a:hover { background:#252b20; }
 .market-software-comparison > p { color:#bbbbae; font-size:12px; line-height:1.55; }
 .market-software-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:10px; }
 .market-software-list article { min-width:0; padding:12px; border:1px solid #35392e; border-radius:6px; }

@@ -316,7 +316,10 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       {savedRuns.length ? <ul>{savedRuns.map((saved) => <li key={saved.id}>
         <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small></span>
         <button type="button" disabled={!!restoringRun || busy || saved.schemaVersion !== 1} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === 1 ? "Restore" : "Update needed"}</button>
-        {saved.schemaVersion === 1 && <button type="button" disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</button>}
+        <details className="saved-research-actions"><summary>More</summary><div>
+          {saved.schemaVersion === 1 && <button type="button" disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</button>}
+          {saved.schemaVersion === 1 && <a href={`/api/hunt/research-runs/export?id=${encodeURIComponent(saved.id)}`}>Download backup</a>}
+        </div></details>
       </li>)}</ul> : <p>Run research while signed in to build your history.</p>}
     </details>
 
