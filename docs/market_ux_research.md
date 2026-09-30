@@ -47,3 +47,7 @@ Decide ownership and inspect dependency licenses before publishing. If the goal 
 Keep the first screen focused on one question, geography, and budget. Put source date, link, evidence type, and uncertainty beside each claim; distinguish comments/answers from buyer intent; keep assumptions editable; show the next evidence-gathering action. Progressive disclosure keeps economics, competitors, sources, and collaboration separate until needed. On mobile, keep citations and the primary action reachable without hiding uncertainty.
 
 Next validation gate: 10 founder interviews, 3 advisor/accelerator interviews, and at least 3 paid briefs before prioritizing team collaboration or a subscription. Record objections and non-purchases too. If users want a free report but will not pay for a validated next action, change the offer before adding features.
+
+## Reporting workflow
+
+Metabase offers configurable dashboards, filters, exports, and subscriptions; its current pricing page lists a free open-source plan and hosted paid tiers ([pricing](https://www.metabase.com/pricing), [dashboard docs](https://www.metabase.com/docs/latest/dashboards/introduction)). BUSINESSman’s narrow reporting wedge is an owner-scoped view of saved research and falsification-check outcomes inside the decision workflow. These records are user-entered evidence, not verified market demand; payment data is not connected. Use the report to decide what to validate next, not to forecast sales.

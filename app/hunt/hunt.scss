@@ -168,6 +168,9 @@
 .research-filters small { display:block; padding-bottom:14px; }
 .research-status { color:#aaa99b; min-height:20px; font-size:12px; }
 .research-provider-errors { display:block; color:#d1b476; margin-top:4px; }
+.research-report-state { display:flex; align-items:center; gap:12px; flex-wrap:wrap; border:1px solid #35392e; border-radius:8px; padding:14px; color:#aaa99b; }
+.research-report-state p { margin:0; }
+.research-report-payment { color:#aaa99b; font-size:12px; }
 .research-submit { display:inline-flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0; border:1px solid #d1b476; border-radius:7px; background:#d1b476; color:#171a14; padding:9px 13px; font-weight:600; }
 .research-submit:disabled { opacity:.65; cursor:wait; }
 .research-decision-strip { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; padding:14px; border:1px solid #35392e; border-radius:10px; background:#171a14; }
