@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Megaphone, Copy, Check, Mail, Calendar, Download } from "lucide-react";
+import { Megaphone, Copy, Check, Mail, Calendar, Download, Share2 } from "lucide-react";
 import { buildValidationCalendar, generateMarketingCampaign } from "@/lib/marketing-automation";
 import type { ResearchOpportunity } from "@/lib/research-engine";
 
@@ -14,6 +14,8 @@ export function MarketingAutomationPanel({
 }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [copyError, setCopyError] = useState(false);
+  const [shareError, setShareError] = useState(false);
+  const [shareComplete, setShareComplete] = useState(false);
   const [calendarDownloaded, setCalendarDownloaded] = useState(false);
   const [activeChannel, setActiveChannel] = useState<"x" | "linkedin" | "email" | "cadence">("x");
 
@@ -21,6 +23,8 @@ export function MarketingAutomationPanel({
 
   async function copyToClipboard(key: string, text: string) {
     setCopyError(false);
+    setShareError(false);
+    setShareComplete(false);
     setCalendarDownloaded(false);
     try {
       await navigator.clipboard.writeText(text);
@@ -33,6 +37,31 @@ export function MarketingAutomationPanel({
   }
 
   const fullThreadText = campaign.xThread.map((t) => t.text).join("\n\n---\n\n");
+  const activeDraft = activeChannel === "x"
+    ? fullThreadText
+    : activeChannel === "linkedin"
+      ? campaign.linkedinPost
+      : activeChannel === "email"
+        ? `Subject: ${campaign.coldOutreachEmail.subject}\n\n${campaign.coldOutreachEmail.body}`
+        : campaign.weeklyDistributionCadence.map((item) => `${item.day} · ${item.platform}\n${item.action}`).join("\n\n");
+
+  async function shareDraft() {
+    setCopyError(false);
+    setShareError(false);
+    setShareComplete(false);
+    setCalendarDownloaded(false);
+    if (typeof navigator.share !== "function") {
+      await copyToClipboard(`share-${activeChannel}`, activeDraft);
+      return;
+    }
+    try {
+      await navigator.share({ title: `Businessman draft · ${campaign.opportunityName}`, text: activeDraft });
+      setShareComplete(true);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setShareError(true);
+    }
+  }
 
   function downloadValidationCalendar() {
     const blob = new Blob([buildValidationCalendar(campaign)], { type: "text/calendar;charset=utf-8" });
@@ -53,9 +82,9 @@ export function MarketingAutomationPanel({
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
         <div>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--gold)", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
-            <Megaphone size={14} /> Marketing Draft Kit
+            <Megaphone size={14} /> Businessman Sales Test
           </span>
-          <h4 style={{ margin: "4px 0 0 0", fontSize: "16px", color: "#eeeae0" }}>Distribution Kit: {campaign.opportunityName}</h4>
+          <h4 style={{ margin: "4px 0 0 0", fontSize: "16px", color: "#eeeae0" }}>Promote Businessman · Example: {campaign.opportunityName}</h4>
         </div>
         <div style={{ display: "flex", gap: "6px" }}>
           <button
@@ -92,6 +121,10 @@ export function MarketingAutomationPanel({
       <p role="status" aria-live="polite" style={{ margin: "0 0 12px", color: copyError ? "#f0a39a" : "#8b937e", fontSize: "11px" }}>
         {copyError
           ? "Copy failed. Check browser clipboard permission and try again."
+          : shareError
+            ? "Could not open the share menu. Copy the draft instead."
+            : shareComplete
+              ? "Shared with your chosen app. Review before sending; nothing is posted automatically."
           : calendarDownloaded
             ? "Calendar file downloaded. Import it into your calendar; tasks remain yours to review."
             : copiedKey
@@ -99,10 +132,15 @@ export function MarketingAutomationPanel({
             : "Drafts only. Review sources and assumptions before publishing; nothing is posted automatically."}
       </p>
 
+      <div className="marketing-calendar-export">
+        <p>Share the selected draft with an app on your device. You choose whether to send it.</p>
+        <button type="button" className="research-submit" onClick={() => void shareDraft()}><Share2 size={14} /> Share selected draft</button>
+      </div>
+
       {activeChannel === "x" && (
         <div style={{ display: "grid", gap: "10px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "12px", color: "#aaa99b" }}>5-Tweet High-Engagement Teardown</span>
+            <span style={{ fontSize: "12px", color: "#aaa99b" }}>5-post product introduction</span>
             <button
               type="button"
               className="hunt-icon-action"
@@ -134,7 +172,7 @@ export function MarketingAutomationPanel({
       {activeChannel === "linkedin" && (
         <div style={{ display: "grid", gap: "10px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "12px", color: "#aaa99b" }}>Thought Leadership Post (Founder / Operator Lens)</span>
+            <span style={{ fontSize: "12px", color: "#aaa99b" }}>Product discovery post</span>
             <button
               type="button"
               className="hunt-icon-action"
@@ -154,7 +192,7 @@ export function MarketingAutomationPanel({
       {activeChannel === "email" && (
         <div style={{ display: "grid", gap: "10px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "12px", color: "#aaa99b" }}>Direct Operator Outreach (Value-First / No Pitch)</span>
+            <span style={{ fontSize: "12px", color: "#aaa99b" }}>Founder and advisor interview (draft)</span>
             <button
               type="button"
               className="hunt-icon-action"

@@ -38,76 +38,39 @@ export interface MarketingCampaign {
   }[];
 }
 
-export function generateMarketingCampaign(opportunity: ResearchOpportunity, currency = "INR"): MarketingCampaign {
+export function generateMarketingCampaign(opportunity: ResearchOpportunity, _currency = "INR"): MarketingCampaign {
   const name = opportunity.name;
-  const category = opportunity.category || "Niche Business";
-  const problem = opportunity.problem || "Unsolved workflow friction";
-  const funding = opportunity.financials?.funding != null
-    ? `${currency} ${opportunity.financials.funding.toLocaleString("en-IN")}`
-    : "Not estimated";
-  const monthlyProfit = opportunity.financials?.scenarios[1]?.profit != null
-    ? `${currency} ${opportunity.financials.scenarios[1].profit.toLocaleString("en-IN")}/mo`
-    : "Not estimated";
-  const testMove = opportunity.gap || "Interview 10 target buyers before building";
-
-  const targetAudience = opportunity.buyer || "Founders, operators, and niche businesses";
+  const targetAudience = "Founders evaluating an idea, small businesses considering expansion, and advisors or incubators supporting those decisions";
   const distributionChannels = [
-    "X / Twitter Tech & Indie Hacker Community",
-    "LinkedIn B2B Decision Makers & Incubators",
-    "Direct Cold DM / Email to Qualified Operators",
-    "Product Hunt / Launch PHOENIX Showcase",
+    "LinkedIn founder, small-business, and advisor networks",
+    "Founder communities and incubator programs that allow research requests",
+    "Warm introductions to founders and business advisors",
+    "Product Hunt after the product and onboarding are ready",
   ];
-
-  const viralHook = `A research brief on ${name} (${category}): the buyer, current alternatives, open questions, and assumptions worth testing.`;
-
+  const viralHook = `Before committing money to a business idea, check the buyer, alternatives, costs, and evidence gaps. Businessman puts those questions in one source-linked decision brief. Current example: ${name} — a research lead, not proof of demand.`;
   const xThread = [
-    {
-      tweetNumber: 1,
-      text: `Could ${name} be a business opportunity?\n\nThis brief maps the buyer, problem, alternatives, and evidence gaps. It is a hypothesis to investigate, not a promise of demand. 🧵👇`,
-    },
-    {
-      tweetNumber: 2,
-      text: `1/ The reported problem:\n\n${problem}.\n\nNext step: verify how often it happens, what it costs, and whether buyers already pay to address it.`,
-    },
-    {
-      tweetNumber: 3,
-      text: `2/ Scenario economics (estimates, not actual results):\n\n• Initial funding assumption: ${funding}\n• Base monthly operating profit assumption: ${monthlyProfit}\n\nReview the inputs and validate them with buyers before relying on these figures.`,
-    },
-    {
-      tweetNumber: 4,
-      text: `3/ A useful next validation step:\n\n${testMove}.\n\nRecord both supporting and contradicting evidence.`,
-    },
-    {
-      tweetNumber: 5,
-      text: `Businessman organizes source-linked research, assumptions, and validation steps for opportunities like ${name}.\n\nThis is early analysis; speak with potential buyers before investing.`,
-    },
+    { tweetNumber: 1, text: "Before you invest in a business idea, test the case.\n\nBusinessman organizes market signals, buyer questions, alternatives, and financial assumptions into one research brief. 🧵" },
+    { tweetNumber: 2, text: `1/ Start with a specific opportunity: ${name}.\n\nName the buyer and recurring problem. Check the source and date behind each claim; keep unsupported details marked unknown.` },
+    { tweetNumber: 3, text: "2/ Compare current alternatives and show low, base, and high economics.\n\nPrices, costs, and sales volumes stay labeled as sourced, estimated, user-entered, or missing. Scenarios are not forecasts." },
+    { tweetNumber: 4, text: "3/ Turn the biggest unknown into a buyer test.\n\nAsk what the person did the last time this happened, what workaround they used, and whether they paid for it. Record evidence that could disprove the idea, too." },
+    { tweetNumber: 5, text: `Businessman is for founders and advisors deciding what to investigate before investing.\n\n${name} is only an example research lead. The tool does not certify demand or promise returns.` },
   ];
-
-  const linkedinPost = `We researched a specific business opportunity: "${name}".
-
-Sector: ${category}
-Target Buyer: ${targetAudience}
-Validation Test: ${testMove}
-
-The figures are scenario estimates, and the demand hypothesis still needs buyer validation. What evidence would change your view?`;
-
+  const linkedinPost = `I'm building Businessman for founders and advisors who need to decide what to investigate before committing capital.\n\nIt brings source-linked market signals, buyers, alternatives, contradictions, and low/base/high financial assumptions into one decision brief. Missing evidence stays visible.\n\nOne current example is ${name}; it is a lead to validate, not a proven opportunity.\n\nHow do you test an idea today, and what do you pay for that research?`;
   const coldOutreachEmail = {
-    subject: `Quick question regarding ${problem.slice(0, 30)}...`,
-    body: `Hi {{firstName}},\n\nI’m researching ${category} and looking at this question: ${problem}.\n\nWe have a preliminary brief on ${name}, including the assumptions and evidence gaps. It is not a validated market forecast.\n\nWould a short summary be useful, or is this problem not relevant to your work?\n\nBest,\n[Your Name]`,
-    callToAction: "Ask whether a short summary would be useful.",
+    subject: "How do you test a business idea before investing?",
+    body: "Hi {{firstName}},\n\nI'm building Businessman, a research tool that organizes source-linked market signals, alternatives, buyer questions, and financial assumptions into a decision brief.\n\nI'm speaking with founders and advisors who evaluate ideas before committing capital. How do you do this today, and do you pay for research or data?\n\nWould you be open to a 15-minute conversation? This is a request for feedback, not a claim that our research has validated demand.\n\nBest,\n[Your Name]",
+    callToAction: "Request a short product-discovery interview; do not send unsolicited bulk messages.",
   };
-
   const productHuntPitch = {
-    tagline: "Source-linked business opportunity research and validation",
-    makerComment: `Hey PH! Businessman helps organize opportunity research: source-linked claims, alternatives, scenario assumptions, and questions to validate with buyers. It does not certify demand or promise returns. We are building it to make early business decisions easier to inspect and challenge.`,
+    tagline: "Source-linked market research briefs for business decisions",
+    makerComment: "Businessman helps founders and advisors examine an idea before investing: source-linked claims, alternatives, scenario assumptions, and buyer tests in one brief. It keeps estimates and missing evidence visible; it does not certify demand or promise returns.",
   };
-
   const weeklyDistributionCadence = [
-    { day: "Day 1", platform: "Research", action: `Write one falsifiable buyer hypothesis for ${targetAudience}; list the evidence that would disprove it.`, successMeasure: "One named buyer role and one disconfirming signal." },
-    { day: "Day 2", platform: "Opt-in channel", action: "Share a short research question in a relevant community or ask for warm introductions. Respect community rules; do not scrape or bulk-message members.", successMeasure: "Qualified replies from the named buyer segment." },
-    { day: "Day 3", platform: "Buyer interviews", action: "Ask willing buyers about their last real occurrence, current workaround, and cost. Avoid pitching before understanding the problem.", successMeasure: "Dated notes with role, geography, workaround, and recent example." },
-    { day: "Day 4", platform: "Paid pilot", action: "Offer a specific scope and price to qualified buyers; record offers separately from actual payments.", successMeasure: "Actual payments separately from offers; record currency and amount." },
-    { day: "Day 5", platform: "Review gate", action: "Compare observed evidence with the pre-set continue/revise/stop threshold; update the opportunity record.", successMeasure: "Decision and next test recorded; no response is not a positive signal." },
+    { day: "Day 1", platform: "Research", action: `Choose one initial segment from: ${targetAudience}. Write a falsifiable hypothesis about how they currently research business decisions.`, successMeasure: "One named segment, current workflow, and disconfirming signal." },
+    { day: "Day 2", platform: "Opt-in channel", action: "Ask a research question in a community that permits it, or request warm introductions. Follow community rules; do not scrape or bulk-message members.", successMeasure: "Qualified replies from the chosen segment." },
+    { day: "Day 3", platform: "Buyer interviews", action: "Ask willing founders or advisors how they evaluated their last idea, which data or services they paid for, and what was missing. Avoid pitching before understanding the workflow.", successMeasure: "Dated notes on role, decision, current workaround, and actual spend." },
+    { day: "Day 4", platform: "Paid pilot", action: "Offer a clearly scoped early-access or research-brief pilot at a stated price. Record the offer separately from a completed payment.", successMeasure: "Actual payment recorded with amount and currency; offers alone do not count as revenue." },
+    { day: "Day 5", platform: "Review gate", action: "Compare interviews, pilot offers, and payments against a pre-set continue/revise/stop threshold; update the product hypothesis.", successMeasure: "Decision and next test recorded; silence is not positive demand." },
   ];
 
   return {
