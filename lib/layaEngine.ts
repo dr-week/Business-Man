@@ -5,7 +5,7 @@ import type { ResearchOpportunity } from "./research-engine";
 import type { System1Evaluation } from "./system1-decision-engine";
 
 // Create a module‑level cache (max 200 recent evaluations)
-const cache = new DecisionCache(200);
+const cache = new DecisionCache<System1Evaluation>(200);
 
 /**
  * Runs the heavy System‑1 heuristics lazily. Results are cached per
@@ -15,7 +15,7 @@ const cache = new DecisionCache(200);
 export async function runDecisionEngine(opportunity: ResearchOpportunity): Promise<System1Evaluation> {
   // Return cached result if available
   const cached = cache.get(opportunity.id);
-  if (cached) return cached as System1Evaluation;
+  if (cached) return cached;
 
   // Dynamically import the heavy engine only once per call
   const { evaluateSystem1Heuristics } = await import("./system1-decision-engine");

@@ -1,59 +1,39 @@
-// Benchmark script for Decision Engine RAM usage
-// This script runs the decision engine twice: once with the default (no cache) and once with the LRU cache enabled.
-// It measures memory consumption and execution time, then prints a simple report.
+import { performance } from "node:perf_hooks";
+import { blankFinancials, researchInput, type ResearchOpportunity } from "../lib/research-engine";
+import { evaluateSystem1Heuristics } from "../lib/system1-decision-engine";
+import { runDecisionEngine } from "../lib/layaEngine";
 
-import { performance } from "perf_hooks";
-import { runDecisionEngine as runWithoutCache } from "../lib/layaEngine"; // This will use cache internally; we will bypass by clearing it
-import DecisionCache from "../lib/decisionCache";
-
-async function measure(opportunity: any, useCache: boolean) {
-  const startMem = process.memoryUsage().heapUsed;
+async function measure(opportunity: ResearchOpportunity, cached: boolean) {
+  const startHeap = process.memoryUsage().heapUsed;
   const startTime = performance.now();
-
-  // If we want to bypass cache, clear it before run
-  if (!useCache) {
-    // Directly import the original engine without cache (dynamic import)
-    const { evaluateSystem1Heuristics } = await import("../lib/system1-decision-engine");
-    const result = await evaluateSystem1Heuristics(opportunity);
-    const endTime = performance.now();
-    const endMem = process.memoryUsage().heapUsed;
-    return { result, timeMs: endTime - startTime, memDelta: endMem - startMem };
-  } else {
-    const result = await runWithoutCache(opportunity);
-    const endTime = performance.now();
-    const endMem = process.memoryUsage().heapUsed;
-    return { result, timeMs: endTime - startTime, memDelta: endMem - startMem };
-  }
+  const result = cached
+    ? await runDecisionEngine(opportunity)
+    : evaluateSystem1Heuristics(opportunity);
+  return {
+    result,
+    timeMs: performance.now() - startTime,
+    heapDelta: process.memoryUsage().heapUsed - startHeap,
+  };
 }
 
 async function main() {
-  // Generate a synthetic opportunity with many signals to stress memory
-  const opportunity = {
-    id: "synthetic-001",
-    signals: Array.from({ length: 5000 }, (_, i) => ({
-      name: `signal_${i}`,
-      weight: Math.random(),
-    })),
+  const input = researchInput.parse({ topic: "retail inventory", geography: "India", budget: null });
+  const opportunity: ResearchOpportunity = {
+    id: "synthetic-001", name: input.topic, category: "Retail", geography: input.geography,
+    buyer: "Independent retailers", problem: "Stockouts are difficult to track", offering: null,
+    alternatives: [], gap: null, risks: [], sources: [], claims: [], assumptions: blankFinancials(input),
+    factors: [], strength: null, confidence: "Low", financials: null, missing: [],
   };
 
-  console.log("Running benchmark without cache...");
-  const without = await measure(opportunity, false);
-  console.log("Result (no cache):", without.result.verdict);
-  console.log(`Time: ${without.timeMs.toFixed(2)} ms, Memory Δ: ${(without.memDelta / 1024 / 1024).toFixed(2)} MB`);
-
-  console.log("\nRunning benchmark with LRU cache...");
-  // First run populates cache; second run should hit cache
-  const withFirst = await measure(opportunity, true);
-  const withSecond = await measure(opportunity, true);
-
-  console.log("Result (first cache run):", withFirst.result.verdict);
-  console.log(`Time: ${withFirst.timeMs.toFixed(2)} ms, Memory Δ: ${(withFirst.memDelta / 1024 / 1024).toFixed(2)} MB`);
-
-  console.log("Result (second cache hit):", withSecond.result.verdict);
-  console.log(`Time: ${withSecond.timeMs.toFixed(2)} ms, Memory Δ: ${(withSecond.memDelta / 1024 / 1024).toFixed(2)} MB`);
+  const uncached = await measure(opportunity, false);
+  const first = await measure(opportunity, true);
+  const cached = await measure(opportunity, true);
+  for (const [label, sample] of [["uncached", uncached], ["cache fill", first], ["cache hit", cached]] as const) {
+    console.log(`${label}: ${sample.result.quickVerdict}; ${sample.timeMs.toFixed(2)}ms; ${(sample.heapDelta / 1024 / 1024).toFixed(2)}MB heap delta`);
+  }
 }
 
-main().catch((e) => {
-  console.error("Benchmark failed:", e);
-  process.exit(1);
+main().catch((error: unknown) => {
+  console.error("Benchmark failed:", error);
+  process.exitCode = 1;
 });

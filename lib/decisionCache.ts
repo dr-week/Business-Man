@@ -1,20 +1,14 @@
-// Simple LRU cache for decision engine results
-
-type CacheEntry = {
-  key: string;
-  value: any;
-};
-
-export class DecisionCache {
+// Simple LRU cache for decision engine results.
+export class DecisionCache<T> {
   private maxSize: number;
-  private map: Map<string, any> = new Map();
+  private map = new Map<string, T>();
   private order: string[] = [];
 
   constructor(maxSize: number = 100) {
     this.maxSize = maxSize;
   }
 
-  get(key: string): any | undefined {
+  get(key: string): T | undefined {
     if (!this.map.has(key)) return undefined;
     // Update LRU order
     const idx = this.order.indexOf(key);
@@ -23,7 +17,7 @@ export class DecisionCache {
     return this.map.get(key);
   }
 
-  set(key: string, value: any): void {
+  set(key: string, value: T): void {
     if (this.map.has(key)) {
       // Update existing
       const idx = this.order.indexOf(key);

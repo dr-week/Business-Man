@@ -29,22 +29,16 @@ export const contributionPayloadSchema = z.object({
   claimSummary: z.string().min(1),
   verdict: z.enum(['true','false','unknown']),
   sourceUrl: z.string().url().optional().nullable(),
-  verificationData: z.any().optional(),
+  verificationData: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
  * Sanitize a parsed payload – trims strings and forces correct types.
  */
-function sanitize<T extends Record<string, any>>(obj: T): T {
-  const sanitized: Record<string, any> = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === 'string') {
-      sanitized[key] = value.trim();
-    } else {
-      sanitized[key] = value;
-    }
-  }
-  return sanitized as T;
+function sanitize<T extends object>(obj: T): T {
+  return Object.fromEntries(
+    Object.entries(obj).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value]),
+  ) as T;
 }
 
 export function validateAndSanitizeBounty(raw: unknown) {

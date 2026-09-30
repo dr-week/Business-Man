@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------
 
 import { useState, useEffect } from "react";
-import { economicsInput, calculateEconomics, inr } from "../lib/economics";
+import { calculateEconomics, inr } from "../lib/economics";
 import type { Economics } from "../lib/economics";
 
 export default function EconomicsSlider({
@@ -36,7 +36,7 @@ export default function EconomicsSlider({
 
   const updateField = (field: keyof Economics, value: string) => {
     const num = value === "" ? null : Number(value);
-    setForm((prev) => ({ ...prev, [field]: isNaN(num as any) ? null : num }));
+    setForm((prev) => ({ ...prev, [field]: num === null || Number.isNaN(num) ? null : num }));
   };
 
   return (
