@@ -13,9 +13,9 @@ const observationSchema = z.object({
   indicator: z.object({ id: z.string(), value: z.string() }),
 }).passthrough();
 
-async function latestObservation(code: string) {
-  const url = new URL(`${source}/${code}`);
-  url.search = new URLSearchParams({ format: "json", mrv: "10" }).toString();
+async function latestObservations(codes: string[]) {
+  const url = new URL(`${source}/${codes.join(";")}`);
+  url.search = new URLSearchParams({ format: "json", mrv: "10", per_page: "50", source: "2" }).toString();
   const response = await fetch(url, {
     headers: { Accept: "application/json" },
     redirect: "manual",
@@ -26,17 +26,23 @@ async function latestObservation(code: string) {
   const payload = z.array(z.unknown()).parse(await readLimitedJson(response, 32_000));
   const rows = z.array(observationSchema).safeParse(payload[1]);
   if (!rows.success) throw new Error("World Bank returned an invalid indicator response.");
-  const row = rows.data.find((item) => item.value !== null);
-  return { value: row?.value ?? null, year: row ? Number(row.date) : null };
+  const latest = new Map<string, { value: number; year: number }>();
+  for (const row of rows.data) {
+    if (row.value !== null && !latest.has(row.indicator.id)) {
+      latest.set(row.indicator.id, { value: row.value, year: Number(row.date) });
+    }
+  }
+  return latest;
 }
 
 export async function collectIndiaMarketContext() {
   const entries = Object.entries(indicators);
-  const values = await Promise.all(entries.map(async ([key, indicator]) => [key, {
+  const latest = await latestObservations(entries.map(([, indicator]) => indicator.code));
+  const values = entries.map(([key, indicator]) => [key, {
     ...indicator,
-    ...(await latestObservation(indicator.code)),
-    sourceUrl: `${source}/${indicator.code}?format=json&mrv=10`,
-  }] as const));
+    ...(latest.get(indicator.code) ?? { value: null, year: null }),
+    sourceUrl: `${source}/${indicator.code}?format=json&mrv=10&source=2`,
+  }] as const);
 
   return {
     market: "India",

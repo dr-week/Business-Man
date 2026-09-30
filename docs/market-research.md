@@ -1,6 +1,8 @@
 # India market context
 
-`GET /api/market-research` fetches India’s latest available GDP and internet-use observations from the World Bank Indicators API. It requests a ten-year window and selects the latest non-null value. Each value includes its indicator, observation year, and source URL. Requests time out after eight seconds; successful responses can be cached for six hours.
+`GET /api/market-research` fetches India’s latest available GDP and internet-use observations from the World Bank Indicators API. It requests both World Development Indicators in one semicolon-delimited call (`source=2`, `mrv=10`) and selects the latest non-null value for each. Each value includes its indicator, observation year, and individual source URL. The API requires no key; requests time out after eight seconds and successful responses can be cached for six hours. The [World Bank API supports multiple indicator codes per call](https://datahelpdesk.worldbank.org/knowledgebase/articles/898581).
+
+Three live paired checks returned matching latest values and years for the old two-request path and combined request. Median observed latency was 32 ms for two parallel calls and 102 ms for one combined call, with wide variance; this change reduces request count, not proven response time.
 
 These national indicators are context only. They do not measure analytics-product demand, addressable customers, willingness to pay, or revenue. Use founder interviews and paid pilots for those questions.
 
