@@ -28,6 +28,7 @@ describe("research run storage", () => {
     expect(inserted.sql).toContain('insert into "research_runs"');
     expect(inserted.sql).toContain('"schema_version"');
     expect(inserted.params).toContain(1);
+    expect(inserted.params).toEqual(expect.arrayContaining([expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)]));
     const query = prune.toSQL();
     expect(query.sql).toContain('delete from "research_runs"');
     expect(query.sql).toContain("not in");

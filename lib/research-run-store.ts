@@ -34,13 +34,14 @@ export async function saveResearchRun(db: ReturnType<typeof getDb>, run: typeof 
   if ((run.schemaVersion ?? RESEARCH_RUN_SCHEMA_VERSION) !== RESEARCH_RUN_SCHEMA_VERSION) {
     throw new Error("Unsupported research snapshot schema version");
   }
-  const runBytes = new TextEncoder().encode(JSON.stringify(run)).byteLength;
+  const snapshot = { ...run, createdAt: run.createdAt ?? new Date().toISOString() };
+  const runBytes = new TextEncoder().encode(JSON.stringify(snapshot)).byteLength;
   if (runBytes > MAX_RUN_BYTES) throw new Error("Research snapshot exceeds the D1 row budget");
   const retained = db.select({ id: researchRuns.id }).from(researchRuns)
     .where(and(eq(researchRuns.ownerId, run.ownerId), ne(researchRuns.id, run.id)))
     .orderBy(desc(researchRuns.createdAt), desc(researchRuns.id)).limit(MAX_RETAINED_RUNS - 1);
   await db.batch([
-    db.insert(researchRuns).values(run),
+    db.insert(researchRuns).values(snapshot),
     db.delete(researchRuns).where(and(eq(researchRuns.ownerId, run.ownerId), ne(researchRuns.id, run.id), notInArray(researchRuns.id, retained))),
   ]);
 }
