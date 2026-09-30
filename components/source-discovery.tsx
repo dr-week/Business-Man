@@ -58,6 +58,8 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
   const [savedRuns, setSavedRuns] = useState<{ id: string; schemaVersion: number; topic: string; geography: string; currency: string; createdAt: string }[]>([]);
   const [importingBackup, setImportingBackup] = useState(false);
+  const [preparedBackup, setPreparedBackup] = useState<{ id: string; file: File } | null>(null);
+  const [preparingBackupId, setPreparingBackupId] = useState("");
   const [restoringRun, setRestoringRun] = useState("");
 
   const abort = useRef<AbortController | null>(null);
@@ -176,6 +178,33 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
     } catch (error) {
       onError(error instanceof Error ? error.message : "Could not import this backup.");
     } finally { setImportingBackup(false); }
+  }
+
+  async function prepareResearchBackup(id: string) {
+    setPreparingBackupId(id);
+    try {
+      const response = await fetch(`/api/hunt/research-runs/export?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not prepare this backup for sharing.");
+      const file = new File([await response.blob()], `businessman-research-${id}.json`, { type: "application/json" });
+      setPreparedBackup({ id, file });
+    } catch (error) {
+      setPreparedBackup(null);
+      onError(error instanceof Error ? error.message : "Could not prepare this backup for sharing.");
+    } finally { setPreparingBackupId(""); }
+  }
+
+  async function shareResearchBackup(id: string) {
+    const file = preparedBackup?.id === id ? preparedBackup.file : null;
+    if (!file) { onError("Open More to prepare the backup, then choose Share with another app."); return; }
+    const shareData = { title: "BUSINESSman research backup", files: [file] };
+    if (!navigator.share || !navigator.canShare?.(shareData)) {
+      onError("File sharing is unavailable in this browser. Choose Download backup instead.");
+      return;
+    }
+    try { await navigator.share(shareData); }
+    catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) onError("Could not share this backup. Choose Download backup instead.");
+    }
   }
 
   async function refreshSavedRun(id: string) {
@@ -342,9 +371,10 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       {savedRuns.length ? <ul>{savedRuns.map((saved) => <li key={saved.id}>
         <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small></span>
         <button type="button" disabled={!!restoringRun || busy || saved.schemaVersion !== 1} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === 1 ? "Restore" : "Update needed"}</button>
-        <details className="saved-research-actions"><summary>More</summary><div>
+        <details className="saved-research-actions" onToggle={(event) => { if (saved.schemaVersion === 1 && event.currentTarget.open && preparedBackup?.id !== saved.id && preparingBackupId !== saved.id) void prepareResearchBackup(saved.id); }}><summary>More</summary><div>
           {saved.schemaVersion === 1 && <button type="button" disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</button>}
           {saved.schemaVersion === 1 && <a href={`/api/hunt/research-runs/export?id=${encodeURIComponent(saved.id)}`}>Download backup</a>}
+          {saved.schemaVersion === 1 && <button type="button" disabled={preparingBackupId === saved.id || preparedBackup?.id !== saved.id} onClick={() => void shareResearchBackup(saved.id)}>{preparingBackupId === saved.id ? "Preparing share…" : "Share with another app"}</button>}
         </div></details>
       </li>)}</ul> : <p>Run research while signed in to build your history.</p>}
     </details>
