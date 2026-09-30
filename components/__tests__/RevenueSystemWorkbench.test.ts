@@ -11,6 +11,10 @@ describe("revenue system workflow", () => {
     expect(markup).toContain("Scenario units / month");
     expect(markup).toContain("₹0");
     expect(markup).toContain("₹18,000");
+    expect(markup).toContain("Competitor offers and our testable difference");
+    expect(markup).toContain("DimeADozen");
+    expect(markup).toContain("₹2,999 one-time");
+    expect(markup).toContain("not a proven advantage");
     expect(markup).not.toContain("1 units / month");
   });
 });

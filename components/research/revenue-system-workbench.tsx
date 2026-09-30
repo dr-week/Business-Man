@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MarketPositioning } from "@/components/research/market-positioning";
 import {
   DEFAULT_INDIA_REVENUE_CONFIG,
   DEFAULT_GLOBAL_REVENUE_CONFIG,
@@ -100,6 +101,8 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
           </button>
         </div>
       </header>
+
+      <MarketPositioning />
 
       <details className="revenue-sensitivity-module" open={assumptions} onToggle={(event) => setAssumptions(event.currentTarget.open)}>
         <summary>Who pays, how we sell, and what still needs proof</summary>

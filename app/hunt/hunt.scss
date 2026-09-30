@@ -236,6 +236,11 @@
 .research-local-competition { margin:0 20px 20px; padding:18px; border:1px solid #35392e; border-radius:8px; background:#1c2118; }
 .research-local-competition > summary { cursor:pointer; font-weight:650; }
 .research-local-competition > p { color:#aaa99b; font-size:12px; margin:10px 0 0; }
+.financial-csv-import { margin:12px 0; padding:12px; border:1px solid #35392e; border-radius:6px; }
+.financial-csv-import summary { cursor:pointer; color:#d1b476; font-size:12px; }
+.financial-csv-import p,.financial-csv-import small { display:block; color:#aaa99b; font-size:11px; line-height:1.5; }
+.financial-csv-import button,.financial-csv-import input { display:block; margin:8px 0; font-size:12px; }
+.financial-csv-import button { padding:7px 10px; border:1px solid #414735; border-radius:5px; color:#d1b476; }
 .market-software-comparison > p { color:#bbbbae; font-size:12px; line-height:1.55; }
 .market-software-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:10px; }
 .market-software-list article { min-width:0; padding:12px; border:1px solid #35392e; border-radius:6px; }
@@ -496,6 +501,15 @@
 
 /* Revenue System Workbench */
 .research-revenue-system { background:#171a14; border:1px solid #35392e; border-radius:12px; padding:20px; display:grid; gap:20px; }
+.market-positioning-content { display:grid; gap:12px; padding-top:12px; }
+.market-comparison-table-wrap { overflow-x:auto; }
+.market-comparison-table { width:100%; border-collapse:collapse; min-width:620px; font-size:12px; }
+.market-comparison-table th,.market-comparison-table td { padding:10px; border-bottom:1px solid #35392e; text-align:left; vertical-align:top; }
+.market-comparison-table thead th { color:var(--muted); font-weight:600; }
+.market-comparison-table tbody th { font-weight:650; white-space:nowrap; }
+.market-comparison-table a { color:var(--gold); }
+.market-comparison-table small { display:block; margin-top:4px; color:var(--muted); }
+.market-comparison-date { color:var(--muted); font-size:11px; }
 .revenue-tier-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; }
 .revenue-tier-tab { background:#1e2319; border:1px solid #38422f; border-radius:8px; padding:12px; display:grid; gap:6px; text-align:left; cursor:pointer; color:var(--cream); }
 .revenue-tier-tab:hover { border-color:var(--gold); }
