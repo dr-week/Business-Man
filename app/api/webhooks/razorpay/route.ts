@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     if (!sale || sale.paymentLinkId !== link.id || sale.currency !== link.currency || sale.amountMinor !== link.amount_paid) {
       return Response.json({ error: "Payment does not match a known sale." }, { status: 400 });
     }
-    if (sale.status !== "paid") {
+    if (sale.status !== "paid" && sale.status !== "fulfilled") {
       await db.update(productRevenue).set({ status: "paid", paidAmountMinor: link.amount_paid, paidAt: new Date().toISOString() }).where(eq(productRevenue.id, sale.id));
     }
     return Response.json({ received: true });

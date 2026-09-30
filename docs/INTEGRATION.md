@@ -65,4 +65,5 @@ Drawer -> `/api/news` -> `lib/news/feed.ts` -> BBC/Guardian Business RSS.
 - Apply D1 migration `0007_product_revenue.sql` before enabling checkout.
 - Store `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET` as server secrets. Set `RAZORPAY_DECISION_BRIEF_PRICE_PAISE` and `RAZORPAY_ASSISTED_VALIDATION_PRICE_PAISE` as positive integer paise amounts.
 - Authenticated owners create hosted one-time links at `POST /api/revenue/checkout`. Fulfill manually; no subscription, automated delivery, or refund sync.
+- The Revenue screen lists the owner’s last 100 links. A verified `paid` sale can be marked `fulfilled` at `POST /api/revenue/sales`; fulfillment is an internal work record and sends no customer message.
 - Configure Razorpay webhook URL `/api/webhooks/razorpay` for `payment_link.paid`, using the same webhook secret. Only signature-verified events matching saved sale id, link id, INR amount, and currency count as captured receipts. Captured totals are before fees/refunds.

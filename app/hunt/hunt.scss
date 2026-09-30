@@ -241,6 +241,13 @@
 .financial-csv-import p,.financial-csv-import small { display:block; color:#aaa99b; font-size:11px; line-height:1.5; }
 .financial-csv-import button,.financial-csv-import input { display:block; margin:8px 0; font-size:12px; }
 .financial-csv-import button { padding:7px 10px; border:1px solid #414735; border-radius:5px; color:#d1b476; }
+.saved-research-history { margin:10px 0 18px; padding:12px; border:1px solid #35392e; border-radius:6px; background:#151912; }
+.saved-research-history summary { cursor:pointer; color:#d1b476; font-size:12px; }
+.saved-research-history ul { display:grid; gap:8px; margin:10px 0 0; padding:0; list-style:none; }
+.saved-research-history li { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px; border:1px solid #30362a; border-radius:5px; }
+.saved-research-history li span,.saved-research-history li small { display:block; min-width:0; color:#d6d2c4; font-size:12px; }
+.saved-research-history li small,.saved-research-history p { margin-top:4px; color:#aaa99b; font-size:11px; }
+.saved-research-history li button { flex:none; padding:6px 9px; border:1px solid #414735; border-radius:5px; color:#d1b476; }
 .market-software-comparison > p { color:#bbbbae; font-size:12px; line-height:1.55; }
 .market-software-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:10px; }
 .market-software-list article { min-width:0; padding:12px; border:1px solid #35392e; border-radius:6px; }

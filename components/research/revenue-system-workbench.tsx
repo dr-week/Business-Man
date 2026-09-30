@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MarketPositioning } from "@/components/research/market-positioning";
 import {
   DEFAULT_INDIA_REVENUE_CONFIG,
@@ -19,6 +19,40 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
     { loading: false, error: "", url: "", amount: 0 },
   );
   const [checkoutCopied, setCheckoutCopied] = useState(false);
+  const [sales, setSales] = useState<Array<{ id: string; offerId: string; amountMinor: number; paidAmountMinor: number; currency: string; status: string; createdAt: string; paidAt: string | null }>>([]);
+  const [salesLoading, setSalesLoading] = useState(true);
+  const [salesError, setSalesError] = useState("");
+  const [fulfillingSale, setFulfillingSale] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/revenue/sales", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(data?.error ?? "Could not load sales.");
+        if (!Array.isArray(data?.sales)) throw new Error("Sales response was invalid.");
+        if (!controller.signal.aborted) setSales(data.sales);
+      })
+      .catch((error) => { if (!controller.signal.aborted) setSalesError(error instanceof Error ? error.message : "Could not load sales."); })
+      .finally(() => { if (!controller.signal.aborted) setSalesLoading(false); });
+    return () => controller.abort();
+  }, []);
+
+  async function markSaleFulfilled(saleId: string) {
+    setFulfillingSale(saleId);
+    setSalesError("");
+    try {
+      const response = await fetch("/api/revenue/sales", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ saleId }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.error ?? "Could not update fulfillment.");
+      setSales((current) => current.map((sale) => sale.id === saleId ? { ...sale, status: "fulfilled" } : sale));
+    } catch (error) {
+      setSalesError(error instanceof Error ? error.message : "Could not update fulfillment.");
+    } finally { setFulfillingSale(""); }
+  }
 
   const metrics = calculateRevenueSystem(config);
   const isINR = config.currency === "INR";
@@ -103,6 +137,24 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
       </header>
 
       <MarketPositioning />
+
+      <details className="revenue-sensitivity-module">
+        <summary>Paid sales & fulfillment ({sales.filter((sale) => sale.status === "paid").length} awaiting delivery)</summary>
+        <div className="revenue-sensitivity-content" aria-live="polite">
+          {salesLoading && <p role="status">Loading sales…</p>}
+          {salesError && <p role="alert">{salesError}</p>}
+          {!salesLoading && !sales.length && !salesError && <p className="revenue-math-note">No sales yet. Payment links appear here; a verified payment webhook moves them into fulfillment.</p>}
+          {sales.map((sale) => <div className="revenue-sale-row" key={sale.id}>
+            <div><strong>{sale.offerId === "decision_brief" ? "Evidence Decision Brief" : sale.offerId === "assisted_validation" ? "Assisted Field Validation" : sale.offerId}
+              </strong><small>{new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(sale.createdAt))} · {sale.status.replace(/_/g, " ")}</small></div>
+            <strong>{new Intl.NumberFormat(undefined, { style: "currency", currency: sale.currency, maximumFractionDigits: 0 }).format((sale.paidAmountMinor || sale.amountMinor) / 100)}</strong>
+            {sale.status === "paid" && <button type="button" className="hunt-icon-action" disabled={fulfillingSale === sale.id} onClick={() => markSaleFulfilled(sale.id)}>
+              {fulfillingSale === sale.id ? "Saving…" : "Mark delivered"}
+            </button>}
+          </div>)}
+          <small>Only signature-verified payments count as paid. Mark delivery after completing the research brief or field work; this does not contact the buyer.</small>
+        </div>
+      </details>
 
       <details className="revenue-sensitivity-module" open={assumptions} onToggle={(event) => setAssumptions(event.currentTarget.open)}>
         <summary>Who pays, how we sell, and what still needs proof</summary>
