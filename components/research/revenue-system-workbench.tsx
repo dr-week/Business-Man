@@ -14,6 +14,10 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
   );
   const [selectedTierId, setSelectedTierId] = useState<string>("decision_brief");
   const [assumptions, setAssumptions] = useState(true);
+  const [checkout, setCheckout] = useState<{ loading: boolean; error: string; url: string; amount: number }>(
+    { loading: false, error: "", url: "", amount: 0 },
+  );
+  const [checkoutCopied, setCheckoutCopied] = useState(false);
 
   const metrics = calculateRevenueSystem(config);
   const isINR = config.currency === "INR";
@@ -46,6 +50,27 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
 
   function switchCurrency(nextCurrency: "INR" | "USD") {
     setConfig(nextCurrency === "USD" ? DEFAULT_GLOBAL_REVENUE_CONFIG : DEFAULT_INDIA_REVENUE_CONFIG);
+    setCheckout({ loading: false, error: "", url: "", amount: 0 });
+  }
+
+  async function createPaymentLink(offerId: "decision_brief" | "assisted_validation") {
+    setCheckout({ loading: true, error: "", url: "", amount: 0 });
+    setCheckoutCopied(false);
+    try {
+      const response = await fetch("/api/revenue/checkout", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ offerId }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || typeof data?.url !== "string" || typeof data?.amountMinor !== "number") {
+        throw new Error(data?.error ?? "Could not create a payment link.");
+      }
+      const amount = data.amountMinor / 100;
+      setConfig((prev) => ({ ...prev, tiers: prev.tiers.map((tier) => tier.id === offerId ? { ...tier, price: amount } : tier) }));
+      setCheckout({ loading: false, error: "", url: data.url, amount });
+    } catch (error) {
+      setCheckout({ loading: false, error: error instanceof Error ? error.message : "Could not create a payment link.", url: "", amount: 0 });
+    }
   }
 
   return (
@@ -95,7 +120,7 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
             role="tab"
             aria-selected={selectedTier.id === tier.id}
             className={`revenue-tier-tab ${selectedTier.id === tier.id ? "active" : ""}`}
-            onClick={() => setSelectedTierId(tier.id)}
+            onClick={() => { setSelectedTierId(tier.id); setCheckout({ loading: false, error: "", url: "", amount: 0 }); setCheckoutCopied(false); }}
           >
             <strong>{tier.name}</strong>
             <span className="revenue-tier-price">
@@ -135,6 +160,23 @@ export function RevenueSystemWorkbench({ currency = "INR" }: { currency?: string
             <small>Fixed monthly cost ÷ contribution per sale after refunds.</small>
           </dd>
         </dl>
+        {isINR && (selectedTier.id === "decision_brief" || selectedTier.id === "assisted_validation") && <div>
+          <small>Model prices are editable scenarios. Checkout uses the server-configured INR price shown after link creation.</small>
+          <button type="button" className="hunt-icon-action" disabled={checkout.loading} onClick={() => createPaymentLink(selectedTier.id as "decision_brief" | "assisted_validation")}>
+            {checkout.loading ? "Creating payment link…" : "Create one-time INR pilot link"}
+          </button>
+          {checkout.error && <p role="alert">{checkout.error}</p>}
+          {checkout.url && <p role="status">
+            Payment link created at {formatMoney(checkout.amount)}. It is not a sale until payment is captured.
+              {" "}<a href={checkout.url} target="_blank" rel="noreferrer">Open link</a>{" "}
+              <button type="button" className="hunt-icon-action" onClick={async () => {
+                try { await navigator.clipboard.writeText(checkout.url); setCheckoutCopied(true); }
+                catch { setCheckoutCopied(false); }
+              }}>{checkoutCopied ? "Copied" : "Copy link"}</button>
+          </p>}
+          <small>Configure Razorpay credentials, pilot prices, and the signed webhook before issuing links. Fulfillment remains manual.</small>
+        </div>}
+        {selectedTier.id === "advisor_workspace" && <p><small>Monthly subscriptions are not connected; this tier is a pricing hypothesis only.</small></p>}
       </div>
 
       {/* Arithmetic sensitivity & break-even explorer */}

@@ -16,7 +16,7 @@ const reportSchema = z.object({
     repeatPurchases: z.number().int().nonnegative(),
     recordedAmountsByCurrency: z.array(z.object({ currency: z.string().length(3), amount: z.number().finite().nonnegative() })),
   }),
-  businessmanPaymentRecords: z.null(),
+  businessmanPaymentRecords: z.array(z.object({ currency: z.string().length(3), capturedAmount: z.number().finite().nonnegative(), records: z.number().int().nonnegative() })),
   note: z.string(),
 });
 type Report = z.infer<typeof reportSchema>;
@@ -71,7 +71,14 @@ export function ValidationReport() {
           ? report.buyerValidation.recordedAmountsByCurrency.map(({ currency, amount }) => new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(amount)).join(" · ")
           : "—"}</strong><span>Recorded amounts, by currency</span></div>
       </div>
-      <p>These are user-reported payments for researched opportunities, not independently verified or BUSINESSman revenue. BUSINESSman checkout is not connected.</p>
+      <p>These are owner-reported payments for researched opportunities, not independently verified. BUSINESSman receipts are reported separately below.</p>
+    </details>
+    <details className="research-report-payment">
+      <summary>BUSINESSman captured receipts</summary>
+      {report.businessmanPaymentRecords.length ? report.businessmanPaymentRecords.map((entry) => <p key={entry.currency}>
+        <strong>{new Intl.NumberFormat(undefined, { style: "currency", currency: entry.currency, maximumFractionDigits: 0 }).format(entry.capturedAmount)}</strong>
+        {" · "}{entry.records} captured payment{entry.records === 1 ? "" : "s"} · before refunds and provider fees
+      </p>) : <p>No verified captured receipts recorded yet. Configure Razorpay checkout and its signed webhook to track sales.</p>}
     </details>
   </section>;
 }

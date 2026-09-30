@@ -115,6 +115,21 @@ export const researchChecks = sqliteTable("research_checks", {
   index("research_checks_owner_idx").on(table.ownerId),
 ]);
 
+/** Captured sales for BUSINESSman offers; never mix with payments for researched opportunities. */
+export const productRevenue = sqliteTable("product_revenue", {
+  id: text("id").primaryKey(),
+  ownerId: text("owner_id").notNull(),
+  offerId: text("offer_id").notNull(),
+  paymentLinkId: text("payment_link_id").notNull().unique(),
+  referenceId: text("reference_id").notNull().unique(),
+  amountMinor: integer("amount_minor").notNull(),
+  currency: text("currency").notNull(),
+  status: text("status").notNull().default("creating"),
+  paidAmountMinor: integer("paid_amount_minor").notNull().default(0),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  paidAt: text("paid_at"),
+}, (table) => [index("product_revenue_owner_status_idx").on(table.ownerId, table.status)]);
+
 /**
  * Community / peer research bounties & verification contributions.
  * Monetization & Collaboration engine: allows decentralized analysts/operators to submit

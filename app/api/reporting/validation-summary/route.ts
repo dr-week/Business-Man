@@ -1,6 +1,6 @@
 import { and, count, eq, gt, inArray, sum } from "drizzle-orm";
 import { getDb } from "@/db";
-import { huntLeads, researchChecks, researchRuns } from "@/db/schema";
+import { huntLeads, productRevenue, researchChecks, researchRuns } from "@/db/schema";
 import { apiError, ownerId } from "@/lib/hunt-api";
 
 const OUTCOMES = ["open", "supports", "disconfirms", "inconclusive"] as const;
@@ -12,7 +12,7 @@ export async function GET() {
 
   try {
     const db = getDb();
-    const [runCount, outcomeRows, evidenceRows, leadStatuses, paymentRows] = await Promise.all([
+    const [runCount, outcomeRows, evidenceRows, leadStatuses, paymentRows, productPayments] = await Promise.all([
       db.select({ total: count() }).from(researchRuns).where(eq(researchRuns.ownerId, owner)),
       db.select({ key: researchChecks.outcome, total: count() }).from(researchChecks)
         .where(eq(researchChecks.ownerId, owner)).groupBy(researchChecks.outcome),
@@ -24,6 +24,8 @@ export async function GET() {
         .from(huntLeads)
         .where(and(eq(huntLeads.ownerId, owner), inArray(huntLeads.validationStatus, ["paid_pilot", "repeat_purchase"]), gt(huntLeads.validationPaymentAmount, 0)))
         .groupBy(huntLeads.validationPaymentCurrency),
+      db.select({ currency: productRevenue.currency, amountMinor: sum(productRevenue.paidAmountMinor), records: count() })
+        .from(productRevenue).where(and(eq(productRevenue.ownerId, owner), eq(productRevenue.status, "paid"))).groupBy(productRevenue.currency),
     ]);
 
     const aggregate = (rows: { key: string | null; total: number }[], keys: readonly string[]) => {
@@ -44,9 +46,9 @@ export async function GET() {
         repeatPurchases: statuses.repeat_purchase,
         recordedAmountsByCurrency: paymentRows.map((row) => ({ currency: row.currency, amount: Number(row.amount ?? 0) })),
       },
-      businessmanPaymentRecords: null,
+      businessmanPaymentRecords: productPayments.map((row) => ({ currency: row.currency, capturedAmount: Number(row.amountMinor ?? 0) / 100, records: row.records })),
       generatedAt: new Date().toISOString(),
-      note: "Research checks and buyer-validation outcomes reflect your saved, owner-reported records; payment amounts are not independently verified. BUSINESSman checkout revenue is not connected.",
+      note: "Opportunity payments are owner-reported and unverified. BUSINESSman receipts are counted only after a signed Razorpay payment-link webhook; captured amounts are before refunds and provider fees.",
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return apiError(error); }
 }
