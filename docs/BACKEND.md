@@ -15,7 +15,7 @@
 | `lib/revenue-system.ts`, `components/research/revenue-system-workbench.tsx` | Product revenue model; break-even sales per offer uses price after refunds, variable cost, and fixed monthly cost |
 | `lib/razorpay-sales.ts`, `app/api/revenue/checkout/`, `app/api/webhooks/razorpay/` | Owner-created INR pilot payment links; signed captured-payment webhook records BUSINESSman sales separately from opportunity validation |
 | `lib/marketing-automation.ts`, `components/research/marketing-automation-panel.tsx` | Zero-ad-spend growth playbooks (viral hooks, 5-tweet teardowns, executive LinkedIn posts, cold emails, 5-day cadence) |
-| `lib/system1-decision-engine.ts`, `components/research/system1-triage-panel.tsx` | LAYA/System-1 fast heuristic decision engine: instant fatal-flaw kill switches and rapid conviction filters (<50ms) |
+| `lib/system1-decision-engine.ts`, `lib/layaEngine.ts`, `components/research/system1-triage-panel.tsx` | Explainable System-1 triage; the bounded cache keys buyer, economics, claims, and source IDs so edited evidence gets a fresh evaluation. Triage suggests investigation, not investment. |
 | `lib/research-collaboration.ts`, `components/research/research-collaboration-panel.tsx` | Decentralized open-source collaboration, peer falsification bounties, and field counter-evidence reputation scoring |
 | `lib/research-bounties.ts`, `app/api/hunt/bounties/` | Collaborative Diligence engine, escrow splits (15% platform fee), and multi-operator consensus scoring |
 | `lib/dossier-report.ts` | Executive market dossier generator, Markdown/Report export with scorecard, unit economics and 21-day action plan |
