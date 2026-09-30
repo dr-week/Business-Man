@@ -14,6 +14,8 @@ There is a market for adjacent jobs, not yet proof of demand for BUSINESSman spe
 
 BUSINESSman’s defensible product direction is a short, auditable decision workflow: query → dated evidence and counter-evidence → named buyer and price gap → assumptions/break-even → next validation action. The code already separates research, economics, evidence, and validation. Evidence lineage, transparent unknowns, and Indian source coverage are the strongest differentiators to test. Source count, forum activity, model scores, and market-size estimates are not purchase evidence.
 
+For investment-analysis pricing, RaiseIQ lists focused India founder reports for unit economics and cash/runway at ₹1,999 each, says buyers pay online and receive reports in the same session, and offers a free snapshot. This supports testing a focused paid brief and free preview. It is an advertised offer, not verified transaction volume; do not copy its price without testing. [RaiseIQ report menu](https://raiseiq.in/reports/)
+
 ## Users, payer, and route to market
 
 - **First user:** founder deciding whether to invest time or capital in an idea. Likely payer: that founder, for an evidence-linked report or guided validation sprint.
@@ -45,6 +47,8 @@ Decide ownership and inspect dependency licenses before publishing. If the goal 
 ## UI/UX and next decision
 
 Keep the first screen focused on one question, geography, and budget. Put source date, link, evidence type, and uncertainty beside each claim; distinguish comments/answers from buyer intent; keep assumptions editable; show the next evidence-gathering action. Progressive disclosure keeps economics, competitors, sources, and collaboration separate until needed. On mobile, keep citations and the primary action reachable without hiding uncertainty.
+
+The local-listing check now requires an explicit click because Google Places is pay-as-you-go and field masks can change the billed SKU. The U.S. Census connector does not cover India; the Udyam state dashboard is a manual reference, not an app-fed count. Label registrations as business presence, not customer demand. [Places billing](https://developers.google.com/maps/documentation/places/web-service/usage-and-billing)
 
 Next validation gate: 10 founder interviews, 3 advisor/accelerator interviews, and at least 3 paid briefs before prioritizing team collaboration or a subscription. Record objections and non-purchases too. If users want a free report but will not pay for a validated next action, change the offer before adding features.
 

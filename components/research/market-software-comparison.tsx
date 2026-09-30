@@ -26,6 +26,15 @@ const products = [
     url: "https://dovetail.com/pricing/",
     source: "Official pricing",
   },
+  {
+    name: "RaiseIQ",
+    focus: "India founder readiness and financial analysis",
+    offer: "Focused unit-economics and cash/runway reports; free snapshot and same-session online delivery",
+    workflow: "One paid report answers one defined question",
+    price: "₹1,999 each for unit economics or cash/runway; other focused reports ₹999–₹4,499",
+    url: "https://raiseiq.in/reports/",
+    source: "Official report menu",
+  },
 ];
 
 export function MarketSoftwareComparison() {

@@ -237,7 +237,7 @@
 .research-local-competition > summary { cursor:pointer; font-weight:650; }
 .research-local-competition > p { color:#aaa99b; font-size:12px; margin:10px 0 0; }
 .market-software-comparison > p { color:#bbbbae; font-size:12px; line-height:1.55; }
-.market-software-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.market-software-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:10px; }
 .market-software-list article { min-width:0; padding:12px; border:1px solid #35392e; border-radius:6px; }
 .market-software-list h4 { margin:0 0 8px; font-size:13px; }
 .market-software-list p { margin:6px 0; color:#bbbbae; font-size:12px; line-height:1.5; }
