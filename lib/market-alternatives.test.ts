@@ -13,13 +13,25 @@ describe("candidate alternatives", () => {
   it("ranks repositories by domain overlap and omits generic vocabulary matches", () => {
     const [original] = analyzeResearch(input, [source]);
     const [result] = attachCandidateAlternatives([original], [
-      { name: "example/restaurant-inventory", url: "https://github.com/example/restaurant-inventory", description: "restaurant inventory management", stars: 12, updatedAt: "2026-01-01", license: "MIT" },
-      { name: "example/general", url: "https://github.com/example/general", description: "business software service platform", stars: 10000, updatedAt: "2026-01-01", license: "MIT" },
-      { name: "example/other", url: "https://github.com/example/other", description: "calendar application", stars: 1000, updatedAt: "2026-01-01", license: "MIT" },
+      { name: "example/restaurant-inventory", url: "https://github.com/example/restaurant-inventory", description: "restaurant inventory management", stars: 12, pushedAt: "2026-01-01", license: "MIT" },
+      { name: "example/general", url: "https://github.com/example/general", description: "business software service platform", stars: 10000, pushedAt: "2026-01-01", license: "MIT" },
+      { name: "example/other", url: "https://github.com/example/other", description: "calendar application", stars: 1000, pushedAt: "2026-01-01", license: "MIT" },
     ]);
     expect(result.candidateAlternatives).toHaveLength(1);
     expect(result.candidateAlternatives?.[0]).toMatchObject({ matchedTerms: expect.arrayContaining(["inventory", "restaurant"]) });
     expect(result.strength).toBe(original.strength);
     expect(result.sources).toEqual(original.sources);
+  });
+
+  it("uses code-push recency to break relevance ties before popularity", () => {
+    const [original] = analyzeResearch(input, [source]);
+    const [result] = attachCandidateAlternatives([original], [
+      { name: "restaurant-inventory", url: "https://github.com/example-old/restaurant-inventory", description: "restaurant inventory management", stars: 10000, pushedAt: "2024-01-01", license: "MIT" },
+      { name: "restaurant-inventory", url: "https://github.com/example-current/restaurant-inventory", description: "restaurant inventory management", stars: 10, pushedAt: "2026-08-01", license: "MIT" },
+    ]);
+    expect(result.candidateAlternatives?.map(({ url }) => url)).toEqual([
+      "https://github.com/example-current/restaurant-inventory",
+      "https://github.com/example-old/restaurant-inventory",
+    ]);
   });
 });

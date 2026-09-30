@@ -16,7 +16,7 @@ export function attachCandidateAlternatives(opportunities: ResearchOpportunity[]
       return matchedTerms.length >= 2 && relevance >= 0.12
         ? [{ ...candidate, matchedTerms, relevance: Math.round(relevance * 100) }]
         : [];
-    }).sort((a, b) => b.relevance - a.relevance || b.stars - a.stars).slice(0, 3);
+    }).sort((a, b) => b.relevance - a.relevance || Date.parse(b.pushedAt) - Date.parse(a.pushedAt) || b.stars - a.stars).slice(0, 3);
     return { ...opportunity, candidateAlternatives: matches };
   });
 }
