@@ -5,11 +5,12 @@ import { MarketFootprint } from "./market-footprint";
 import { IndiaMarketContext } from "./india-market-context";
 import { MarketSoftwareComparison } from "./market-software-comparison";
 
-export function MarketPanel({ opportunity, competitors, placesConfigured, footprint }: {
+export function MarketPanel({ opportunity, competitors, placesConfigured, footprint, onOpenAnalysis }: {
   opportunity: ResearchOpportunity;
   competitors: LocalCompetitor[];
   placesConfigured: boolean;
   footprint: CensusMarketSignal | null;
+  onOpenAnalysis?: () => void;
 }) {
   return <div className="research-detail-modules">
     <section className="research-detail-card research-local-competition" aria-label="Local competitors">
@@ -32,5 +33,11 @@ export function MarketPanel({ opportunity, competitors, placesConfigured, footpr
         <small>{candidate.matchedTerms?.length ? `Matched: ${candidate.matchedTerms.join(", ")} · ${candidate.relevance}% text overlap · ` : ""}Updated {candidate.updatedAt.slice(0, 10)}</small>
       </li>)}</ul> : "No candidates found"}</dd>
     </dl><small>Listings and stars do not measure buyer demand.</small></section>
+    {onOpenAnalysis && <section className="research-market-next-step" aria-labelledby="market-next-step-title">
+      <div><h3 id="market-next-step-title">Check buyer evidence before investing</h3>
+        <p>Listings and business counts show activity, not customer purchases. Review evidence, assumptions, and buyer checks next.</p>
+      </div>
+      <button className="research-submit" type="button" onClick={onOpenAnalysis}>Review evidence and buyer checks</button>
+    </section>}
   </div>;
 }

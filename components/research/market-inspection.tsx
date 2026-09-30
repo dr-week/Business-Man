@@ -8,7 +8,7 @@ import { MarketPanel } from "./market-panel";
 
 type MarketResult = { competitors: LocalCompetitor[]; placesConfigured: boolean; footprint: CensusMarketSignal | null; error: string | null };
 
-export function MarketInspection({ opportunity }: { opportunity: ResearchOpportunity }) {
+export function MarketInspection({ opportunity, onOpenAnalysis }: { opportunity: ResearchOpportunity; onOpenAnalysis?: () => void }) {
   const [result, setResult] = useState<MarketResult | null>(null);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState<number | null>(null);
@@ -40,5 +40,5 @@ export function MarketInspection({ opportunity }: { opportunity: ResearchOpportu
     <p>{error || "Market lookup unavailable."}</p>
     <button className="research-submit" type="button" onClick={() => { setLoading(true); setError(""); setAttempt((value) => (value ?? 0) + 1); }}>Retry market check</button>
   </div>;
-  return <>{error && <p role="status">{error}</p>}<MarketPanel opportunity={opportunity} competitors={result.competitors} placesConfigured={result.placesConfigured} footprint={result.footprint} /></>;
+  return <>{error && <p role="status">{error}</p>}<MarketPanel opportunity={opportunity} competitors={result.competitors} placesConfigured={result.placesConfigured} footprint={result.footprint} onOpenAnalysis={onOpenAnalysis} /></>;
 }
