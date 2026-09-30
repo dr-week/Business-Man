@@ -25,7 +25,7 @@ export async function GET() {
         .where(and(eq(huntLeads.ownerId, owner), inArray(huntLeads.validationStatus, ["paid_pilot", "repeat_purchase"]), gt(huntLeads.validationPaymentAmount, 0)))
         .groupBy(huntLeads.validationPaymentCurrency),
       db.select({ currency: productRevenue.currency, amountMinor: sum(productRevenue.paidAmountMinor), records: count() })
-        .from(productRevenue).where(and(eq(productRevenue.ownerId, owner), eq(productRevenue.status, "paid"))).groupBy(productRevenue.currency),
+        .from(productRevenue).where(and(eq(productRevenue.ownerId, owner), inArray(productRevenue.status, ["paid", "fulfilled"]))).groupBy(productRevenue.currency),
     ]);
 
     const aggregate = (rows: { key: string | null; total: number }[], keys: readonly string[]) => {

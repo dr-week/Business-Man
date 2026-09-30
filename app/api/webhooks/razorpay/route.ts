@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { env } from "cloudflare:workers";
 import { getDb } from "@/db";
 import { productRevenue } from "@/db/schema";
@@ -57,7 +57,8 @@ export async function POST(request: Request) {
       return Response.json({ error: "Payment does not match a known sale." }, { status: 400 });
     }
     if (sale.status !== "paid" && sale.status !== "fulfilled") {
-      await db.update(productRevenue).set({ status: "paid", paidAmountMinor: link.amount_paid, paidAt: new Date().toISOString() }).where(eq(productRevenue.id, sale.id));
+      await db.update(productRevenue).set({ status: "paid", paidAmountMinor: link.amount_paid, paidAt: new Date().toISOString() })
+        .where(and(eq(productRevenue.id, sale.id), inArray(productRevenue.status, ["creating", "link_created", "failed"])));
     }
     return Response.json({ received: true });
   } catch {
