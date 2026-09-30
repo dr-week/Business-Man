@@ -18,6 +18,7 @@ import { SourceLedger } from "@/components/research/source-ledger";
 import { WebCandidates } from "@/components/research/web-candidates";
 import { CounterEvidence } from "@/components/research/counter-evidence";
 import { MarketingAutomationPanel } from "@/components/research/marketing-automation-panel";
+import { ResearchCollaborationPanel } from "@/components/research/research-collaboration-panel";
 
 import { calculateFinancials, recalculateOpportunity, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity, type Provenance } from "@/lib/research-engine";
 import { downloadDossierReport } from "@/lib/dossier-report";
@@ -479,6 +480,10 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
         {view !== "economics" && <details className="research-module">
           <summary>Marketing & Distribution Playbook · zero-ad-spend growth</summary>
           <MarketingAutomationPanel opportunity={active} currency={input?.currency ?? currency} />
+        </details>}
+        {view !== "economics" && <details className="research-module">
+          <summary>Open-Source Collaboration & Bounties · decentralized field validation</summary>
+          <ResearchCollaborationPanel opportunity={active} currency={input?.currency ?? currency} />
         </details>}
       </div>
 
