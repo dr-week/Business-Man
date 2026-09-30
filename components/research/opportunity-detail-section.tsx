@@ -59,6 +59,12 @@ export function OpportunityDetailSection({
 }) {
   const independentOrigins = independentSourceCount(active.sources);
   const contradictionCount = active.claims.filter((claim) => claim.direction === "contradicts").length;
+  const baseVolume = active.assumptions.baseVolume.value;
+  const breakEven = active.financials?.breakEven;
+  const hasBaseVolume = active.financials != null && baseVolume != null && baseVolume > 0;
+  const safetyMargin = baseVolume != null && baseVolume > 0 && breakEven != null
+    ? ((baseVolume - breakEven) / baseVolume) * 100
+    : null;
   return (
     <article className="research-analysis" aria-label="Selected business analysis">
       <header>
@@ -152,6 +158,30 @@ export function OpportunityDetailSection({
                 <dd>{active.financials?.paybackMonth == null ? "Unknown" : active.financials.paybackMonth + " months"}</dd>
               </dl>
             </section>
+            <aside className="research-margin-of-safety" aria-live="polite">
+              <div>
+                <small>Sales buffer to break-even</small>
+                <strong>
+                  {!hasBaseVolume
+                    ? "Unknown"
+                  : breakEven == null
+                    ? "Not achievable"
+                    : safetyMargin >= 0
+                      ? `${Math.floor(safetyMargin)}% drop`
+                      : `${Math.ceil(Math.abs(safetyMargin))}% short`}
+                </strong>
+              </div>
+              <p>
+                {!hasBaseVolume
+                  ? "Add dated price, cost, and positive base-volume assumptions to calculate this."
+                  : breakEven == null
+                    ? "Contribution per unit is zero or negative, so increasing sales alone will not reach break-even."
+                  : safetyMargin >= 0
+                    ? `Modeled sales can fall about ${Math.floor(safetyMargin)}% from ${baseVolume} ${active.assumptions.unit}s / month before reaching ${breakEven} ${active.assumptions.unit}s break-even.`
+                    : `Base sales of ${baseVolume} ${active.assumptions.unit}s / month are below the ${breakEven} ${active.assumptions.unit}s break-even target.`}
+                {" "}This is arithmetic from your assumptions, not a forecast.
+              </p>
+            </aside>
             <div className="research-default-charts">
               <Charts kind="scenarios" opportunity={active} currency={input.currency} />
               <Charts kind="breakEven" opportunity={active} currency={input.currency} />

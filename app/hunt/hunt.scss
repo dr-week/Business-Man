@@ -221,6 +221,11 @@
 .research-detail-card dl { display:grid; grid-template-columns:130px minmax(0,1fr); gap:9px; margin:0; font-size:12px; }
 .research-detail-card dt { color:#aaa99b; }
 .research-detail-card dd { margin:0; overflow-wrap:anywhere; }
+.research-margin-of-safety { display:grid; grid-template-columns:minmax(130px,.35fr) minmax(0,1fr); gap:12px; align-items:center; margin:12px 16px; padding:14px 16px; border:1px solid #4b5940; border-radius:8px; background:#151a12; }
+.research-margin-of-safety > div { display:grid; gap:4px; }
+.research-margin-of-safety small { color:#aaa99b; font-size:11px; }
+.research-margin-of-safety strong { color:#d1b476; font-size:20px; font-variant-numeric:tabular-nums; }
+.research-margin-of-safety p { margin:0; color:#bbbbae; font-size:12px; line-height:1.5; }
 .research-module > .research-local-competition { margin:12px 16px; }
 .research-module > .research-default-charts { padding:12px 16px; }
 .research-module > .research-more-charts,.research-module > .research-method,.research-module > .research-assumptions { margin:12px 16px; }
@@ -343,7 +348,7 @@
 .research-compare > header p,.research-compare-hint { color:#aaa99b; font-size:12px; }
 .research-compare-clear { padding:6px 10px; border:1px solid #414735; border-radius:6px; color:#d1b476; font-size:12px; }
 @media(max-width:900px) { .research-filters > div { grid-template-columns:repeat(2,1fr); } }
-@media(max-width:650px) { .research-figures { grid-template-columns:repeat(2,minmax(0,1fr)); } .research-default-charts,.research-more-charts > div,.research-assumption-grid,.market-software-list { grid-template-columns:1fr; } .research-bar label { flex-basis:100%; } .research-bar select { flex:1; } .research-local-competition li { grid-template-columns:1fr auto; } .research-local-competition li div { grid-column:1/-1; } }
+@media(max-width:650px) { .research-figures { grid-template-columns:repeat(2,minmax(0,1fr)); } .research-default-charts,.research-more-charts > div,.research-assumption-grid,.market-software-list { grid-template-columns:1fr; } .research-margin-of-safety { grid-template-columns:1fr; } .research-bar label { flex-basis:100%; } .research-bar select { flex:1; } .research-local-competition li { grid-template-columns:1fr auto; } .research-local-competition li div { grid-column:1/-1; } }
 @media(max-width:650px) { .research-figures-analysis,.research-figures-economics { grid-template-columns:1fr; } }
 @media(max-width:600px) { .research-decision-strip { grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; padding:8px; } .research-decision-strip > div { padding:6px; } .research-decision-strip span { font-size:10px; } .research-decision-strip strong { font-size:17px; } }
 
