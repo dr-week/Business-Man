@@ -21,6 +21,9 @@
 | `app/api/hunt/leads/` | Authenticated owner-scoped dossiers/evidence |
 | `db/schema.ts`, `drizzle/` | D1 schema/migrations |
 | `app/api/news/route.ts` | Independent RSS endpoint |
+| `workers/marketingAutomation.ts` | Preview-first, single-recipient opt-in email via SendGrid |
+
+Marketing worker defaults to preview. Sending requires `--send`, recipient consent evidence, a SendGrid unsubscribe group, product URL, sender address, and provider credentials. It does not manage a mailing list or schedule campaigns.
 
 ## Research
 
