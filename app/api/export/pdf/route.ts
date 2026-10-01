@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { readLimitedJson } from '@/lib/read-limited-json';
+import { wrapReportText } from '@/lib/reporting/pdf-text-layout';
 import { z } from 'zod';
 
 const reportInput = z.object({
@@ -63,33 +64,13 @@ export async function POST(request: Request) {
       });
       y -= headingFontSize + 6;
 
-      // Content (wrap manually)
-      let line = '';
-      for (const match of sec.content.matchAll(/\S+/g)) {
-        const word = match[0];
-        const testLine = line + (line ? ' ' : '') + word;
-        const textWidth = timesRoman.widthOfTextAtSize(testLine, contentFontSize);
-        if (textWidth > width - 2 * margin) {
-          page.drawText(line, {
-            x: margin,
-            y: y - contentFontSize,
-            size: contentFontSize,
-            font: timesRoman,
-            color: rgb(0, 0, 0),
-          });
-          y -= lineHeight;
-          line = word;
-        } else {
-          line = testLine;
-        }
+      // Wrap using one font measurement per word, instead of measuring each growing line.
+      const lines = wrapReportText(sec.content, timesRoman, contentFontSize, width - 2 * margin);
+      for (const line of lines) {
         if (y < margin) {
-          // Add new page if out of space
-          const newPage = pdfDoc.addPage();
+          page = pdfDoc.addPage();
           y = height - margin;
-          page = newPage;
         }
-      }
-      if (line) {
         page.drawText(line, {
           x: margin,
           y: y - contentFontSize,
