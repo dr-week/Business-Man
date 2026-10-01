@@ -1,0 +1,132 @@
+$positive: #4ade80;
+$negative: #f87171;
+$caution: #fbbf24;
+
+.panel {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #2a3321;
+  border-radius: 8px;
+  background: #11150e;
+  font-size: 12px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.eyebrow,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge {
+  padding: 3px 8px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.goFast {
+  color: $positive;
+  background: rgba($positive, 0.1);
+  border-color: rgba($positive, 0.3);
+}
+
+.hardPass {
+  color: $negative;
+  background: rgba($negative, 0.1);
+  border-color: rgba($negative, 0.3);
+}
+
+.pause {
+  color: $caution;
+  background: rgba($caution, 0.1);
+  border-color: rgba($caution, 0.3);
+}
+
+.summary {
+  margin: 0 0 10px;
+  color: #ddd7c6;
+  line-height: 1.5;
+}
+
+.disclaimer {
+  margin: 0 0 10px;
+  color: #aaa99b;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.coverage,
+.signals {
+  padding: 8px 10px;
+  border: 1px solid #303827;
+  border-radius: 4px;
+  background: #171b13;
+}
+
+.coverage {
+  margin-bottom: 10px;
+
+  strong,
+  span {
+    display: block;
+    font-size: 11px;
+  }
+
+  strong { color: var(--gold); }
+  span { margin-top: 3px; color: #aaa99b; }
+}
+
+.signals {
+  margin-bottom: 8px;
+
+  strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 11px;
+  }
+}
+
+.signals.hardPass {
+  background: rgba($negative, 0.08);
+  border-color: rgba($negative, 0.2);
+  color: #fca5a5;
+
+  strong { color: $negative; }
+}
+
+.signals.goFast {
+  background: rgba($positive, 0.08);
+  border-color: rgba($positive, 0.2);
+  color: #86efac;
+
+  strong { color: $positive; }
+}
+
+@media (max-width: 560px) {
+  .header { align-items: flex-start; flex-direction: column; }
+}

@@ -1,114 +1,55 @@
 "use client";
 
-import { Zap, AlertOctagon, HelpCircle } from "lucide-react";
+import { AlertOctagon, HelpCircle, Zap } from "lucide-react";
 import type { System1Evaluation } from "@/lib/system1-decision-engine";
+import styles from "./system1-triage-panel.module.scss";
+
+const verdictConfig = {
+  go_fast: { label: "TEST NEXT", tone: "goFast", icon: Zap },
+  hard_pass: { label: "STOP & REVIEW", tone: "hardPass", icon: AlertOctagon },
+  pause_investigate: { label: "PAUSE & INVESTIGATE", tone: "pause", icon: HelpCircle },
+} as const;
 
 export function System1TriageBadge({ evaluation }: { evaluation: System1Evaluation }) {
-  const evalResult = evaluation;
-
-  const badgeConfig = {
-    go_fast: {
-      label: "TEST NEXT",
-      color: "#4ade80",
-      bg: "rgba(34, 197, 94, 0.12)",
-      border: "rgba(34, 197, 94, 0.3)",
-      icon: <Zap size={12} color="#4ade80" />,
-    },
-    hard_pass: {
-      label: "STOP & REVIEW",
-      color: "#f87171",
-      bg: "rgba(239, 68, 68, 0.12)",
-      border: "rgba(239, 68, 68, 0.3)",
-      icon: <AlertOctagon size={12} color="#f87171" />,
-    },
-    pause_investigate: {
-      label: "PAUSE & INVESTIGATE",
-      color: "#fbbf24",
-      bg: "rgba(245, 158, 11, 0.12)",
-      border: "rgba(245, 158, 11, 0.3)",
-      icon: <HelpCircle size={12} color="#fbbf24" />,
-    },
-  }[evalResult.quickVerdict];
+  const config = verdictConfig[evaluation.quickVerdict];
+  const Icon = config.icon;
 
   return (
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "6px",
-        padding: "3px 8px",
-        borderRadius: "4px",
-        background: badgeConfig.bg,
-        border: `1px solid ${badgeConfig.border}`,
-        color: badgeConfig.color,
-        fontSize: "10px",
-        fontWeight: 700,
-        letterSpacing: "0.04em",
-      }}
-      title={evalResult.heuristicSummary}
-    >
-      {badgeConfig.icon}
-      <span>{badgeConfig.label}</span>
-    </div>
+    <span className={`${styles.badge} ${styles[config.tone]}`} title={evaluation.heuristicSummary}>
+      <Icon size={12} aria-hidden="true" />
+      <span>{config.label}</span>
+    </span>
   );
 }
 
 export function System1TriagePanel({ evaluation }: { evaluation: System1Evaluation }) {
-  const evalResult = evaluation;
-
   return (
-    <div
-      style={{
-        padding: "14px",
-        background: "#11150e",
-        border: "1px solid #2a3321",
-        borderRadius: "8px",
-        marginTop: "12px",
-        fontSize: "12px",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--gold)", fontSize: "11px", fontWeight: 600, textTransform: "uppercase" }}>
-          <Zap size={13} /> Fast heuristic triage
+    <section className={styles.panel} aria-label="Fast heuristic decision review">
+      <header className={styles.header}>
+        <span className={styles.eyebrow}><Zap size={13} aria-hidden="true" /> Fast heuristic triage</span>
+      </header>
+      <p className={styles.summary}>{evaluation.heuristicSummary}</p>
+      <p className={styles.disclaimer}>Rules-based screening aid, not Laya model inference or an investment recommendation.</p>
+      <div className={styles.coverage}>
+        <strong>Evidence coverage: {evaluation.evidenceCoveragePercent}%</strong>
+        <span>
+          Coverage shows which inputs exist; it is not a probability of success. {evaluation.missingEvidence.length > 0
+            ? `Missing: ${evaluation.missingEvidence.join(", ")}.`
+            : "All screening inputs are present; verify their quality and recency. A test-next signal is not an investment recommendation."}
         </span>
       </div>
-
-      <p style={{ margin: "0 0 10px 0", color: "#ddd7c6", lineHeight: 1.5 }}>
-        {evalResult.heuristicSummary}
-      </p>
-
-      <p style={{ margin: "0 0 10px", color: "#aaa99b", fontSize: "11px", lineHeight: 1.5 }}>
-        Rules-based screening aid, not Laya model inference or an investment recommendation.
-      </p>
-
-      <div style={{ marginBottom: "10px", padding: "8px 10px", background: "#171b13", border: "1px solid #303827", borderRadius: "4px" }}>
-        <strong style={{ color: "var(--gold)", fontSize: "11px" }}>Evidence coverage: {evalResult.evidenceCoveragePercent}%</strong>
-        <span style={{ display: "block", marginTop: "3px", color: "#aaa99b", fontSize: "11px" }}>
-          Coverage shows which inputs exist; it is not a probability of success. {evalResult.missingEvidence.length > 0 ? `Missing: ${evalResult.missingEvidence.join(", ")}.` : "All screening inputs are present; verify their quality and recency. A test-next signal is not an investment recommendation."}
-        </span>
-      </div>
-
-      {evalResult.fatalFlaws.length > 0 && (
-        <div style={{ marginBottom: "8px", padding: "8px 10px", background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "4px" }}>
-          <strong style={{ color: "#f87171", fontSize: "11px", display: "block", marginBottom: "4px" }}>Issues to review:</strong>
-          <ul style={{ margin: 0, paddingLeft: "16px", color: "#fca5a5", fontSize: "11px" }}>
-            {evalResult.fatalFlaws.map((flaw, idx) => (
-              <li key={idx}>{flaw}</li>
-            ))}
-          </ul>
+      {evaluation.fatalFlaws.length > 0 && (
+        <div className={`${styles.signals} ${styles.hardPass}`}>
+          <strong>Issues to review:</strong>
+          <ul>{evaluation.fatalFlaws.map((flaw) => <li key={flaw}>{flaw}</li>)}</ul>
         </div>
       )}
-
-      {evalResult.instantMoats.length > 0 && (
-        <div style={{ padding: "8px 10px", background: "rgba(34, 197, 94, 0.08)", border: "1px solid rgba(34, 197, 94, 0.2)", borderRadius: "4px" }}>
-          <strong style={{ color: "#4ade80", fontSize: "11px", display: "block", marginBottom: "4px" }}>Positive screening signals:</strong>
-          <ul style={{ margin: 0, paddingLeft: "16px", color: "#86efac", fontSize: "11px" }}>
-            {evalResult.instantMoats.map((moat, idx) => (
-              <li key={idx}>{moat}</li>
-            ))}
-          </ul>
+      {evaluation.instantMoats.length > 0 && (
+        <div className={`${styles.signals} ${styles.goFast}`}>
+          <strong>Positive screening signals:</strong>
+          <ul>{evaluation.instantMoats.map((signal) => <li key={signal}>{signal}</li>)}</ul>
         </div>
       )}
-    </div>
+    </section>
   );
 }

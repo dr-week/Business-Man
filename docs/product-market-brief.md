@@ -8,8 +8,12 @@ Businessman should focus on **evidence-backed go/no-go decisions for Indian foun
 | --- | --- | --- |
 | [Metabase](https://www.metabase.com/docs/latest/dashboards/subscriptions) | BI dashboards, sharing, scheduled email/Slack delivery | Does not make buyer interviews, falsification checks, and payment proof the main decision workflow |
 | [Dovetail](https://dovetail.com/pricing/) | Customer-research repository, AI analysis, team collaboration | Focuses on customer feedback; no built-in path from opportunity claim to paid-pilot/revenue validation |
+| [LivePlan](https://www.liveplan.com/pricing) | Sourced market research, idea validation, forecasts, readiness review, and ongoing plan tracking | Position against its planning suite by making buyer evidence and decision follow-through the core workflow; validate the gap with users |
+| [IdeaBuddy](https://ideabuddy.com/pricing/) | Canvas, guided idea workflow, financial plan, validation, collaborators, and white-label plans | Its staged planning experience sets a strong UX baseline; keep the evidence trail tied to the next real-world buyer test |
 
 Metabase has scheduled dashboard delivery; custom filters are plan-gated. Dovetail offers a free individual tier and custom-priced Enterprise. This confirms paid precedent for reporting, collaboration, and automation, not willingness to pay for Businessman specifically.
+
+For decision UX, LivePlan combines sourced market reports with financial readiness; IdeaBuddy combines an idea canvas, validation flow, and collaborator sharing. LivePlan lists Standard at $20/month or $15/month billed annually and Premium at $40/month or $30/month billed annually. IdeaBuddy lists a free tier and 15-day trial; white-label and enterprise plans use custom quotes. These prices are competitor signals, not willingness-to-pay evidence for Businessman or Indian pricing. BUSINESSman should differentiate through traceable buyer checks and paid-pilot evidence, without claiming those products lack validation. The triage panel keeps verdict label, icon, and tone in one shared UI config and shows that verdict beside the evidence summary.
 
 ## Buyer and demand hypothesis
 
@@ -39,6 +43,8 @@ The validation report now has an explicit refresh control. It avoids background 
 
 - [Metabase subscriptions](https://www.metabase.com/docs/latest/dashboards/subscriptions) and [plan comparison](https://www.metabase.com/pricing/compare-plans)
 - [Dovetail pricing and tiers](https://dovetail.com/pricing/)
+- [LivePlan pricing](https://www.liveplan.com/pricing) and [sourced market research workflow](https://help.liveplan.com/liveplan-s-market-research-feature)
+- [IdeaBuddy pricing and collaboration plans](https://ideabuddy.com/pricing/)
 - [MSME/ONDC digital-channel activity, Government of India](https://www.pib.gov.in/PressReleasePage.aspx?PRID=2236872&lang=1&reg=20)
 - [GNU AGPL overview](https://www.gnu.org/licenses/) and [AGPL FAQ](https://www.gnu.org/licenses/gpl-faq.en.html)
 - [Copyright Office of India: software copyright FAQ](https://copyright.gov.in/frmFAQ.aspx/Copyright_Act_1957/Images/ScriptLibrary/FORMXV/Images/Documents/images/JQuery/Society/Applicant/Images/JQuery/HyperlinkPolicy.aspx)
