@@ -18,7 +18,7 @@
 | `lib/system1-decision-engine.ts`, `lib/layaEngine.ts`, `components/research/system1-triage-panel.tsx` | Explainable System-1 triage; the bounded cache keys buyer, economics, claims, and source IDs so edited evidence gets a fresh evaluation. Triage suggests investigation, not investment. |
 | `lib/research-collaboration.ts`, `components/research/research-collaboration-panel.tsx` | Decentralized open-source collaboration, peer falsification bounties, and field counter-evidence reputation scoring |
 | `lib/research-bounties.ts`, `app/api/hunt/bounties/` | Collaborative Diligence engine, escrow splits (15% platform fee), and multi-operator consensus scoring |
-| `lib/dossier-report.ts` | Executive market dossier generator, Markdown/Report export with scorecard, unit economics and 21-day action plan |
+| `lib/dossier-report.ts`, `components/reporting/validation-report.tsx` | Executive and validation briefs; validation brief uses native file sharing when supported and falls back to download |
 | `lib/investment-risks.ts` | Budget and downside flags from explicit inputs |
 | `app/api/hunt/leads/` | Authenticated owner-scoped dossiers/evidence |
 | `db/schema.ts`, `drizzle/` | D1 schema/migrations |

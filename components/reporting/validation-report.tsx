@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Share2 } from "lucide-react";
 import { z } from "zod";
 
 const reportSchema = z.object({
@@ -17,12 +18,13 @@ const reportSchema = z.object({
     recordedAmountsByCurrency: z.array(z.object({ currency: z.string().length(3), amount: z.number().finite().nonnegative() })),
   }),
   businessmanPaymentRecords: z.array(z.object({ currency: z.string().length(3), capturedAmount: z.number().finite().nonnegative(), records: z.number().int().nonnegative() })),
+  nextAction: z.object({ title: z.string(), detail: z.string() }),
   generatedAt: z.string().datetime().optional(),
   note: z.string(),
 });
 type Report = z.infer<typeof reportSchema>;
 
-function downloadValidationBrief(report: Report) {
+function createValidationBrief(report: Report) {
   const formatMoney = (amount: number, currency: string) => {
     try { return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount); }
     catch { return `${amount.toLocaleString("en-IN")} ${currency}`; }
@@ -52,11 +54,19 @@ function downloadValidationBrief(report: Report) {
     "## Evidence limits",
     report.note,
     "Counts describe records in this workspace; they do not establish representative market demand or prove causation. Opportunity payments are owner-reported. BUSINESSman captured receipts are before refunds and provider fees.",
+    "",
+    "## Suggested next action",
+    `- ${report.nextAction.title}: ${report.nextAction.detail}`,
+    "This is a transparent follow-up prompt based on saved records, not an investment recommendation.",
   ].join("\n");
-  const url = URL.createObjectURL(new Blob([body], { type: "text/markdown;charset=utf-8" }));
+  return new File([body], `market-validation-brief-${new Date().toISOString().slice(0, 10)}.md`, { type: "text/markdown;charset=utf-8" });
+}
+
+function downloadValidationBrief(file: File) {
+  const url = URL.createObjectURL(file);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `market-validation-brief-${new Date().toISOString().slice(0, 10)}.md`;
+  link.download = file.name;
   link.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -64,6 +74,7 @@ function downloadValidationBrief(report: Report) {
 export function ValidationReport() {
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState("");
+  const [shareStatus, setShareStatus] = useState("");
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -97,15 +108,43 @@ export function ValidationReport() {
     ["Sourced facts", report.checks.evidenceKinds.sourced_fact],
   ] as const;
 
+  async function shareBrief() {
+    setShareStatus("");
+    const file = createValidationBrief(report);
+    if (typeof navigator.share !== "function" || !navigator.canShare?.({ files: [file] })) {
+      downloadValidationBrief(file);
+      setShareStatus("File sharing is unavailable here; the brief was downloaded.");
+      return;
+    }
+    try {
+      await navigator.share({ title: "Market validation brief", files: [file] });
+      setShareStatus("Brief shared.");
+    } catch (cause) {
+      if (cause instanceof DOMException && cause.name === "AbortError") return;
+      downloadValidationBrief(file);
+      setShareStatus("Sharing failed; the brief was downloaded instead.");
+    }
+  }
+
   return <section aria-label="Validation reporting">
     <div className="research-report-actions">
       <p>Share a compact snapshot of research activity, buyer checks, and payment signals. The export includes evidence limits.</p>
-      <button className="research-submit" type="button" onClick={() => downloadValidationBrief(report)}>Download validation brief</button>
+      <div>
+        <button className="research-submit" type="button" onClick={shareBrief}><Share2 size={15} /> Share brief</button>{" "}
+        <button className="research-submit" type="button" onClick={() => downloadValidationBrief(createValidationBrief(report))}>Download brief</button>
+      </div>
     </div>
+    {shareStatus && <p role="status" aria-live="polite">{shareStatus}</p>}
     <div className="research-decision-strip">
       {metrics.map(([label, value]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}
       <p>{report.note}</p>
     </div>
+    <aside className="research-validation-next-action" aria-label="Suggested validation next action">
+      <small>Suggested next action · based on recorded checks</small>
+      <strong>{report.nextAction.title}</strong>
+      <p>{report.nextAction.detail}</p>
+      <small>This is a follow-up prompt, not an investment recommendation.</small>
+    </aside>
     <details className="research-report-payment">
       <summary>Buyer validation from saved opportunities</summary>
       <div className="research-decision-strip">
