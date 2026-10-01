@@ -276,6 +276,7 @@
 .market-software-list article { min-width:0; padding:12px; border:1px solid #35392e; border-radius:6px; }
 .market-software-list h4 { margin:0 0 8px; font-size:13px; }
 .market-software-list p { margin:6px 0; color:#bbbbae; font-size:12px; line-height:1.5; }
+.market-software-list .market-software-boundary { padding-top:8px; border-top:1px solid #35392e; color:var(--muted); }
 .market-software-list a { color:#d1b476; font-size:12px; text-decoration:underline; }
 .market-software-comparison .market-software-hypothesis { padding:10px; background:#252a20; border-radius:6px; }
 .market-software-comparison > small { color:#aaa99b; font-size:11px; }

@@ -4,6 +4,7 @@ const products = [
     focus: "One-time idea validation report",
     offer: "Sourced market, competitor, risk, and unit-economics analysis delivered as a decision report.",
     price: "$9 Starter; $129 full report; one-time",
+    boundary: "Pre-build validation report; its pricing page says it is not a lender-ready business plan. Public examples emphasize English-speaking US, UK, and AU markets.",
     url: "https://www.dimeadozen.ai/pricing",
   },
   {
@@ -11,6 +12,7 @@ const products = [
     focus: "Business planning workspace",
     offer: "Canvas, step-by-step guide, financial plan, validation, collaborators, and exports.",
     price: "Free entry; paid plans; incubator and enterprise plans by quote",
+    boundary: "Planning workspace built from your inputs; its public feature page does not position it as a live company-intelligence feed.",
     url: "https://ideabuddy.com/pricing",
   },
   {
@@ -18,6 +20,7 @@ const products = [
     focus: "Founder-approved market experiments",
     offer: "Research, experiment drafts, launch assets, spend-cap monitoring, and evidence memos. Founder approves tests and controls external accounts.",
     price: "$99/month; external ad and tool costs excluded",
+    boundary: "Founder chooses the experiment, spend cap, and verdict; external ad, domain, and payment costs stay separate.",
     url: "https://www.moshpit.in/pricing",
   },
   {
@@ -25,6 +28,7 @@ const products = [
     focus: "Company intelligence and prospecting",
     offer: "Private-company search, funding and firmographic data, saved searches, alerts, and AI assistant.",
     price: "7-day trial; checkout displays per-seat subscription pricing",
+    boundary: "Private-company intelligence and alerts; its public offer does not center local small-business validation or unit-economics planning.",
     url: "https://www.crunchbase.com/buy/cb-pro",
   },
 ];
@@ -42,6 +46,7 @@ export function MarketSoftwareComparison() {
           <p><strong>{product.focus}</strong></p>
           <p>{product.offer}</p>
           <p><strong>Published price:</strong> {product.price}</p>
+          <p className="market-software-boundary"><strong>Scope boundary:</strong> {product.boundary}</p>
           <a href={product.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${product.name} official pricing`}>Official pricing ↗</a>
         </article>)}
       </div>
