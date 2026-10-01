@@ -33,14 +33,20 @@ const MarketInspection = dynamic(
 );
 
 const storageKey = "businessman.research.v2";
-type SavedRunSummary = { id: string; schemaVersion: number; topic: string; geography: string; currency: string; createdAt: string };
+type SavedRunSummary = {
+  id: string; schemaVersion: number; topic: string; geography: string; currency: string; createdAt: string;
+  topOpportunity: string | null; topConfidence: string | null; topStrength: number | null;
+};
 
 function isSavedRunSummary(value: unknown): value is SavedRunSummary {
   if (typeof value !== "object" || value === null) return false;
   const run = value as Partial<SavedRunSummary>;
   return typeof run.id === "string" && Number.isInteger(run.schemaVersion) && typeof run.topic === "string" &&
     typeof run.geography === "string" && typeof run.currency === "string" && typeof run.createdAt === "string" &&
-    Number.isFinite(Date.parse(run.createdAt));
+    Number.isFinite(Date.parse(run.createdAt)) &&
+    (typeof run.topOpportunity === "string" || run.topOpportunity === null) &&
+    (typeof run.topConfidence === "string" || run.topConfidence === null) &&
+    (typeof run.topStrength === "number" || run.topStrength === null);
 }
 
 const money = (value: number | null | undefined, currency: string) => value == null ? "â€”" : new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
@@ -75,7 +81,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   const [restoringRun, setRestoringRun] = useState("");
   const [deletingRun, setDeletingRun] = useState("");
   const [exportingBriefId, setExportingBriefId] = useState("");
-  const filteredSavedRuns = savedRuns.filter((saved) => `${saved.topic} ${saved.geography}`.toLowerCase().includes(savedRunFilter.trim().toLowerCase()));
+  const filteredSavedRuns = savedRuns.filter((saved) => `${saved.topic} ${saved.geography} ${saved.topOpportunity ?? ""} ${saved.topConfidence ?? ""}`.toLowerCase().includes(savedRunFilter.trim().toLowerCase()));
 
   const abort = useRef<AbortController | null>(null);
   const [stars, setStars] = useState<string[]>([]);
@@ -433,7 +439,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       {savedRuns.length === 0 && <p>Run research while signed in to build your history.</p>}
       {savedRuns.length > 0 && filteredSavedRuns.length === 0 && <p>No saved research matches “{savedRunFilter}”.</p>}
       {filteredSavedRuns.length > 0 && <ul>{filteredSavedRuns.map((saved) => <li key={saved.id}>
-        <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small></span>
+        <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small>{saved.topOpportunity && <small>Top finding: {saved.topOpportunity}{saved.topStrength == null ? "" : ` · ${saved.topStrength}/100`}{saved.topConfidence ? ` · ${saved.topConfidence} confidence` : ""}</small>}</span>
         <button type="button" disabled={!!restoringRun || busy || saved.schemaVersion !== RESEARCH_RUN_SCHEMA_VERSION} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION ? "Restore" : "Update needed"}</button>
         <details className="saved-research-actions"><summary>More</summary><div>
           {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</button>}

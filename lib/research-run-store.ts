@@ -1,4 +1,4 @@
-import { and, desc, eq, ne, notInArray } from "drizzle-orm";
+import { and, desc, eq, ne, notInArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { getDb } from "@/db";
 import { researchRuns } from "@/db/schema";
@@ -76,9 +76,19 @@ export function parseResearchBackup(value: unknown, ownerId: string) {
   };
 }
 
-/** Return a small owner-scoped history index without loading saved result payloads. */
+/** Return a decision-oriented history index without loading saved result payloads. */
 export function listResearchRuns(db: ReturnType<typeof getDb>, ownerId: string) {
-  return db.select({ id: researchRuns.id, schemaVersion: researchRuns.schemaVersion, topic: researchRuns.topic, geography: researchRuns.geography, currency: researchRuns.currency, createdAt: researchRuns.createdAt }).from(researchRuns)
+  return db.select({
+    id: researchRuns.id,
+    schemaVersion: researchRuns.schemaVersion,
+    topic: researchRuns.topic,
+    geography: researchRuns.geography,
+    currency: researchRuns.currency,
+    createdAt: researchRuns.createdAt,
+    topOpportunity: sql<string | null>`json_extract(${researchRuns.result}, '$.opportunities[0].name')`,
+    topConfidence: sql<string | null>`json_extract(${researchRuns.result}, '$.opportunities[0].confidence')`,
+    topStrength: sql<number | null>`json_extract(${researchRuns.result}, '$.opportunities[0].strength')`,
+  }).from(researchRuns)
     .where(eq(researchRuns.ownerId, ownerId))
     .orderBy(desc(researchRuns.createdAt), desc(researchRuns.id))
     .limit(MAX_RETAINED_RUNS);
