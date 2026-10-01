@@ -75,6 +75,8 @@ describe("research run storage", () => {
     const query = listResearchRuns(db, "owner-1").toSQL();
     expect(query.sql).toContain('from "research_runs"');
     expect(query.sql).toContain('"schema_version"');
+    expect(query.sql).toContain('"top_opportunity"');
+    expect(query.sql).not.toContain("json_extract");
     expect(query.sql).toContain('"research_runs"."owner_id" = ?');
     expect(query.sql).toContain('order by "research_runs"."created_at" desc, "research_runs"."id" desc');
     expect(query.sql).toContain("limit ?");
@@ -95,7 +97,8 @@ describe("research run storage", () => {
     const db = drizzle({} as D1Database, { schema });
     const batch = vi.spyOn(db, "batch").mockResolvedValue([] as never);
     await saveResearchRun(db, {
-      id: "run-1", ownerId: "owner-1", schemaVersion: 1, topic: "cafes", geography: "Goa, India", currency: "INR", input: {}, result: {},
+      id: "run-1", ownerId: "owner-1", schemaVersion: 1, topic: "cafes", geography: "Goa, India", currency: "INR", input: {},
+      result: { opportunities: [{ name: "Cafe subscriptions", confidence: "Medium", strength: 63 }, { name: "ignored", confidence: "Low", strength: 10 }] },
     });
 
     expect(batch).toHaveBeenCalledOnce();
@@ -104,6 +107,7 @@ describe("research run storage", () => {
     expect(inserted.sql).toContain('insert into "research_runs"');
     expect(inserted.sql).toContain('"schema_version"');
     expect(inserted.params).toContain(1);
+    expect(inserted.params).toEqual(expect.arrayContaining(["Cafe subscriptions", "Medium", 63]));
     expect(inserted.params).toEqual(expect.arrayContaining([expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)]));
     const query = prune.toSQL();
     expect(query.sql).toContain('delete from "research_runs"');

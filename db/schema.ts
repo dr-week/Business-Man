@@ -91,6 +91,10 @@ export const researchRuns = sqliteTable("research_runs", {
   currency: text("currency").notNull(),
   input: text("input", { mode: "json" }).notNull().$type<Record<string, unknown>>(),
   result: text("result", { mode: "json" }).notNull().$type<Record<string, unknown>>(),
+  // Small list-view read model; keep the full result lazy-loaded.
+  topOpportunity: text("top_opportunity"),
+  topConfidence: text("top_confidence"),
+  topStrength: real("top_strength"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index("research_runs_owner_created_idx").on(table.ownerId, table.createdAt, table.id),

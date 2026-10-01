@@ -55,3 +55,5 @@ Current API notes: [Google Trends API](https://developers.google.com/search/apis
 | User URLs | Direct source extraction | Respect access limits; retain source URL/date. |
 
 References: [Google Places API](https://developers.google.com/maps/documentation/places/web-service/overview), [Census developer APIs](https://www.census.gov/data/developers.html), [D1 migrations](https://developers.cloudflare.com/d1/reference/migrations/), [Drizzle migrations](https://orm.drizzle.team/docs/migrations).
+
+Saved-run history stores its three list fields (`top_opportunity`, `top_confidence`, `top_strength`) beside the JSON snapshot. Migration `0010` backfills existing rows; `saveResearchRun` derives fields for new saves/imports. Load full JSON only when opening a run.

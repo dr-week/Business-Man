@@ -1,4 +1,4 @@
-import { and, desc, eq, ne, notInArray, sql } from "drizzle-orm";
+import { and, desc, eq, ne, notInArray } from "drizzle-orm";
 import { z } from "zod";
 import type { getDb } from "@/db";
 import { researchRuns } from "@/db/schema";
@@ -61,6 +61,17 @@ const researchBackup = z.object({
   }).passthrough(),
 }).strict();
 
+function listSummary(result: Record<string, unknown>) {
+  const first = Array.isArray(result.opportunities) ? result.opportunities[0] : undefined;
+  if (!first || typeof first !== "object") return { topOpportunity: null, topConfidence: null, topStrength: null };
+  const opportunity = first as Record<string, unknown>;
+  return {
+    topOpportunity: typeof opportunity.name === "string" ? opportunity.name : null,
+    topConfidence: typeof opportunity.confidence === "string" ? opportunity.confidence : null,
+    topStrength: typeof opportunity.strength === "number" && Number.isFinite(opportunity.strength) ? opportunity.strength : null,
+  };
+}
+
 /** Validate an app backup and prepare a fresh owner-scoped archive row. */
 export function parseResearchBackup(value: unknown, ownerId: string) {
   const parsed = researchBackup.safeParse(value);
@@ -85,9 +96,9 @@ export function listResearchRuns(db: ReturnType<typeof getDb>, ownerId: string) 
     geography: researchRuns.geography,
     currency: researchRuns.currency,
     createdAt: researchRuns.createdAt,
-    topOpportunity: sql<string | null>`json_extract(${researchRuns.result}, '$.opportunities[0].name')`,
-    topConfidence: sql<string | null>`json_extract(${researchRuns.result}, '$.opportunities[0].confidence')`,
-    topStrength: sql<number | null>`json_extract(${researchRuns.result}, '$.opportunities[0].strength')`,
+    topOpportunity: researchRuns.topOpportunity,
+    topConfidence: researchRuns.topConfidence,
+    topStrength: researchRuns.topStrength,
   }).from(researchRuns)
     .where(eq(researchRuns.ownerId, ownerId))
     .orderBy(desc(researchRuns.createdAt), desc(researchRuns.id))
@@ -139,7 +150,7 @@ export async function saveResearchRun(db: ReturnType<typeof getDb>, run: typeof 
   if ((run.schemaVersion ?? RESEARCH_RUN_SCHEMA_VERSION) !== RESEARCH_RUN_SCHEMA_VERSION) {
     throw new Error("Unsupported research snapshot schema version");
   }
-  const snapshot = { ...run, createdAt: run.createdAt ?? new Date().toISOString() };
+  const snapshot = { ...run, ...listSummary(run.result), createdAt: run.createdAt ?? new Date().toISOString() };
   const serialized = JSON.stringify(snapshot);
   // UTF-8 uses at most three bytes per UTF-16 code unit. Most snapshots fit
   // this safe range, so avoid allocating an encoded copy for them.
