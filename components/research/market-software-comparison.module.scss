@@ -1,0 +1,37 @@
+.comparison {
+  > p { color: #bbbbae; font-size: 12px; line-height: 1.55; }
+
+  summary {
+    width: fit-content;
+    margin: 4px 0 10px;
+    color: #d1b476;
+    font-size: 12px;
+    cursor: pointer;
+
+    &:focus-visible { outline: 2px solid #d1b476; outline-offset: 3px; }
+  }
+
+  > small { color: #aaa99b; font-size: 11px; }
+}
+
+.hypothesis { padding: 10px; background: #252a20; border-radius: 6px; }
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 10px;
+
+  article { min-width: 0; padding: 12px; border: 1px solid #35392e; border-radius: 6px; }
+  h4 { margin: 0 0 8px; font-size: 13px; }
+  p { margin: 6px 0; color: #bbbbae; font-size: 12px; line-height: 1.5; }
+  .boundary { padding-top: 8px; border-top: 1px solid #35392e; color: var(--muted); }
+
+  a {
+    color: #d1b476;
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:focus-visible { outline: 2px solid #d1b476; outline-offset: 3px; }
+  }
+}

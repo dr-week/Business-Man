@@ -34,6 +34,7 @@ Target: quiet, Japanese-inspired minimalism; whitespace, restrained colour, clea
 - `components/research/revenue-system-workbench.tsx`: product revenue model, tier assumptions, and break-even explorer.
 - `components/research/source-ledger.tsx`, `source-ledger.module.scss`: source search and evidence-type filters.
 - `components/research/market-panel.tsx`: competitor and alternative view.
+- `components/research/market-software-comparison.tsx`: competitor pricing/evidence view; isolated styles live in its SCSS module.
 - `components/EconomicsSlider.tsx`, `EconomicsSlider.module.scss`: economics assumptions and outputs.
 - `lib/research-snapshot-cache.ts`: coalesced offline snapshot writes.
 - `components/research/validation-checklist.tsx`, `.module.scss`: collapsed field-work log; completion requires a note and HTTPS evidence link. Browser-local, user-reported progress.
