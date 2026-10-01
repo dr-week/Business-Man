@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { RefreshCw, Share2 } from "lucide-react";
 import { validationSummaryErrorSchema, validationSummarySchema, type ValidationSummary } from "@/lib/reporting/validation-summary-schema";
+import styles from "./validation-report.module.scss";
 
 function createValidationBrief(report: ValidationSummary) {
   const formatMoney = (amount: number, currency: string) => {
@@ -113,9 +114,9 @@ export function ValidationReport() {
     {error && <p className="research-report-state" role="alert">{error} Showing the last successfully loaded report.</p>}
     <div className="research-report-actions">
       <p>Share a compact snapshot of research activity, buyer checks, and payment signals. The export includes evidence limits.</p>
-      <div>
-        <button className="research-submit" type="button" onClick={() => setAttempt((value) => value + 1)} disabled={refreshing}><RefreshCw size={15} /> {refreshing ? "Refreshing…" : "Refresh report"}</button>{" "}
-        <button className="research-submit" type="button" onClick={shareBrief}><Share2 size={15} /> Share brief</button>{" "}
+      <div className={styles.actions} role="group" aria-label="Validation report actions">
+        <button className="research-submit" type="button" onClick={() => setAttempt((value) => value + 1)} disabled={refreshing}><RefreshCw size={15} /> {refreshing ? "Refreshing…" : "Refresh report"}</button>
+        <button className="research-submit" type="button" onClick={shareBrief}><Share2 size={15} /> Share brief</button>
         <button className="research-submit" type="button" onClick={() => downloadValidationBrief(createValidationBrief(report))}>Download brief</button>
       </div>
     </div>
