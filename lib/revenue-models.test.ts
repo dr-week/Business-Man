@@ -81,6 +81,37 @@ describe("revenue models engine", () => {
     expect(result.runwayMonthsWithInvestment).toBe(5);
   });
 
+  it("subtracts cash tied up by collection terms before estimating runway", () => {
+    const result = calculateRevenueModel({
+      archetypeId: "consulting_service",
+      price: 10_000,
+      variableCost: 2_000,
+      monthlyUnits: 2,
+      fixedCost: 25_000,
+      investment: 100_000,
+      paymentTermsDays: 60,
+    });
+
+    expect(result.netMonthlyProfit).toBe(-9_000);
+    expect(result.workingCapitalLocked).toBe(40_000);
+    expect(result.runwayMonthsWithInvestment).toBe(6.7);
+  });
+
+  it("reports no funded runway when collection delays consume the investment", () => {
+    const result = calculateRevenueModel({
+      archetypeId: "consulting_service",
+      price: 10_000,
+      variableCost: 2_000,
+      monthlyUnits: 2,
+      fixedCost: 25_000,
+      investment: 30_000,
+      paymentTermsDays: 60,
+    });
+
+    expect(result.workingCapitalLocked).toBe(40_000);
+    expect(result.runwayMonthsWithInvestment).toBeNull();
+  });
+
   it("validates input boundaries using Zod schema", () => {
     expect(
       revenueEngineInput.safeParse({

@@ -145,8 +145,9 @@ export function calculateRevenueModel(input: RevenueEngineInput): RevenueEngineR
   const workingCapitalLocked = paymentTermsDays > 0 ? Math.round(monthlyRevenue * (paymentTermsDays / 30)) : 0;
 
   // Runway months if business is currently loss-making:
-  const runwayMonthsWithInvestment = netMonthlyProfit < 0 && investment > 0
-    ? Number((investment / Math.abs(netMonthlyProfit)).toFixed(1))
+  const availableOperatingCash = Math.max(0, investment - workingCapitalLocked);
+  const runwayMonthsWithInvestment = netMonthlyProfit < 0 && availableOperatingCash > 0
+    ? Number((availableOperatingCash / Math.abs(netMonthlyProfit)).toFixed(1))
     : null;
 
   // Milestone targets
