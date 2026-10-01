@@ -17,6 +17,14 @@ RaiseIQ is a closer India-facing price anchor for economics work. Its listed off
 
 Likely initial buyers to interview: founders deciding whether to pursue an idea, and advisors or incubators screening several ideas. Evidence of demand requires paid pilots and repeat use; competitor pricing only establishes existing spend categories.
 
+### Competitor-analysis reality check
+
+The overlap is substantial: [DimeADozen](https://www.dimeadozen.ai/pricing) combines free idea scoring with source-linked reports, including risks and monetization; [Moshpit](https://www.moshpit.in/pricing) adds approved demand experiments and budget monitoring; [IdeaBuddy](https://ideabuddy.com/pricing) adds financial planning, collaboration, and exports. The local-evidence + economics combination is not unique by itself. Validate a narrower India-specific advantage through local source coverage, traceable evidence, and a repeatable founder/advisor workflow.
+
+GitHub examples suggest generic AI validation is easy to copy: [business-validator](https://github.com/elvismusli/business-validator) assembles research, competitor analysis, financial modelling, and risk assessment in an open-source pipeline; [IdeaGo](https://github.com/tendo33/ideago) describes evidence-led market and competitor analysis with commercial signals and recommendations. These are repository claims, not proof of product quality or customer adoption. Reusable capability should be compared by source quality, geography, evidence provenance, and decision follow-through—not feature count.
+
+Competitor offer facts used in both UI views live in `lib/market-competitors.ts`; keep the comparison table and cards in sync by editing that dataset. DimeADozen price snapshot: $9 Starter, $129 full report, $179 three-pack. Crunchbase currently lists $79/seat/month annual billing and $99 monthly. Recheck official pages before treating prices as current.
+
 ### Reporting workflow
 
 [Visible](https://visible.vc/) sells portfolio monitoring and investor reporting with data collection and verification; [Dovetail](https://dovetail.com/solutions/research-repository/) focuses on sharing reusable customer evidence. Dovetail lists a free individual tier and custom-priced Enterprise plan ([pricing](https://dovetail.com/pricing/)). Businessman can target an earlier-stage job: export a concise market-validation brief combining research activity, buyer checks, payment signals, and explicit evidence limits. Potential payers: incubators and startup advisors reviewing cohorts; founders may pay for a polished brief. Validate with paid pilots before setting prices.

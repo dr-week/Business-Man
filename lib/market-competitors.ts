@@ -1,0 +1,38 @@
+export const marketCompetitors = [
+  {
+    name: "DimeADozen",
+    buyer: "Founder screening an idea",
+    offer: "Source-linked validation reports; free idea score and one-time report purchases",
+    price: "$9 Starter; $129 full report; $179 three-pack",
+    focus: "One-time idea validation report",
+    boundary: "Reports cite US, UK, and AU public sources; the company says non-English and emerging-market source coverage is not its strength.",
+    url: "https://www.dimeadozen.ai/pricing",
+  },
+  {
+    name: "IdeaBuddy",
+    buyer: "Founder planning with collaborators",
+    offer: "Canvas, guided idea development, financial plan, validation, collaboration, and exports",
+    price: "Free plan; paid plans; enterprise and white-label by quote",
+    focus: "Business planning workspace",
+    boundary: "A planning workspace built from user inputs; its public offer is not a live company-intelligence feed.",
+    url: "https://ideabuddy.com/pricing",
+  },
+  {
+    name: "Moshpit",
+    buyer: "Founder running pre-build demand tests",
+    offer: "Research, validation plans, launch assets, spend-cap monitoring, and evidence memos",
+    price: "$99/month; external ad and tool costs excluded",
+    focus: "Founder-approved market experiments",
+    boundary: "Founder approves experiments, sets budgets, and makes the final decision.",
+    url: "https://www.moshpit.in/pricing",
+  },
+  {
+    name: "Crunchbase Pro",
+    buyer: "Investor or sales team finding companies and prospects",
+    offer: "Private-company search, funding and firmographic data, saved searches, alerts, and AI assistant",
+    price: "$79/seat/month billed annually; $99 month-to-month",
+    focus: "Company intelligence and prospecting",
+    boundary: "Company intelligence and prospecting; it does not center local small-business validation or unit-economics planning.",
+    url: "https://www.crunchbase.com/buy/cb-pro",
+  },
+] as const;

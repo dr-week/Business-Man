@@ -1,29 +1,4 @@
-const alternatives = [
-  {
-    name: "DimeADozen",
-    buyer: "Founder screening an idea",
-    offer: "Source-linked validation report; one-time purchase",
-    price: "$9 starter · $129 full report",
-    url: "https://www.dimeadozen.ai/pricing",
-    label: "Published price",
-  },
-  {
-    name: "IdeaBuddy",
-    buyer: "Founder planning with collaborators",
-    offer: "Guided idea development, financial plan, validation, and sharing",
-    price: "Free tier/trial; paid plans",
-    url: "https://ideabuddy.com/pricing",
-    label: "Plan features",
-  },
-  {
-    name: "Moshpit",
-    buyer: "Founder running pre-build demand tests",
-    offer: "Research, approved experiments, spend caps, and test monitoring",
-    price: "$99/month",
-    url: "https://www.moshpit.in/pricing",
-    label: "Published plan",
-  },
-] as const;
+import { marketCompetitors } from "@/lib/market-competitors";
 
 export function MarketPositioning() {
   return <details className="revenue-sensitivity-module market-positioning">
@@ -33,9 +8,9 @@ export function MarketPositioning() {
       <div className="market-comparison-table-wrap">
         <table className="market-comparison-table">
           <thead><tr><th>Product</th><th>Buyer / job</th><th>Published offer</th><th>Price signal</th></tr></thead>
-          <tbody>{alternatives.map((item) => <tr key={item.name}>
+          <tbody>{marketCompetitors.slice(0, 3).map((item) => <tr key={item.name}>
             <th scope="row"><a href={item.url} target="_blank" rel="noreferrer">{item.name}</a></th>
-            <td>{item.buyer}</td><td>{item.offer}</td><td>{item.price}<small>{item.label}</small></td>
+            <td>{item.buyer}</td><td>{item.offer}</td><td>{item.price}<small>Published price</small></td>
           </tr>)}</tbody>
         </table>
       </div>
