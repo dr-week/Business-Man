@@ -22,6 +22,7 @@ Target: quiet, Japanese-inspired minimalism; whitespace, restrained colour, clea
 - Market view keeps local listings visible; secondary alternatives stay collapsed until requested. Do not cache Google Places content between views ([policy](https://developers.google.com/maps/documentation/places/web-service/policies)).
 - Migrate utility-styled feature components to scoped SCSS when touched; keep Tailwind for remaining screens until each has a scoped replacement and visual verification. Do not add a second component framework for styling alone.
 - Coalesce local research snapshot writes during slider edits; keep saved history indexed and load full records only on selection.
+- Investment stress cases stay isolated and labeled as scenarios, not forecasts; include demand, price, and variable-cost shocks.
 
 ## Files
 
@@ -36,5 +37,6 @@ Target: quiet, Japanese-inspired minimalism; whitespace, restrained colour, clea
 - `components/research/market-panel.tsx`: competitor and alternative view.
 - `components/research/market-software-comparison.tsx`: competitor pricing/evidence view; isolated styles live in its SCSS module.
 - `components/EconomicsSlider.tsx`, `EconomicsSlider.module.scss`: economics assumptions and outputs.
+- `lib/revenue-models.ts`: archetypes, working-capital, and stress-scenario calculations.
 - `lib/research-snapshot-cache.ts`: coalesced offline snapshot writes.
 - `components/research/validation-checklist.tsx`, `.module.scss`: collapsed field-work log; completion requires a note and HTTPS evidence link. Browser-local, user-reported progress.

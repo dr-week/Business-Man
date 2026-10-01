@@ -21,7 +21,7 @@ const opportunity = {
   ],
   sources: [],
   claims: [],
-  assumptions: {},
+  assumptions: {} as any,
   factors: [],
   strength: null,
   confidence: "Low",

@@ -6,7 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import dynamic from "next/dynamic";
 
-import { Download, ExternalLink, Search, Square, GitCompareArrows, Star, Store, BriefcaseBusiness, FileText, Upload } from "lucide-react";
+import { Accordion, ActionIcon, Button, Group, Menu, Paper, Stack, Text, TextInput } from "@mantine/core";
+import { Download, Ellipsis, ExternalLink, Search, Square, GitCompareArrows, Star, Store, BriefcaseBusiness, FileText, RefreshCw, Trash2, Upload } from "lucide-react";
 
 import type { Lead } from "@/lib/opportunity-hunt";
 import { ResearchFocusCard } from "@/components/research/research-focus-card";
@@ -16,6 +17,7 @@ import { OpportunityDetailSection } from "@/components/research/opportunity-deta
 
 import { recalculateOpportunity, researchInput, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity } from "@/lib/research-engine";
 import { downloadDossierReport } from "@/lib/dossier-report";
+import { downloadEvidenceCsv } from "@/lib/reporting/evidence-csv";
 import { parseSavedResearchBrief } from "@/lib/saved-research-brief";
 import { TRENDING_PROMPTS } from "@/lib/trending-prompts";
 import type { ResearchFocus, ResearchFocusSource } from "@/lib/research-focus";
@@ -24,6 +26,7 @@ import { independentSourceCount } from "@/lib/evidence-lineage";
 import { OpportunityComparison } from "@/components/research/opportunity-comparison";
 import { parseFirstImpressions, recordFirstImpression, type FirstImpression } from "@/lib/first-impressions";
 import { RESEARCH_RUN_SCHEMA_VERSION } from "@/lib/research-run-version";
+import savedResearchStyles from "@/components/research/saved-research.module.scss";
 import { scheduleResearchSnapshot } from "@/lib/research-snapshot-cache";
 
 const Charts = dynamic(() => import("./research-charts"), { ssr: false });
@@ -51,7 +54,8 @@ function isSavedRunSummary(value: unknown): value is SavedRunSummary {
 
 const money = (value: number | null | undefined, currency: string) => value == null ? "â€”" : new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
 
-function persist(input: ResearchInput, opportunities: ResearchOpportunity[], runId: string | null) {
+function persist(input: ResearchInput | null, opportunities: ResearchOpportunity[], runId: string | null) {
+  if (!input) return;
   scheduleResearchSnapshot(storageKey, { input, opportunities, runId });
 }
 
@@ -81,6 +85,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   const [restoringRun, setRestoringRun] = useState("");
   const [deletingRun, setDeletingRun] = useState("");
   const [exportingBriefId, setExportingBriefId] = useState("");
+  const [exportingEvidenceId, setExportingEvidenceId] = useState("");
   const filteredSavedRuns = savedRuns.filter((saved) => `${saved.topic} ${saved.geography} ${saved.topOpportunity ?? ""} ${saved.topConfidence ?? ""}`.toLowerCase().includes(savedRunFilter.trim().toLowerCase()));
 
   const abort = useRef<AbortController | null>(null);
@@ -139,30 +144,27 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
   useEffect(() => {
     let active = true;
+    let hasLocalSnapshot = false;
     try {
       const local: unknown = JSON.parse(localStorage.getItem(storageKey) ?? "null");
-      if (typeof local === "object" && local !== null && "input" in local && researchInput.safeParse(local.input).success && "opportunities" in local && Array.isArray(local.opportunities)) return;
+      hasLocalSnapshot = typeof local === "object" && local !== null && "input" in local && researchInput.safeParse(local.input).success && "opportunities" in local && Array.isArray(local.opportunities);
     } catch { /* Fall back to the saved server snapshot. */ }
-    fetch("/api/hunt/research-runs", { cache: "no-store" })
-      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; schemaVersion?: number; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation>; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean } }[] }> : null)
+    const url = hasLocalSnapshot ? "/api/hunt/research-runs?list=1" : "/api/hunt/research-runs";
+    fetch(url, { cache: "no-store" })
+      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; schemaVersion?: number; topic?: string; geography?: string; currency?: string; createdAt?: string; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation>; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean } }[]; history?: unknown }> : null)
       .then((data) => {
+        if (!active || !data) return;
+        const history = hasLocalSnapshot ? data.runs : data.history;
+        if (Array.isArray(history) && history.length <= 20 && history.every(isSavedRunSummary)) setSavedRuns(history);
+        if (hasLocalSnapshot) return;
         const latest = data?.runs?.[0];
-        if (!active || latest?.schemaVersion !== RESEARCH_RUN_SCHEMA_VERSION || !latest.input || !Array.isArray(latest.result?.opportunities)) return;
+        if (latest?.schemaVersion !== RESEARCH_RUN_SCHEMA_VERSION || !latest.input || !Array.isArray(latest.result?.opportunities)) return;
         setRunId(latest.id ?? null); setInput(latest.input); setOpportunities(latest.result.opportunities);
         setWebResearch(latest.result.webResearch ?? []); setWebSearchConfigured(!!latest.result.webSearchConfigured);
         setTopic(latest.input.topic); setGeography(latest.input.geography); setBudget(latest.input.budget == null ? "" : String(latest.input.budget));
         setPreparedBrief(latest.result.query?.brief ?? ""); setInterpretation(latest.result.query ?? null);
       })
       .catch(() => { /* Local snapshot remains available when archive is unavailable. */ });
-    return () => { active = false; };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    fetch("/api/hunt/research-runs?list=1", { cache: "no-store" })
-      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: typeof savedRuns }> : null)
-      .then((data) => { if (active && Array.isArray(data?.runs)) setSavedRuns(data.runs); })
-      .catch(() => { /* Saved history remains optional when the archive is unavailable. */ });
     return () => { active = false; };
   }, []);
 
@@ -272,6 +274,24 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
     } catch (error) {
       onError(error instanceof Error ? error.message : "Could not export this research brief.");
     } finally { setExportingBriefId(""); }
+  }
+
+  async function downloadSavedEvidence(id: string) {
+    setExportingEvidenceId(id);
+    try {
+      const response = await fetch(`/api/hunt/research-runs/export?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+      const body: unknown = await response.json();
+      if (!response.ok) {
+        const message = typeof body === "object" && body !== null && "error" in body && typeof body.error === "string"
+          ? body.error
+          : "Could not export evidence.";
+        throw new Error(message);
+      }
+      const brief = parseSavedResearchBrief(body);
+      downloadEvidenceCsv(brief.opportunities, brief.metadata);
+    } catch (error) {
+      onError(error instanceof Error ? error.message : "Could not export evidence.");
+    } finally { setExportingEvidenceId(""); }
   }
 
   async function refreshSavedRun(id: string) {
@@ -432,24 +452,63 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
     </form>
 
-    <details hidden={view !== "research" && view !== "analysis"} className="saved-research-history">
-      <summary>Saved research ({savedRuns.length})</summary>
-      <label className="saved-research-import"><Upload size={15} />{importingBackup ? "Importing backup…" : "Import backup"}<input type="file" accept="application/json,.json" disabled={importingBackup || busy} onChange={(event) => { void importResearchBackup(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} /></label>
-      {savedRuns.length > 3 && <label className="saved-research-filter"><Search size={14} /><span className="sr-only">Filter saved research by topic or location</span><input type="search" value={savedRunFilter} onChange={(event) => setSavedRunFilter(event.target.value)} placeholder="Filter topic or location" /></label>}
-      {savedRuns.length === 0 && <p>Run research while signed in to build your history.</p>}
-      {savedRuns.length > 0 && filteredSavedRuns.length === 0 && <p>No saved research matches “{savedRunFilter}”.</p>}
-      {filteredSavedRuns.length > 0 && <ul>{filteredSavedRuns.map((saved) => <li key={saved.id}>
-        <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small>{saved.topOpportunity && <small>Top finding: {saved.topOpportunity}{saved.topStrength == null ? "" : ` · ${saved.topStrength}/100`}{saved.topConfidence ? ` · ${saved.topConfidence} confidence` : ""}</small>}</span>
-        <button type="button" disabled={!!restoringRun || busy || saved.schemaVersion !== RESEARCH_RUN_SCHEMA_VERSION} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION ? "Restore" : "Update needed"}</button>
-        <details className="saved-research-actions"><summary>More</summary><div>
-          {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</button>}
-          {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <a href={`/api/hunt/research-runs/export?id=${encodeURIComponent(saved.id)}`}>Download backup</a>}
-          {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={exportingBriefId === saved.id} onClick={() => void downloadSavedBrief(saved.id)}>{exportingBriefId === saved.id ? "Preparing brief…" : "Download readable brief"}</button>}
-          {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={preparingBackupId === saved.id || !!restoringRun || busy} onClick={() => void (preparedBackup?.id === saved.id ? shareResearchBackup(saved.id) : prepareResearchBackup(saved.id))}>{preparingBackupId === saved.id ? "Preparing share…" : preparedBackup?.id === saved.id ? "Share with another app" : "Prepare share"}</button>}
-          <button type="button" disabled={!!deletingRun || !!restoringRun || busy} onClick={() => void deleteSavedRun(saved.id)}>{deletingRun === saved.id ? "Deleting…" : "Delete saved research"}</button>
-        </div></details>
-      </li>)}</ul>}
-    </details>
+    <Accordion
+      hidden={view !== "research" && view !== "analysis"}
+      variant="separated"
+      order={3}
+      className={savedResearchStyles.history}
+      classNames={{ item: savedResearchStyles.historyItem, control: savedResearchStyles.historyControl, panel: savedResearchStyles.historyPanel }}
+    >
+      <Accordion.Item value="saved-research">
+        <Accordion.Control>
+          <Group gap="xs">
+            <Text fw={600} size="sm">Saved research</Text>
+            <Text c="dimmed" size="xs">{savedRuns.length}</Text>
+          </Group>
+        </Accordion.Control>
+        <Accordion.Panel>
+          <Stack gap="sm">
+            <Group className={savedResearchStyles.toolbar}>
+              <Button component="label" color="businessman" size="sm" leftSection={<Upload size={15} />} loading={importingBackup} pos="relative">
+                {importingBackup ? "Importing backup…" : "Import backup"}
+                <input className={savedResearchStyles.backupInput} type="file" accept="application/json,.json" aria-label="Import research backup" disabled={importingBackup || busy} onChange={(event) => { void importResearchBackup(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
+              </Button>
+              {savedRuns.length > 3 && <TextInput className={savedResearchStyles.filter} type="search" aria-label="Filter saved research by topic or location" value={savedRunFilter} onChange={(event) => setSavedRunFilter(event.currentTarget.value)} placeholder="Filter topic or location" leftSection={<Search size={14} />} />}
+            </Group>
+            {savedRuns.length === 0 && <Text className={savedResearchStyles.empty} component="p">Run research while signed in to build your history.</Text>}
+            {savedRuns.length > 0 && filteredSavedRuns.length === 0 && <Text className={savedResearchStyles.empty} component="p">No saved research matches “{savedRunFilter}”.</Text>}
+            {filteredSavedRuns.length > 0 && <ul className={savedResearchStyles.runList}>{filteredSavedRuns.map((saved) => {
+              const supported = saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION;
+              return <Paper component="li" key={saved.id} radius="sm" className={savedResearchStyles.run}>
+                <Stack className={savedResearchStyles.runInfo} gap={2}>
+                  <Text fw={600} size="sm">{saved.topic}</Text>
+                  <Text c="dimmed" size="xs">{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</Text>
+                  {saved.topOpportunity && <Text c="dimmed" size="xs">Top finding: {saved.topOpportunity}{saved.topStrength == null ? "" : ` · ${saved.topStrength}/100`}{saved.topConfidence ? ` · ${saved.topConfidence} confidence` : ""}</Text>}
+                </Stack>
+                <Button type="button" color="businessman" size="sm" variant="light" disabled={!!restoringRun || busy || !supported} loading={restoringRun === saved.id} onClick={() => void restoreSavedRun(saved.id)}>
+                  {supported ? "Restore" : "Update needed"}
+                </Button>
+                <Menu position="bottom-end" withinPortal>
+                  <Menu.Target>
+                    <ActionIcon type="button" variant="subtle" color="businessman" aria-label={`More actions for ${saved.topic}`}>
+                      <Ellipsis size={18} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    {supported && <Menu.Item leftSection={<RefreshCw size={15} />} disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</Menu.Item>}
+                    {supported && <Menu.Item component="a" href={`/api/hunt/research-runs/export?id=${encodeURIComponent(saved.id)}`} leftSection={<Download size={15} />}>Download backup</Menu.Item>}
+                    {supported && <Menu.Item leftSection={<FileText size={15} />} disabled={exportingBriefId === saved.id} onClick={() => void downloadSavedBrief(saved.id)}>{exportingBriefId === saved.id ? "Preparing brief…" : "Download readable brief"}</Menu.Item>}
+                    {supported && <Menu.Item leftSection={<Download size={15} />} disabled={exportingEvidenceId === saved.id} onClick={() => void downloadSavedEvidence(saved.id)}>{exportingEvidenceId === saved.id ? "Preparing evidence…" : "Download evidence CSV"}</Menu.Item>}
+                    {supported && <Menu.Item leftSection={<ExternalLink size={15} />} disabled={preparingBackupId === saved.id || !!restoringRun || busy} onClick={() => void (preparedBackup?.id === saved.id ? shareResearchBackup(saved.id) : prepareResearchBackup(saved.id))}>{preparingBackupId === saved.id ? "Preparing share…" : preparedBackup?.id === saved.id ? "Share with another app" : "Prepare share"}</Menu.Item>}
+                    <Menu.Item color="red" leftSection={<Trash2 size={15} />} disabled={!!deletingRun || !!restoringRun || busy} onClick={() => void deleteSavedRun(saved.id)}>{deletingRun === saved.id ? "Deleting…" : "Delete saved research"}</Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              </Paper>;
+            })}</ul>}
+          </Stack>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion>
 
     <div hidden={view !== "research" || !!opportunities.length} className="research-intro">
       <div className="research-mode" role="tablist" aria-label="Research goal">

@@ -42,8 +42,7 @@ for /f "tokens=1,2 delims=:" %%A in ("%CHECK_RESULT%") do (
 if not "%CHECK_STATUS%"=="IS_BUSINESSMAN" goto find_port
 set "SAVED_PORT=%CHECK_PORT%"
 echo [+] Businessman is already running on port %SAVED_PORT%.
-echo [*] Opening http://localhost:%SAVED_PORT%...
-start "" "http://localhost:%SAVED_PORT%"
+echo [*] Open this URL in your browser: http://localhost:%SAVED_PORT%
 exit /b 0
 
 :find_port
@@ -66,8 +65,8 @@ set "TIMESTAMP=%TIMESTAMP: =0%"
 set "TIMESTAMP=%TIMESTAMP:,=-%"
 set "RUN_LOG=%LOG_DIR%\session_%TIMESTAMP%.log"
 
-start /b "" cmd /c "timeout /t 3 >nul & start \"\" \"%URL%\""
 echo [*] Starting server on %URL%...
+echo [*] Open this URL in your browser when ready: %URL%
 echo [*] Log: %RUN_LOG%
 echo [*] Press Ctrl+C or close this launcher window to stop the server.
 echo.

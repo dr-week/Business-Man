@@ -60,7 +60,11 @@ describe("revenue models engine", () => {
     const result = calculateRevenueModel(input);
     expect(result.monthlyRevenue).toBe(300000);
     expect(result.workingCapitalLocked).toBe(450000); // 300000 * 1.5
-    expect(result.stressScenarios).toHaveLength(4);
+    expect(result.stressScenarios).toHaveLength(5);
+    expect(result.stressScenarios.find((scenario) => scenario.label === "Input Cost Shock (+15%)")).toMatchObject({
+      description: "Supplier, material, energy, or labor costs rise 15%",
+    });
+    expect(result.stressScenarios.find((scenario) => scenario.label === "Input Cost Shock (+15%)")?.monthlyProfit).toBeCloseTo(56_000, 8);
   });
 
   it("handles loss-making scenarios by computing investment runway", () => {

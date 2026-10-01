@@ -1,3 +1,3 @@
 @echo off
-start "" "%~dp0scripts\launch.bat"
-exit /b 0
+call "%~dp0scripts\launch.bat"
+exit /b %errorlevel%

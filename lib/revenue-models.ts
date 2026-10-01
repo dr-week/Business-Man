@@ -154,7 +154,7 @@ export function calculateRevenueModel(input: RevenueEngineInput): RevenueEngineR
   const for1LakhProfit = contribution > 0 ? Math.ceil((fixedCost + 100_000) / contribution) : null;
   const for5LakhProfit = contribution > 0 ? Math.ceil((fixedCost + 500_000) / contribution) : null;
 
-  // Stress tests (e.g. 20% price drop or 30% unit drop)
+  // Isolated stress tests; these are scenarios, not forecasts.
   const stressScenarios = [
     {
       label: "Base Case",
@@ -163,17 +163,22 @@ export function calculateRevenueModel(input: RevenueEngineInput): RevenueEngineR
     },
     {
       label: "Price Squeeze (-15%)",
-      monthlyProfit: (price * 0.85 - variableCost) * monthlyUnits - fixedCost,
+      monthlyProfit: Math.round((price * 0.85 - variableCost) * monthlyUnits - fixedCost),
       description: "Competitor discounting or platform fees force a 15% price cut",
     },
     {
       label: "Demand Slump (-30% sales)",
-      monthlyProfit: contribution * Math.floor(monthlyUnits * 0.7) - fixedCost,
+      monthlyProfit: Math.round(contribution * Math.floor(monthlyUnits * 0.7) - fixedCost),
       description: "Slow acquisition period or season low",
     },
     {
+      label: "Input Cost Shock (+15%)",
+      monthlyProfit: Math.round((price - variableCost * 1.15) * monthlyUnits - fixedCost),
+      description: "Supplier, material, energy, or labor costs rise 15%",
+    },
+    {
       label: "High Growth (2x sales)",
-      monthlyProfit: contribution * (monthlyUnits * 2) - fixedCost,
+      monthlyProfit: Math.round(contribution * (monthlyUnits * 2) - fixedCost),
       description: "Target scale milestone reached",
     },
   ];

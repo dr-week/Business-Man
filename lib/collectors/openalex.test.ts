@@ -17,7 +17,8 @@ describe("OpenAlex literature collector", () => {
       { title: "Unsafe link", url: "https://openalex.org/W2", year: null, citedByCount: 0 },
     ]);
     expect(works.every((work) => new URL(work.url).protocol === "https:")).toBe(true);
-    const requestUrl = new URL(fetch.mock.calls[0][0] as string);
+    const calls = fetch.mock.calls as unknown as Array<[unknown]>;
+    const requestUrl = new URL(String(calls[0]?.[0]));
     expect(requestUrl.searchParams.get("per_page")).toBe("3");
     expect(requestUrl.searchParams.get("select")).toContain("cited_by_count");
   });
