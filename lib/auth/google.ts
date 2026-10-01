@@ -1,9 +1,23 @@
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { z } from "zod";
 import { getUserDbAdapter, type User } from "./user-db";
 
 export const GOOGLE_ISSUERS = ["https://accounts.google.com", "accounts.google.com"] as const;
+export const GOOGLE_JWKS_URL = new URL("https://www.googleapis.com/oauth2/v3/certs");
 export const SESSION_COOKIE_NAME = "bm_session";
 export const SESSION_DURATION_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
+
+let remoteJwks: ReturnType<typeof createRemoteJWKSet> | null = null;
+
+function getGoogleJWKS() {
+  if (!remoteJwks) {
+    remoteJwks = createRemoteJWKSet(GOOGLE_JWKS_URL, {
+      cacheMaxAge: 10 * 60 * 1000, // 10 minutes cache
+      cooldownDuration: 30 * 1000,
+    });
+  }
+  return remoteJwks;
+}
 
 export const googleTokenPayloadSchema = z.object({
   iss: z.string(),
@@ -120,14 +134,23 @@ export async function authenticateGoogleUser(
     }
     claims = validation.payload;
   } else {
-    // In production with network access, we verify using Google's public certificates
-    // For standalone/offline or test mode, validate claims directly
-    const rawPayload = decodeJwtPayloadUnsafe(token);
-    const validation = validateGooglePayloadClaims(rawPayload, options);
-    if (!validation.valid) {
-      throw new Error(validation.error);
+    // Cryptographically verify Google RSA signature using Google public JWKS
+    try {
+      const { payload } = await jwtVerify(token, getGoogleJWKS(), {
+        issuer: [...GOOGLE_ISSUERS],
+        audience: options.expectedClientId,
+        currentDate: options.now ? new Date(options.now * 1000) : undefined,
+      });
+
+      const validation = validateGooglePayloadClaims(payload, options);
+      if (!validation.valid) {
+        throw new Error(validation.error);
+      }
+      claims = validation.payload;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Cryptographic signature verification failed";
+      throw new Error(`Google token signature verification failed: ${message}`);
     }
-    claims = validation.payload;
   }
 
   const adapter = getUserDbAdapter();

@@ -179,4 +179,23 @@ describe("Google Passwordless Auth & Isolated User DB", () => {
     expect(secondRun.user.id).toBe(firstRun.user.id);
     expect(secondRun.user.displayName).toBe("New Name");
   });
+
+  it("fails securely when token signature cannot be cryptographically verified against JWKS", async () => {
+    const unverifiedJwt = createMockJwt({
+      iss: "https://accounts.google.com",
+      sub: "google-uid-untrusted",
+      aud: expectedClientId,
+      email: "untrusted@attacker.com",
+      email_verified: true,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      iat: Math.floor(Date.now() / 1000),
+    });
+
+    await expect(
+      authenticateGoogleUser(unverifiedJwt, {
+        expectedClientId,
+        skipSignatureVerification: false,
+      })
+    ).rejects.toThrow(/signature verification failed/i);
+  });
 });
