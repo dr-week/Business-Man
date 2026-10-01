@@ -267,6 +267,10 @@
 .saved-research-import { position:relative; display:inline-flex; align-items:center; gap:6px; margin:10px 0 2px; padding:7px 10px; border:1px solid #414735; border-radius:5px; color:#d1b476; font-size:12px; cursor:pointer; }
 .saved-research-import input { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
 .saved-research-import:focus-within { outline:2px solid #d1b476; outline-offset:2px; }
+.saved-research-filter { display:flex; align-items:center; gap:8px; width:min(100%,320px); margin:8px 0 2px; padding:7px 9px; border:1px solid #414735; border-radius:5px; color:#aaa99b; }
+.saved-research-filter:focus-within { border-color:#d1b476; outline:2px solid #d1b476; outline-offset:2px; }
+.saved-research-filter input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:#d6d2c4; font:inherit; font-size:12px; }
+.saved-research-filter input::placeholder { color:#aaa99b; }
 .saved-research-actions { position:relative; flex:none; }
 .saved-research-actions > summary { cursor:pointer; padding:6px 9px; border:1px solid #414735; border-radius:5px; color:#d1b476; font-size:12px; list-style:none; }
 .saved-research-actions > summary::-webkit-details-marker { display:none; }

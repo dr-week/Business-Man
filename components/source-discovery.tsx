@@ -57,11 +57,13 @@ function exportCsv(items: ResearchOpportunity[], currency: string) {
 export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError, initialTopic, onOpenAnalysis, onOpenResearch = () => {} }: { view?: "research" | "analysis" | "economics" | "market" | "sources" | "starred" | "settings" | "profile"; onSaved: (lead: Lead) => void; onError: (message: string) => void; initialTopic?: string; onOpenAnalysis?: () => void; onOpenResearch?: () => void }) {
 
   const [savedRuns, setSavedRuns] = useState<{ id: string; schemaVersion: number; topic: string; geography: string; currency: string; createdAt: string }[]>([]);
+  const [savedRunFilter, setSavedRunFilter] = useState("");
   const [importingBackup, setImportingBackup] = useState(false);
   const [preparedBackup, setPreparedBackup] = useState<{ id: string; file: File } | null>(null);
   const [preparingBackupId, setPreparingBackupId] = useState("");
   const [restoringRun, setRestoringRun] = useState("");
   const [deletingRun, setDeletingRun] = useState("");
+  const filteredSavedRuns = savedRuns.filter((saved) => `${saved.topic} ${saved.geography}`.toLowerCase().includes(savedRunFilter.trim().toLowerCase()));
 
   const abort = useRef<AbortController | null>(null);
   const [stars, setStars] = useState<string[]>([]);
@@ -388,7 +390,10 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
     <details hidden={view !== "research" && view !== "analysis"} className="saved-research-history">
       <summary>Saved research ({savedRuns.length})</summary>
       <label className="saved-research-import"><Upload size={15} />{importingBackup ? "Importing backup…" : "Import backup"}<input type="file" accept="application/json,.json" disabled={importingBackup || busy} onChange={(event) => { void importResearchBackup(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} /></label>
-      {savedRuns.length ? <ul>{savedRuns.map((saved) => <li key={saved.id}>
+      {savedRuns.length > 3 && <label className="saved-research-filter"><Search size={14} /><span className="sr-only">Filter saved research by topic or location</span><input type="search" value={savedRunFilter} onChange={(event) => setSavedRunFilter(event.target.value)} placeholder="Filter topic or location" /></label>}
+      {savedRuns.length === 0 && <p>Run research while signed in to build your history.</p>}
+      {savedRuns.length > 0 && filteredSavedRuns.length === 0 && <p>No saved research matches “{savedRunFilter}”.</p>}
+      {filteredSavedRuns.length > 0 && <ul>{filteredSavedRuns.map((saved) => <li key={saved.id}>
         <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small></span>
         <button type="button" disabled={!!restoringRun || busy || saved.schemaVersion !== 1} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === 1 ? "Restore" : "Update needed"}</button>
         <details className="saved-research-actions" onToggle={(event) => { if (saved.schemaVersion === 1 && event.currentTarget.open && preparedBackup?.id !== saved.id && preparingBackupId !== saved.id) void prepareResearchBackup(saved.id); }}><summary>More</summary><div>
@@ -397,7 +402,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
           {saved.schemaVersion === 1 && <button type="button" disabled={preparingBackupId === saved.id || preparedBackup?.id !== saved.id} onClick={() => void shareResearchBackup(saved.id)}>{preparingBackupId === saved.id ? "Preparing share…" : "Share with another app"}</button>}
           <button type="button" disabled={!!deletingRun || !!restoringRun || busy} onClick={() => void deleteSavedRun(saved.id)}>{deletingRun === saved.id ? "Deleting…" : "Delete saved research"}</button>
         </div></details>
-      </li>)}</ul> : <p>Run research while signed in to build your history.</p>}
+      </li>)}</ul>}
     </details>
 
     <div hidden={view !== "research" || !!opportunities.length} className="research-intro">
