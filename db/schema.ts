@@ -93,7 +93,7 @@ export const researchRuns = sqliteTable("research_runs", {
   result: text("result", { mode: "json" }).notNull().$type<Record<string, unknown>>(),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
-  index("research_runs_owner_created_idx").on(table.ownerId, table.createdAt),
+  index("research_runs_owner_created_idx").on(table.ownerId, table.createdAt, table.id),
 ]);
 
 /** User-authored falsification checks attached to an archived opportunity. */

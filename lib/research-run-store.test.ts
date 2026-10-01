@@ -1,9 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import { drizzle } from "drizzle-orm/d1";
+import { getTableConfig } from "drizzle-orm/sqlite-core";
 import * as schema from "@/db/schema";
 import { listResearchRuns, parseResearchBackup, saveResearchRun } from "./research-run-store";
 
 describe("research run storage", () => {
+  it("indexes owner history in the same order used by list queries", () => {
+    const historyIndex = getTableConfig(schema.researchRuns).indexes.find(({ config }) => config.name === "research_runs_owner_created_idx");
+    expect(historyIndex?.config.columns.map((column) => "name" in column ? column.name : "")).toEqual(["owner_id", "created_at", "id"]);
+  });
+
   it("imports a supported backup as a new owner-scoped snapshot", () => {
     const row = parseResearchBackup({
       format: "businessman-research-run", formatVersion: 1, exportedAt: "2026-09-30T10:00:00.000Z",

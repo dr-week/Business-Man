@@ -64,6 +64,13 @@
       "when": 1790797331706,
       "tag": "0008_research_run_schema_version",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1790824244661,
+      "tag": "0009_research_run_history_order_index",
+      "breakpoints": true
     }
   ]
 }
