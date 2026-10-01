@@ -13,6 +13,7 @@ import { MarketingAutomationPanel } from "@/components/research/marketing-automa
 import { ResearchCollaborationPanel } from "@/components/research/research-collaboration-panel";
 import { System1TriageBadge, System1TriagePanel } from "@/components/research/system1-triage-panel";
 import { FinancialEditor, fields } from "@/components/research/financial-editor";
+import { IndiaMarketContext } from "@/components/research/india-market-context";
 import { independentSourceCount } from "@/lib/evidence-lineage";
 import type { FirstImpression } from "@/lib/first-impressions";
 
@@ -244,6 +245,8 @@ export function OpportunityDetailSection({
             </details>
           </details>
         )}
+
+        {view === "economics" && /\bindia\b/i.test(active.geography) && <IndiaMarketContext mode="lending" />}
 
         {view !== "economics" && firstImpressions[active.id] && (
           <section className="research-decision-review" aria-label="Decision review">

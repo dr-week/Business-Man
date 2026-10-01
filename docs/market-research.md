@@ -1,6 +1,10 @@
 # India market context
 
-`GET /api/market-research` fetches India’s latest available GDP and internet-use observations from the World Bank Indicators API. It requests both World Development Indicators in one semicolon-delimited call (`source=2`, `mrv=10`) and selects the latest non-null value for each. Each value includes its indicator, observation year, and individual source URL. The API requires no key; requests time out after eight seconds and successful responses can be cached for six hours. The [World Bank API supports multiple indicator codes per call](https://datahelpdesk.worldbank.org/knowledgebase/articles/898581).
+`GET /api/market-research` fetches India’s latest available GDP, internet-use, FDI, and lending-rate observations from the World Bank Indicators API. It requests all four series in one semicolon-delimited call (`source=2`, `mrv=10`) and selects the latest non-null value for each. Each value includes its indicator, observation year, and individual source URL. The API requires no key; requests time out after eight seconds and successful responses can be cached for six hours. The [World Bank API supports multiple indicator codes per call](https://datahelpdesk.worldbank.org/knowledgebase/articles/898581).
+
+The annual `FR.INR.LEND` rate is IMF-sourced economy-wide context, not a quote for a particular business or borrower; lending terms vary by creditworthiness and financing purpose ([indicator definition](https://databank.worldbank.org/metadataglossary/world-development-indicators/series/FR.INR.LEND)).
+
+India opportunities also show this rate in Economics as borrowing context. Do not substitute it for a lender quote or the user's financing assumption.
 
 Three live paired checks returned matching latest values and years for the old two-request path and combined request. Median observed latency was 32 ms for two parallel calls and 102 ms for one combined call, with wide variance; this change reduces request count, not proven response time.
 

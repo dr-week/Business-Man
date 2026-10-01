@@ -6,6 +6,7 @@ const indicators = {
   gdpCurrentUsd: { code: "NY.GDP.MKTP.CD", label: "GDP (current US$)" },
   internetUsersPercent: { code: "IT.NET.USER.ZS", label: "Individuals using the Internet (% of population)" },
   fdiNetInflowsUsd: { code: "BX.KLT.DINV.CD.WD", label: "Foreign direct investment, net inflows (current US$)" },
+  lendingRatePercent: { code: "FR.INR.LEND", label: "Lending interest rate (%)" },
 } as const;
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
@@ -51,7 +52,7 @@ async function fetchIndiaMarketContext() {
     source: "World Bank Indicators API",
     retrievedAt: new Date().toISOString(),
     metrics: Object.fromEntries(values),
-    caveat: "National GDP and internet-use rates are context only. They do not estimate this product’s addressable customers, willingness to pay, market demand, or revenue.",
+    caveat: "National indicators are context, not local demand. The annual lending rate is an economy-wide benchmark, not a quote for this business or borrower.",
   };
 }
 
