@@ -27,6 +27,7 @@ import { parseFirstImpressions, recordFirstImpression, type FirstImpression } fr
 import { RESEARCH_RUN_SCHEMA_VERSION } from "@/lib/research-run-version";
 import savedResearchStyles from "@/components/research/saved-research.module.scss";
 import { scheduleResearchSnapshot } from "@/lib/research-snapshot-cache";
+import { researchResultSummary } from "@/lib/research-result-summary";
 
 const Charts = dynamic(() => import("./research-charts"), { ssr: false });
 const MarketInspection = dynamic(
@@ -422,7 +423,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
       setSelected(null); setCompare([]); persist(next, data.opportunities, data.runId ?? null);
 
-      setProgress(data.opportunities.length ? data.opportunities.length + " findings grouped and qualified" : data.webResearch?.length ? data.webResearch.length + " web results ready to review; no scored leads yet" : "No findings; broaden the topic or location");
+      setProgress(researchResultSummary(data.opportunities, data.webResearch?.length ?? 0));
       void fetch("/api/hunt/research-runs?list=1", { cache: "no-store" })
         .then(async (history) => history.ok ? history.json() as Promise<{ runs?: typeof savedRuns }> : null)
         .then((history) => { if (Array.isArray(history?.runs)) setSavedRuns(history.runs); })

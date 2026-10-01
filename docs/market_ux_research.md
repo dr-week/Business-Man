@@ -63,3 +63,7 @@ Forum posts can describe a problem without proving demand in the requested place
 ## Saved research recovery
 
 [Dovetail](https://dovetail.com/pricing/) sells a searchable research repository (one project free; enterprise pricing by quote). [Airtable](https://support.airtable.com/articles/2277136852-airtable-plans-overview) sells shared record workflows (free tier; paid Team seats). Their offers show that retrieval and collaboration matter, but do not establish demand for this app. BUSINESSman now labels archive loading, sign-in, and request failure separately from a truly empty history, with a retry for failures. The bounded summary API remains the recovery path; full snapshots load when selected.
+
+## Discovery status
+
+[Similarweb](https://www.similarweb.com/corp/web/market-intelligence/) automates digital market and geographic trend views; [Dovetail](https://dovetail.com/solutions/research-repository/) links research insights to source evidence. BUSINESSman should label forum hits as source leads until buyer, location, alternatives, and costs are checked. The completion message now counts source leads separately from findings with enough evidence to score. An [India founder discussion](https://www.reddit.com/r/StartUpIndia/comments/1kduw06/market_research_in_india_sucks/) points to difficulty obtaining affordable local data, not proven willingness to pay for this app.
