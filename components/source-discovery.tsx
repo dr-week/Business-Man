@@ -17,7 +17,6 @@ import { OpportunityDetailSection } from "@/components/research/opportunity-deta
 
 import { recalculateOpportunity, researchInput, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity } from "@/lib/research-engine";
 import { downloadDossierReport } from "@/lib/dossier-report";
-import { downloadEvidenceCsv } from "@/lib/reporting/evidence-csv";
 import { parseSavedResearchBrief } from "@/lib/saved-research-brief";
 import { TRENDING_PROMPTS } from "@/lib/trending-prompts";
 import type { ResearchFocus, ResearchFocusSource } from "@/lib/research-focus";
@@ -85,7 +84,6 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   const [restoringRun, setRestoringRun] = useState("");
   const [deletingRun, setDeletingRun] = useState("");
   const [exportingBriefId, setExportingBriefId] = useState("");
-  const [exportingEvidenceId, setExportingEvidenceId] = useState("");
   const filteredSavedRuns = savedRuns.filter((saved) => `${saved.topic} ${saved.geography} ${saved.topOpportunity ?? ""} ${saved.topConfidence ?? ""}`.toLowerCase().includes(savedRunFilter.trim().toLowerCase()));
 
   const abort = useRef<AbortController | null>(null);
@@ -274,24 +272,6 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
     } catch (error) {
       onError(error instanceof Error ? error.message : "Could not export this research brief.");
     } finally { setExportingBriefId(""); }
-  }
-
-  async function downloadSavedEvidence(id: string) {
-    setExportingEvidenceId(id);
-    try {
-      const response = await fetch(`/api/hunt/research-runs/export?id=${encodeURIComponent(id)}`, { cache: "no-store" });
-      const body: unknown = await response.json();
-      if (!response.ok) {
-        const message = typeof body === "object" && body !== null && "error" in body && typeof body.error === "string"
-          ? body.error
-          : "Could not export evidence.";
-        throw new Error(message);
-      }
-      const brief = parseSavedResearchBrief(body);
-      downloadEvidenceCsv(brief.opportunities, brief.metadata);
-    } catch (error) {
-      onError(error instanceof Error ? error.message : "Could not export evidence.");
-    } finally { setExportingEvidenceId(""); }
   }
 
   async function refreshSavedRun(id: string) {
@@ -498,7 +478,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
                     {supported && <Menu.Item leftSection={<RefreshCw size={15} />} disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</Menu.Item>}
                     {supported && <Menu.Item component="a" href={`/api/hunt/research-runs/export?id=${encodeURIComponent(saved.id)}`} leftSection={<Download size={15} />}>Download backup</Menu.Item>}
                     {supported && <Menu.Item leftSection={<FileText size={15} />} disabled={exportingBriefId === saved.id} onClick={() => void downloadSavedBrief(saved.id)}>{exportingBriefId === saved.id ? "Preparing brief…" : "Download readable brief"}</Menu.Item>}
-                    {supported && <Menu.Item leftSection={<Download size={15} />} disabled={exportingEvidenceId === saved.id} onClick={() => void downloadSavedEvidence(saved.id)}>{exportingEvidenceId === saved.id ? "Preparing evidence…" : "Download evidence CSV"}</Menu.Item>}
+                    {supported && <Menu.Item component="a" href={`/api/hunt/research-runs/evidence?id=${encodeURIComponent(saved.id)}`} leftSection={<Download size={15} />}>Download evidence CSV</Menu.Item>}
                     {supported && <Menu.Item leftSection={<ExternalLink size={15} />} disabled={preparingBackupId === saved.id || !!restoringRun || busy} onClick={() => void (preparedBackup?.id === saved.id ? shareResearchBackup(saved.id) : prepareResearchBackup(saved.id))}>{preparingBackupId === saved.id ? "Preparing share…" : preparedBackup?.id === saved.id ? "Share with another app" : "Prepare share"}</Menu.Item>}
                     <Menu.Item color="red" leftSection={<Trash2 size={15} />} disabled={!!deletingRun || !!restoringRun || busy} onClick={() => void deleteSavedRun(saved.id)}>{deletingRun === saved.id ? "Deleting…" : "Delete saved research"}</Menu.Item>
                   </Menu.Dropdown>
