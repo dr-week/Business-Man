@@ -22,6 +22,16 @@ export const fields = [
 
 export type Field = typeof fields[number][0];
 
+export const quickKeys = ["price", "variableCost", "fixedCost", "baseVolume"] as const;
+
+export function summarizeQuickEvidence(assumptions: FinancialAssumptions) {
+  const missing = quickKeys.filter((key) => {
+    const assumption = assumptions[key];
+    return !assumption.sourceIds.length && !assumption.note.trim();
+  });
+  return { documented: quickKeys.length - missing.length, total: quickKeys.length, missing };
+}
+
 export function FinancialEditor({
   item,
   onChange,
@@ -39,7 +49,7 @@ export function FinancialEditor({
 
   const valid = calculateFinancials(draft) !== null;
   const benchmarks = priceBenchmarks(item.sources, draft.currency);
-  const quickKeys = ["price", "variableCost", "fixedCost", "baseVolume"] as const;
+  const quickEvidence = summarizeQuickEvidence(draft);
   const quickReady = quickKeys.every((key) => {
     const value = draft[key].value;
     return value !== null && Number.isFinite(value) && value >= 0 && (key !== "baseVolume" || Number.isInteger(value));
@@ -57,6 +67,12 @@ export function FinancialEditor({
       <section className={styles.quickScreen} aria-label="Quick investment screen">
         <h4>Quick screen</h4>
         <p>Start with four numbers for a base-month profit check. Add capital and low/high cases for payback analysis.</p>
+        <p className={styles.evidenceSummary} role="status" aria-live="polite">
+          <strong>{quickEvidence.documented}/{quickEvidence.total} assumptions documented</strong>
+          {quickEvidence.missing.length
+            ? ` · Add a source or rationale for: ${quickEvidence.missing.map((key) => fields.find(([field]) => field === key)?.[1]).join(", ")}.`
+            : " · All four assumptions have a source or rationale."}
+        </p>
         <div className="research-assumption-grid">
           {fields.filter(([field]) => quickKeys.includes(field as typeof quickKeys[number])).map(([field, label]) => (
             <fieldset key={field}>
