@@ -16,10 +16,12 @@ import { OpportunityDetailSection } from "@/components/research/opportunity-deta
 
 import { recalculateOpportunity, researchInput, type FinancialAssumptions, type ResearchInput, type ResearchOpportunity } from "@/lib/research-engine";
 import { downloadDossierReport } from "@/lib/dossier-report";
+import { parseSavedResearchBrief } from "@/lib/saved-research-brief";
 import { TRENDING_PROMPTS } from "@/lib/trending-prompts";
 import type { ResearchFocus, ResearchFocusSource } from "@/lib/research-focus";
 import type { WebResearchResult } from "@/lib/collectors/brave-search";
 import { independentSourceCount } from "@/lib/evidence-lineage";
+import { OpportunityComparison } from "@/components/research/opportunity-comparison";
 import { parseFirstImpressions, recordFirstImpression, type FirstImpression } from "@/lib/first-impressions";
 import { RESEARCH_RUN_SCHEMA_VERSION } from "@/lib/research-run-version";
 
@@ -73,6 +75,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   const [preparingBackupId, setPreparingBackupId] = useState("");
   const [restoringRun, setRestoringRun] = useState("");
   const [deletingRun, setDeletingRun] = useState("");
+  const [exportingBriefId, setExportingBriefId] = useState("");
   const filteredSavedRuns = savedRuns.filter((saved) => `${saved.topic} ${saved.geography}`.toLowerCase().includes(savedRunFilter.trim().toLowerCase()));
 
   const abort = useRef<AbortController | null>(null);
@@ -248,6 +251,24 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
     }
   }
 
+  async function downloadSavedBrief(id: string) {
+    setExportingBriefId(id);
+    try {
+      const response = await fetch(`/api/hunt/research-runs/export?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+      const body: unknown = await response.json();
+      if (!response.ok) {
+        const message = typeof body === "object" && body !== null && "error" in body && typeof body.error === "string"
+          ? body.error
+          : "Could not export this research brief.";
+        throw new Error(message);
+      }
+      const brief = parseSavedResearchBrief(body);
+      downloadDossierReport(brief.opportunities, brief.metadata);
+    } catch (error) {
+      onError(error instanceof Error ? error.message : "Could not export this research brief.");
+    } finally { setExportingBriefId(""); }
+  }
+
   async function refreshSavedRun(id: string) {
     setRestoringRun(id);
     try {
@@ -418,6 +439,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
         <details className="saved-research-actions" onToggle={(event) => { if (saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && event.currentTarget.open && preparedBackup?.id !== saved.id && preparingBackupId !== saved.id) void prepareResearchBackup(saved.id); }}><summary>More</summary><div>
           {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</button>}
           {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <a href={`/api/hunt/research-runs/export?id=${encodeURIComponent(saved.id)}`}>Download backup</a>}
+          {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={exportingBriefId === saved.id} onClick={() => void downloadSavedBrief(saved.id)}>{exportingBriefId === saved.id ? "Preparing brief…" : "Download readable brief"}</button>}
           {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={preparingBackupId === saved.id || preparedBackup?.id !== saved.id} onClick={() => void shareResearchBackup(saved.id)}>{preparingBackupId === saved.id ? "Preparing share…" : "Share with another app"}</button>}
           <button type="button" disabled={!!deletingRun || !!restoringRun || busy} onClick={() => void deleteSavedRun(saved.id)}>{deletingRun === saved.id ? "Deleting…" : "Delete saved research"}</button>
         </div></details>
@@ -525,7 +547,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
             {item.sources[0] && <a href={item.sources[0].url} target="_blank" rel="noreferrer" title="Open first source" aria-label={"Open source for " + item.name}><ExternalLink size={15} /></a>}
 
-            <button title={compare.includes(item.id) ? "Remove from comparison" : "Add to comparison"} aria-label={(compare.includes(item.id) ? "Remove " : "Compare ") + item.name} aria-pressed={compare.includes(item.id)} onClick={() => setCompare((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])}><GitCompareArrows size={15} /></button>
+            <button title={compare.includes(item.id) ? "Remove from comparison" : "Add to comparison"} aria-label={(compare.includes(item.id) ? "Remove " : "Compare ") + item.name} aria-pressed={compare.includes(item.id)} disabled={!compare.includes(item.id) && compare.length >= 4} onClick={() => setCompare((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : current.length < 4 ? [...current, item.id] : current)}><GitCompareArrows size={15} /></button>
 
           </td>
           <td data-label="Decision"><div className="research-first-impression" role="group" aria-label={`Decision for ${item.name}`}>{(["investigate", "watch", "pass"] as const).map((choice) => <button key={choice} type="button" aria-pressed={firstImpressions[item.id] === choice} onClick={() => setFirstImpression(item.id, choice)}>{choice === "pass" ? "Pass" : choice === "watch" ? "Watch" : "Investigate"}</button>)}</div></td>
@@ -541,8 +563,8 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
     {view === "economics" && !active && <p className="research-empty">Select a result in <button type="button" className="hunt-open" onClick={onOpenResearch}>Research</button>.</p>}
     {view === "market" && !active && <p className="research-empty">Select a result in <button type="button" className="hunt-open" onClick={onOpenResearch}>Research</button>.</p>}
     {view === "market" && active && <article className="research-analysis" aria-label="Local market"><header><h2>{active.name}</h2></header><MarketInspection key={active.id} opportunity={active} /></article>}
-    {view === "analysis" && compare.length > 0 && <section className="research-compare"><header><div><h3>Compare</h3></div><button type="button" className="research-compare-clear" onClick={() => setCompare([])}>Clear selection</button></header>
-      {compare.length > 1 ? <Charts kind="comparison" opportunities={opportunities.filter((item) => compare.includes(item.id))} currency={input?.currency ?? currency} /> : <p className="research-compare-hint">Select one more lead to compare them side by side.</p>}
+    {view === "analysis" && compare.length > 0 && <section className="research-compare"><header><div><h3>Compare · {compare.length}/4</h3></div><button type="button" className="research-compare-clear" onClick={() => setCompare([])}>Clear selection</button></header>
+      {compare.length > 1 ? <><OpportunityComparison opportunities={opportunities.filter((item) => compare.includes(item.id))} currency={input?.currency ?? currency} /><Charts kind="comparison" opportunities={opportunities.filter((item) => compare.includes(item.id))} currency={input?.currency ?? currency} /></> : <p className="research-compare-hint">Select one more opportunity.</p>}
     </section>}
 
     {(view === "analysis" || view === "economics" || !onOpenAnalysis) && active && input && (
