@@ -7,6 +7,7 @@ const indicators = {
   internetUsersPercent: { code: "IT.NET.USER.ZS", label: "Individuals using the Internet (% of population)" },
   fdiNetInflowsUsd: { code: "BX.KLT.DINV.CD.WD", label: "Foreign direct investment, net inflows (current US$)" },
 } as const;
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
 const observationSchema = z.object({
   date: z.string().regex(/^\d{4}$/),
@@ -36,7 +37,7 @@ async function latestObservations(codes: string[]) {
   return latest;
 }
 
-export async function collectIndiaMarketContext() {
+async function fetchIndiaMarketContext() {
   const entries = Object.entries(indicators);
   const latest = await latestObservations(entries.map(([, indicator]) => indicator.code));
   const values = entries.map(([key, indicator]) => [key, {
@@ -52,4 +53,20 @@ export async function collectIndiaMarketContext() {
     metrics: Object.fromEntries(values),
     caveat: "National GDP and internet-use rates are context only. They do not estimate this product’s addressable customers, willingness to pay, market demand, or revenue.",
   };
+}
+
+type IndiaMarketContext = Awaited<ReturnType<typeof fetchIndiaMarketContext>>;
+let cachedContext: { data: IndiaMarketContext; expiresAt: number } | null = null;
+let pendingRequest: Promise<IndiaMarketContext> | null = null;
+
+export function collectIndiaMarketContext() {
+  if (cachedContext && cachedContext.expiresAt > Date.now()) return Promise.resolve(cachedContext.data);
+  if (pendingRequest) return pendingRequest;
+  pendingRequest = fetchIndiaMarketContext()
+    .then((data) => {
+      cachedContext = { data, expiresAt: Date.now() + CACHE_TTL_MS };
+      return data;
+    })
+    .finally(() => { pendingRequest = null; });
+  return pendingRequest;
 }
