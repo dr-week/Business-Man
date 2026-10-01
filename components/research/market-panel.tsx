@@ -21,11 +21,13 @@ const statusLabels = {
   FUTURE_OPENING: "Future opening",
 } as const;
 
-export function MarketPanel({ opportunity, competitors, placesConfigured, footprint }: {
+export function MarketPanel({ opportunity, competitors, placesConfigured, footprint, checkedAt, onRefresh }: {
   opportunity: ResearchOpportunity;
   competitors: LocalCompetitor[];
   placesConfigured: boolean;
   footprint: CensusMarketSignal | null;
+  checkedAt: string;
+  onRefresh: () => void;
 }) {
   return <div className="research-detail-modules">
     <section className="research-detail-card research-local-competition" aria-label="Local competitors">
@@ -36,6 +38,8 @@ export function MarketPanel({ opportunity, competitors, placesConfigured, footpr
         {place.mapUrl && <a href={place.mapUrl} target="_blank" rel="noopener noreferrer" title={`Open ${place.name} on Google Maps`}>Map</a>}
       </li>)}</ul><small translate="no">Google Maps · candidate listings, not a market census</small></> :
         <p>{placesConfigured ? "No matching listings returned." : "Google Places is not configured."}</p>}
+      <small>Checked {new Date(checkedAt).toLocaleString()}</small>
+      <button className="research-submit" type="button" onClick={onRefresh}>Refresh listings</button>
       {footprint && <MarketFootprint value={footprint} />}
     </section>
     {/\bindia\b/i.test(opportunity.geography) && <IndiaMarketContext />}

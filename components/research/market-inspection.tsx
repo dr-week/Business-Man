@@ -6,7 +6,7 @@ import type { LocalCompetitor } from "@/lib/collectors/places";
 import type { CensusMarketSignal } from "@/lib/collectors/census-market";
 import { MarketPanel } from "./market-panel";
 
-type MarketResult = { competitors: LocalCompetitor[]; placesConfigured: boolean; footprint: CensusMarketSignal | null; error: string | null };
+type MarketResult = { competitors: LocalCompetitor[]; placesConfigured: boolean; footprint: CensusMarketSignal | null; error: string | null; checkedAt: string };
 
 export function MarketInspection({ opportunity }: { opportunity: ResearchOpportunity }) {
   const [result, setResult] = useState<MarketResult | null>(null);
@@ -40,5 +40,5 @@ export function MarketInspection({ opportunity }: { opportunity: ResearchOpportu
     <p>{error || "Market lookup unavailable."}</p>
     <button className="research-submit" type="button" onClick={() => { setLoading(true); setError(""); setAttempt((value) => (value ?? 0) + 1); }}>Retry market check</button>
   </div>;
-  return <>{error && <p role="status">{error}</p>}<MarketPanel opportunity={opportunity} competitors={result.competitors} placesConfigured={result.placesConfigured} footprint={result.footprint} /></>;
+  return <>{error && <p role="status">{error}</p>}<MarketPanel opportunity={opportunity} competitors={result.competitors} placesConfigured={result.placesConfigured} footprint={result.footprint} checkedAt={result.checkedAt} onRefresh={() => { setError(""); setAttempt((value) => (value ?? 0) + 1); }} /></>;
 }

@@ -12,7 +12,9 @@ it("looks up only the selected business when Market is requested", async () => {
   const response = await POST(new Request("http://localhost/api/hunt/market", { method: "POST", body: JSON.stringify({ topic: "Coconut shell products", geography: "Goa, India", industry: "Manufacturing" }) }));
   expect(response.status).toBe(200);
   expect(collectLocalCompetitors).toHaveBeenCalledWith({ topic: "Coconut shell products", geography: "Goa, India", key: "test-key" }, expect.any(AbortSignal));
-  expect((await response.json() as { competitors: unknown[] }).competitors).toHaveLength(1);
+  const result = await response.json() as { competitors: unknown[]; checkedAt: string };
+  expect(result.competitors).toHaveLength(1);
+  expect(Number.isNaN(Date.parse(result.checkedAt))).toBe(false);
 });
 
 it("rejects oversized or invalid market requests before fetching", async () => {

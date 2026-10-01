@@ -21,5 +21,5 @@ export async function POST(request: Request) {
     collectCensusMarket({ geography, industry, key: env.CENSUS_API_KEY }, request.signal),
   ]);
   if (request.signal.aborted) return Response.json({ error: "Market search cancelled." }, { status: 499 });
-  return Response.json({ competitors: places.value, placesConfigured: !!env.GOOGLE_PLACES_API_KEY, footprint, error: places.error }, { headers: { "Cache-Control": "no-store" } });
+  return Response.json({ competitors: places.value, placesConfigured: !!env.GOOGLE_PLACES_API_KEY, footprint, error: places.error, checkedAt: new Date().toISOString() }, { headers: { "Cache-Control": "no-store" } });
 }
