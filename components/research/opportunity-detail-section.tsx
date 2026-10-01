@@ -1,8 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useMemo } from "react";
 import { Download } from "lucide-react";
 import type { FinancialAssumptions, ResearchInput, ResearchOpportunity } from "@/lib/research-engine";
+import { evaluateSystem1Heuristics } from "@/lib/system1-decision-engine";
 import { ValidationPlan } from "@/components/research/validation-plan";
 import { ValidationChecklist } from "@/components/research/validation-checklist";
 import { EvidenceMap } from "@/components/research/evidence-map";
@@ -57,6 +59,7 @@ export function OpportunityDetailSection({
   onUpdateAssumptions: (id: string, assumptions: FinancialAssumptions) => void;
   onError: (message: string) => void;
 }) {
+  const triage = useMemo(() => evaluateSystem1Heuristics(active), [active]);
   const independentOrigins = independentSourceCount(active.sources);
   const contradictionCount = active.claims.filter((claim) => claim.direction === "contradicts").length;
   const baseVolume = active.assumptions.baseVolume.value;
@@ -72,7 +75,7 @@ export function OpportunityDetailSection({
           <small>{active.geography}</small>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <h2>{active.name}</h2>
-            <System1TriageBadge opportunity={active} />
+            <System1TriageBadge evaluation={triage} />
           </div>
         </div>
         <button
@@ -124,7 +127,7 @@ export function OpportunityDetailSection({
         )}
       </div>
 
-      {view !== "economics" && <System1TriagePanel opportunity={active} />}
+      {view !== "economics" && <System1TriagePanel evaluation={triage} />}
 
       <div className="research-detail-modules">
         {view !== "economics" && (
