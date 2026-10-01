@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { and, eq, lte, sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /**
@@ -136,6 +136,102 @@ export class InMemoryUserDatabaseAdapter implements UserDatabaseAdapter {
       }
     }
     return count;
+  }
+}
+
+/**
+ * Persistent adapter for Cloudflare D1 or standalone SQLite user database.
+ */
+export class DrizzleUserDatabaseAdapter implements UserDatabaseAdapter {
+  constructor(private db: any) {}
+
+  async upsertGoogleUser(data: {
+    googleSub: string;
+    email: string;
+    displayName: string;
+    pictureUrl?: string | null;
+  }): Promise<User> {
+    const now = new Date().toISOString();
+    const existing = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.googleSub, data.googleSub))
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      const u = existing[0];
+      await this.db
+        .update(users)
+        .set({
+          displayName: data.displayName,
+          pictureUrl: data.pictureUrl ?? u.pictureUrl,
+          lastLoginAt: now,
+        })
+        .where(eq(users.id, u.id));
+      return { ...u, displayName: data.displayName, pictureUrl: data.pictureUrl ?? u.pictureUrl, lastLoginAt: now };
+    }
+
+    const newUser: User = {
+      id: `usr_${crypto.randomUUID()}`,
+      googleSub: data.googleSub,
+      email: data.email.toLowerCase(),
+      displayName: data.displayName,
+      pictureUrl: data.pictureUrl ?? null,
+      role: "analyst",
+      createdAt: now,
+      lastLoginAt: now,
+    };
+
+    await this.db.insert(users).values(newUser);
+    return newUser;
+  }
+
+  async getUserById(id: string): Promise<User | null> {
+    const rows = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
+    return rows[0] ?? null;
+  }
+
+  async createSession(userId: string, sessionTokenHash: string, expiresAt: Date): Promise<UserSession> {
+    const session: UserSession = {
+      id: `sess_${crypto.randomUUID()}`,
+      sessionTokenHash,
+      userId,
+      expiresAt: expiresAt.toISOString(),
+      createdAt: new Date().toISOString(),
+    };
+    await this.db.insert(userSessions).values(session);
+    return session;
+  }
+
+  async getSessionByTokenHash(sessionTokenHash: string): Promise<{ session: UserSession; user: User } | null> {
+    const sessionRows = await this.db
+      .select()
+      .from(userSessions)
+      .where(eq(userSessions.sessionTokenHash, sessionTokenHash))
+      .limit(1);
+
+    const session = sessionRows[0];
+    if (!session) return null;
+
+    if (new Date(session.expiresAt) <= new Date()) {
+      await this.deleteSession(sessionTokenHash);
+      return null;
+    }
+
+    const user = await this.getUserById(session.userId);
+    if (!user) return null;
+
+    return { session, user };
+  }
+
+  async deleteSession(sessionTokenHash: string): Promise<void> {
+    await this.db.delete(userSessions).where(eq(userSessions.sessionTokenHash, sessionTokenHash));
+  }
+
+  async deleteExpiredSessions(): Promise<number> {
+    const nowIso = new Date().toISOString();
+    await this.db.delete(userSessions).where(lte(userSessions.expiresAt, nowIso));
+    return 0;
   }
 }
 

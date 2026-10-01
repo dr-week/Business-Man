@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import { InMemoryUserDatabaseAdapter, type UserDatabaseAdapter } from "./user-db";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { DrizzleUserDatabaseAdapter, InMemoryUserDatabaseAdapter, type UserDatabaseAdapter } from "./user-db";
 
 describe("Isolated User & Session Database Adapter", () => {
   let adapter: UserDatabaseAdapter;
@@ -139,5 +139,44 @@ describe("Isolated User & Session Database Adapter", () => {
     expect(await adapter.getSessionByTokenHash("hash_expired_1")).toBeNull();
     expect(await adapter.getSessionByTokenHash("hash_expired_2")).toBeNull();
     expect(await adapter.getSessionByTokenHash("hash_valid_1")).not.toBeNull();
+  });
+
+  it("supports Drizzle persistent adapter interface queries", async () => {
+    const mockDb = {
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      }),
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockResolvedValue([{ id: 1 }]),
+      }),
+      update: vi.fn().mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ id: 1 }]),
+        }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([{ id: 1 }]),
+      }),
+    };
+
+    const drizzleAdapter = new DrizzleUserDatabaseAdapter(mockDb);
+    const user = await drizzleAdapter.upsertGoogleUser({
+      googleSub: "sub_drizzle_1",
+      email: "drizzle@domain.in",
+      displayName: "Drizzle User",
+    });
+
+    expect(user.email).toBe("drizzle@domain.in");
+    expect(mockDb.insert).toHaveBeenCalled();
+
+    await drizzleAdapter.createSession(user.id, "token_hash_drizzle", new Date(Date.now() + 3600000));
+    expect(mockDb.insert).toHaveBeenCalledTimes(2);
+
+    await drizzleAdapter.deleteSession("token_hash_drizzle");
+    expect(mockDb.delete).toHaveBeenCalled();
   });
 });
