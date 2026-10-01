@@ -170,6 +170,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       setWebResearch(run.result.webResearch ?? []); setWebSearchConfigured(!!run.result.webSearchConfigured);
       setTopic(run.input.topic); setGeography(run.input.geography); setBudget(run.input.budget == null ? "" : String(run.input.budget));
       setPreparedBrief(run.result.query?.brief ?? ""); setInterpretation(run.result.query ?? null);
+      persist(run.input, run.result.opportunities, run.id);
       onError("");
     } catch (error) { onError(error instanceof Error ? error.message : "Could not restore saved research."); }
     finally { setRestoringRun(""); }
