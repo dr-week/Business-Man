@@ -436,11 +436,11 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       {filteredSavedRuns.length > 0 && <ul>{filteredSavedRuns.map((saved) => <li key={saved.id}>
         <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small></span>
         <button type="button" disabled={!!restoringRun || busy || saved.schemaVersion !== RESEARCH_RUN_SCHEMA_VERSION} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION ? "Restore" : "Update needed"}</button>
-        <details className="saved-research-actions" onToggle={(event) => { if (saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && event.currentTarget.open && preparedBackup?.id !== saved.id && preparingBackupId !== saved.id) void prepareResearchBackup(saved.id); }}><summary>More</summary><div>
+        <details className="saved-research-actions"><summary>More</summary><div>
           {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</button>}
           {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <a href={`/api/hunt/research-runs/export?id=${encodeURIComponent(saved.id)}`}>Download backup</a>}
           {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={exportingBriefId === saved.id} onClick={() => void downloadSavedBrief(saved.id)}>{exportingBriefId === saved.id ? "Preparing brief…" : "Download readable brief"}</button>}
-          {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={preparingBackupId === saved.id || preparedBackup?.id !== saved.id} onClick={() => void shareResearchBackup(saved.id)}>{preparingBackupId === saved.id ? "Preparing share…" : "Share with another app"}</button>}
+          {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={preparingBackupId === saved.id || !!restoringRun || busy} onClick={() => void (preparedBackup?.id === saved.id ? shareResearchBackup(saved.id) : prepareResearchBackup(saved.id))}>{preparingBackupId === saved.id ? "Preparing share…" : preparedBackup?.id === saved.id ? "Share with another app" : "Prepare share"}</button>}
           <button type="button" disabled={!!deletingRun || !!restoringRun || busy} onClick={() => void deleteSavedRun(saved.id)}>{deletingRun === saved.id ? "Deleting…" : "Delete saved research"}</button>
         </div></details>
       </li>)}</ul>}
