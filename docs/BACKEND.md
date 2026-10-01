@@ -6,7 +6,7 @@
 | `lib/bounded-cache.ts` | Owner-scoped research TTL/LRU and byte budget |
 | `app/api/hunt/research-runs/` | Owner-scoped archive of completed research runs |
 | `app/api/hunt/research-runs/[runId]/checks/` | Owner-scoped falsification questions and classified, dated outcomes |
-| `app/api/reporting/validation-summary/` | Owner-scoped validation and payment aggregates; six D1 reads use one batch |
+| `app/api/reporting/validation-summary/` | Owner-scoped validation/payment aggregates; six D1 reads in one batch, checked against `lib/reporting/validation-summary-schema.ts` before response |
 | `lib/counter-evidence.ts` | Validation and limits for counter-evidence records |
 | `lib/research-run-store.ts` | Owner-scoped run history, composite sort index, atomic save, and 20-run retention |
 | `lib/research-engine.ts` | Input schema, grouping, scoring |
@@ -25,6 +25,8 @@
 | `app/api/news/route.ts` | Independent RSS endpoint |
 
 Saved research stores `schema_version`; bump it only with a reader or migration for older snapshots.
+
+`GET /api/reporting/validation-summary` returns `{ savedResearchRuns, checks, buyerValidation, businessmanPaymentRecords, nextAction, generatedAt, note }`. The shared Zod schema validates both the API output and client input. Counts are owner-scoped saved records. Opportunity payment amounts are owner-reported and grouped by currency; BUSINESSman receipts come only from paid/fulfilled records, convert minor units to currency units, and are before refunds/provider fees. These records are directional evidence, not a market-demand estimate. Unauthenticated requests return `{ error }` with 401; database readiness errors return the same shape with 503.
 
 ## Research
 

@@ -2,6 +2,7 @@ import { and, count, eq, gt, inArray, sum } from "drizzle-orm";
 import { getDb } from "@/db";
 import { huntLeads, productRevenue, researchChecks, researchRuns } from "@/db/schema";
 import { apiError, ownerId } from "@/lib/hunt-api";
+import { validationSummarySchema } from "@/lib/reporting/validation-summary-schema";
 import { validationNextAction } from "@/lib/validation-next-action";
 
 const OUTCOMES = ["open", "supports", "disconfirms", "inconclusive"] as const;
@@ -42,7 +43,7 @@ export async function GET() {
       openChecks: outcomes.open, disconfirmingChecks: outcomes.disconfirms,
       paidPilotRecords: statuses.paid_pilot, repeatPurchases: statuses.repeat_purchase,
     });
-    return Response.json({
+    const payload = validationSummarySchema.safeParse({
       savedResearchRuns: runCount[0]?.total ?? 0,
       checks: { total: Object.values(outcomes).reduce((sum, value) => sum + value, 0), outcomes, evidenceKinds },
       buyerValidation: {
@@ -55,7 +56,9 @@ export async function GET() {
       nextAction,
       generatedAt: new Date().toISOString(),
       note: "Opportunity payments are owner-reported and unverified. BUSINESSman receipts are counted only after a signed Razorpay payment-link webhook; captured amounts are before refunds and provider fees.",
-    }, { headers: { "Cache-Control": "no-store" } });
+    });
+    if (!payload.success) return Response.json({ error: "Validation report data could not be prepared." }, { status: 500, headers: { "Cache-Control": "no-store" } });
+    return Response.json(payload.data, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return apiError(error); }
 }
 

@@ -2,29 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { RefreshCw, Share2 } from "lucide-react";
-import { z } from "zod";
+import { validationSummaryErrorSchema, validationSummarySchema, type ValidationSummary } from "@/lib/reporting/validation-summary-schema";
 
-const reportSchema = z.object({
-  savedResearchRuns: z.number().int().nonnegative(),
-  checks: z.object({
-    total: z.number().int().nonnegative(),
-    outcomes: z.object({ open: z.number().int().nonnegative(), supports: z.number().int().nonnegative(), disconfirms: z.number().int().nonnegative(), inconclusive: z.number().int().nonnegative() }),
-    evidenceKinds: z.object({ sourced_fact: z.number().int().nonnegative(), user_report: z.number().int().nonnegative(), estimate: z.number().int().nonnegative(), hypothesis: z.number().int().nonnegative() }),
-  }),
-  buyerValidation: z.object({
-    pilotOffers: z.number().int().nonnegative(),
-    paidPilotRecords: z.number().int().nonnegative(),
-    repeatPurchases: z.number().int().nonnegative(),
-    recordedAmountsByCurrency: z.array(z.object({ currency: z.string().length(3), amount: z.number().finite().nonnegative() })),
-  }),
-  businessmanPaymentRecords: z.array(z.object({ currency: z.string().length(3), capturedAmount: z.number().finite().nonnegative(), records: z.number().int().nonnegative() })),
-  nextAction: z.object({ title: z.string(), detail: z.string() }),
-  generatedAt: z.string().datetime().optional(),
-  note: z.string(),
-});
-type Report = z.infer<typeof reportSchema>;
-
-function createValidationBrief(report: Report) {
+function createValidationBrief(report: ValidationSummary) {
   const formatMoney = (amount: number, currency: string) => {
     try { return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount); }
     catch { return `${amount.toLocaleString("en-IN")} ${currency}`; }
@@ -72,7 +52,7 @@ function downloadValidationBrief(file: File) {
 }
 
 export function ValidationReport() {
-  const [report, setReport] = useState<Report | null>(null);
+  const [report, setReport] = useState<ValidationSummary | null>(null);
   const [error, setError] = useState("");
   const [shareStatus, setShareStatus] = useState("");
   const [attempt, setAttempt] = useState(0);
@@ -85,9 +65,9 @@ export function ValidationReport() {
     fetch("/api/reporting/validation-summary", { signal: controller.signal, cache: "no-store" })
       .then(async (response) => {
         const data: unknown = await response.json().catch(() => null);
-        const errorMessage = z.object({ error: z.string() }).safeParse(data).data?.error;
+        const errorMessage = validationSummaryErrorSchema.safeParse(data).data?.error;
         if (!response.ok) throw new Error(errorMessage ?? "Could not load validation report.");
-        const parsed = reportSchema.safeParse(data);
+        const parsed = validationSummarySchema.safeParse(data);
         if (!parsed.success) throw new Error("The report returned an invalid response.");
         if (!controller.signal.aborted) setReport(parsed.data);
       })
@@ -102,6 +82,7 @@ export function ValidationReport() {
     <button className="research-submit" type="button" onClick={() => setAttempt((value) => value + 1)}>Retry report</button>
   </section>;
   if (!report) return <p className="research-empty" role="status">Loading your validation report…</p>;
+  const loadedReport = report;
 
   const metrics = [
     ["Saved research runs", report.savedResearchRuns],
@@ -112,7 +93,7 @@ export function ValidationReport() {
 
   async function shareBrief() {
     setShareStatus("");
-    const file = createValidationBrief(report);
+    const file = createValidationBrief(loadedReport);
     if (typeof navigator.share !== "function" || !navigator.canShare?.({ files: [file] })) {
       downloadValidationBrief(file);
       setShareStatus("File sharing is unavailable here; the brief was downloaded.");
