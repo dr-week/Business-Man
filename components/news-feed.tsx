@@ -36,6 +36,7 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
   const [revision, setRevision] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [stars, setStars] = useState<string[]>([]);
+  const [savedOnly, setSavedOnly] = useState(false);
   const [preferences, setPreferences] = useState<UserPreferences>({
     geography: "Goa, India",
     currency: "INR",
@@ -103,6 +104,16 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
   }, [data, preferences]);
 
   const sourceNames = [...new Set(data?.items.map((item) => item.source) ?? [])];
+  const visible = useMemo(() => {
+    if (!savedOnly) return qualified;
+    const savedIds = new Set(stars);
+    return {
+      ...qualified,
+      forYou: qualified.forYou && savedIds.has(qualified.forYou.id) ? qualified.forYou : null,
+      demandNow: qualified.demandNow.filter((item) => savedIds.has(item.id)),
+      everydayBusiness: qualified.everydayBusiness.filter((item) => savedIds.has(item.id)),
+    };
+  }, [qualified, savedOnly, stars]);
 
   const renderCard = (item: PersonalizedOpportunity) => {
     const isExpanded = expandedId === item.id;
@@ -290,18 +301,31 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
               : "Recent business news, checked against your location and budget"}
           </small>
         </div>
-        <button
-          className="hunt-icon-action"
-          disabled={loading}
-          title="Refresh news"
-          aria-label="Refresh news"
-          onClick={() => {
-            setLoading(true);
-            setRevision((value) => value + 1);
-          }}
-        >
-          <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-        </button>
+        <div className="news-feed-actions">
+          <button
+            type="button"
+            className="news-saved-filter"
+            aria-pressed={savedOnly}
+            onClick={() => setSavedOnly((value) => !value)}
+            title={savedOnly ? "Show all opportunities" : "Show saved opportunities"}
+          >
+            <Star size={14} fill={savedOnly ? "currentColor" : "none"} />
+            <span>Saved</span>
+            {stars.length > 0 && <small>{stars.length}</small>}
+          </button>
+          <button
+            className="hunt-icon-action"
+            disabled={loading}
+            title="Refresh news"
+            aria-label="Refresh news"
+            onClick={() => {
+              setLoading(true);
+              setRevision((value) => value + 1);
+            }}
+          >
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
       </header>
 
       <div role="status" className="news-feed-status">
@@ -315,7 +339,7 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
       )}
 
       {/* SECTION 1: FOR YOU */}
-      {qualified.forYou && (
+      {visible.forYou && (
         <section className="news-section news-section-foryou" aria-label="For You featured opportunity">
           <div className="news-section-header">
             <span className="news-section-badge">
@@ -338,15 +362,15 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
               </button>
             )}
           </div>
-          {renderCard(qualified.forYou)}
+          {renderCard(visible.forYou)}
         </section>
       )}
 
       {/* SECTION DIVIDER WITH SUBTLE IDLE ACCENT */}
-      {qualified.forYou && qualified.demandNow.length > 0 && <div className="news-section-divider" />}
+      {visible.forYou && visible.demandNow.length > 0 && <div className="news-section-divider" />}
 
       {/* SECTION 2: DEMAND NOW */}
-      {qualified.demandNow.length > 0 && (
+      {visible.demandNow.length > 0 && (
         <section className="news-section news-section-demand" aria-label="Current buyer demand signals">
           <div className="news-section-header">
             <span className="news-section-badge demand-badge">
@@ -355,17 +379,17 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
             </span>
             <span className="news-section-subtitle">Buyer requests with purchase details in the source</span>
           </div>
-          <div className="news-cards-grid">{qualified.demandNow.map(renderCard)}</div>
+          <div className="news-cards-grid">{visible.demandNow.map(renderCard)}</div>
         </section>
       )}
 
       {/* SECTION DIVIDER WITH SUBTLE IDLE ACCENT */}
-      {qualified.demandNow.length > 0 && qualified.everydayBusiness.length > 0 && (
+      {visible.demandNow.length > 0 && visible.everydayBusiness.length > 0 && (
         <div className="news-section-divider" />
       )}
 
       {/* SECTION 3: EVERYDAY BUSINESS */}
-      {qualified.everydayBusiness.length > 0 && (
+      {visible.everydayBusiness.length > 0 && (
         <section className="news-section news-section-everyday" aria-label="News to investigate">
           <div className="news-section-header">
             <span className="news-section-badge everyday-badge">
@@ -374,15 +398,15 @@ export function NewsFeedPanel({ onResearch, onNavigateProfile }: NewsFeedPanelPr
             </span>
             <span className="news-section-subtitle">Recurring needs with linked evidence; verify locally</span>
           </div>
-          <div className="news-cards-grid">{qualified.everydayBusiness.map(renderCard)}</div>
+          <div className="news-cards-grid">{visible.everydayBusiness.map(renderCard)}</div>
         </section>
       )}
 
       {!loading &&
         !error &&
-        !qualified.forYou &&
-        !qualified.demandNow.length &&
-        !qualified.everydayBusiness.length && <p className="news-feed-empty">No dispatches available.</p>}
+        !visible.forYou &&
+        !visible.demandNow.length &&
+        !visible.everydayBusiness.length && <p className="news-feed-empty">{savedOnly ? "No saved opportunities." : "No dispatches available."}</p>}
     </section>
   );
 }

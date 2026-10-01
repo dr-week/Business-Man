@@ -423,6 +423,10 @@
 .news-feed-explainer { margin:0 0 18px; max-width:70ch; color:#aaa99b; font-size:12px; line-height:1.6; }
 .news-feed-notice { display:block; color:#a18758; font-size:11px; margin-bottom:14px; }
 .news-feed-empty { font-size:12px; color:#787d6d; padding:24px 0; text-align:center; }
+.news-feed-actions { display:flex; align-items:center; gap:8px; }
+.news-saved-filter { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 10px; border:1px solid #454936; border-radius:7px; color:var(--muted); font-size:12px; }
+.news-saved-filter[aria-pressed="true"] { color:var(--gold); border-color:var(--gold); background:#292d23; }
+.news-saved-filter small { font-variant-numeric:tabular-nums; }
 
 /* Personalized Sections */
 .news-section { display:grid; gap:10px; margin-bottom:18px; }

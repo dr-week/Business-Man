@@ -1,0 +1,35 @@
+.quickScreen {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #414735;
+  border-radius: 7px;
+  background: #171a14;
+
+  h4 { margin: 0; font-size: 13px; }
+  > p { margin: 7px 0; color: #aaa99b; font-size: 11px; line-height: 1.5; }
+}
+
+.quickResult {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  background: #22271d;
+
+  span, small { color: #aaa99b; font-size: 11px; }
+  strong { font-size: 17px; font-variant-numeric: tabular-nums; }
+}
+
+.advancedFields {
+  margin: 12px 0;
+
+  > summary, .evidenceDetails > summary { cursor: pointer; color: #d1b476; font-size: 12px; }
+  > p { color: #aaa99b; font-size: 11px; line-height: 1.5; }
+}
+
+.evidenceDetails {
+  grid-column: 1 / -1;
+
+  > summary { padding: 3px 0; }
+}
