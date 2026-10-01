@@ -50,7 +50,9 @@ describe("research run storage", () => {
       format: "businessman-research-run", formatVersion: 1,
       run: {
         schemaVersion: 1, topic: "Hotel service", geography: "Goa, India", currency: "INR", createdAt: "2026-09-20T10:00:00.000Z",
-        input: { topic: "Hotel service", geography: "Goa, India", currency: "INR", budget: null }, result: { opportunities: [opportunity] },
+        input: { topic: "Hotel service", geography: "Goa, India", currency: "INR", budget: null }, result: {
+          opportunities: [opportunity], webResearch: [{ title: "Public source", url: "https://example.com/report", snippet: "A source link." }],
+        },
       },
     };
     expect(() => parseResearchBackup(backup, "owner-1")).not.toThrow();
@@ -59,6 +61,12 @@ describe("research run storage", () => {
     expect(() => parseResearchBackup(backup, "owner-1")).toThrow("Backup format is invalid");
     opportunity.claims[0].sourceIds = ["source-1"];
     opportunity.factors[0].evidenceIds = ["missing-claim"];
+    expect(() => parseResearchBackup(backup, "owner-1")).toThrow("Backup format is invalid");
+    opportunity.factors[0].evidenceIds = ["claim-1"];
+    opportunity.sources[0].url = "javascript:alert(1)";
+    expect(() => parseResearchBackup(backup, "owner-1")).toThrow("Backup format is invalid");
+    opportunity.sources[0].url = "https://example.com/data";
+    backup.run.result.webResearch[0].url = "data:text/html,unsafe";
     expect(() => parseResearchBackup(backup, "owner-1")).toThrow("Backup format is invalid");
   });
 

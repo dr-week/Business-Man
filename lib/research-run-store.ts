@@ -8,9 +8,13 @@ const MAX_RETAINED_RUNS = 20;
 const MAX_RUN_BYTES = 1_900_000;
 export const RESEARCH_RUN_SCHEMA_VERSION = 1;
 const evidenceId = z.string().min(1).max(200);
+const externalWebUrl = z.string().url().max(2000).refine((value) => {
+  try { return ["http:", "https:"].includes(new URL(value).protocol); }
+  catch { return false; }
+}, "Evidence URL must use HTTP or HTTPS");
 const sourceSignal = z.object({
   id: evidenceId, provider: z.string().min(1).max(200), title: z.string().min(1).max(1000),
-  url: z.string().url().max(2000), publishedAt: z.string(), retrievedAt: z.string(),
+  url: externalWebUrl, publishedAt: z.string(), retrievedAt: z.string(),
 }).passthrough();
 const claim = z.object({
   id: evidenceId, text: z.string().min(1).max(5000), direction: z.enum(["supports", "contradicts", "context"]), sourceIds: z.array(evidenceId).min(1).max(200),
@@ -49,7 +53,7 @@ const researchBackup = z.object({
     result: z.object({
       opportunities: z.array(importedOpportunity).max(200), query: z.record(z.string(), z.unknown()).optional(),
       providerErrors: z.array(z.string().max(300)).optional(),
-      webResearch: z.array(z.object({ title: z.string().max(240), url: z.string().url().max(2000), snippet: z.string().max(600) })).max(8).optional(),
+      webResearch: z.array(z.object({ title: z.string().max(240), url: externalWebUrl, snippet: z.string().max(600) })).max(8).optional(),
       webSearchConfigured: z.boolean().optional(),
     }).passthrough(),
   }).passthrough(),
