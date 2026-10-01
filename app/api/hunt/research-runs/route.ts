@@ -11,8 +11,11 @@ export async function POST(request: Request) {
   try {
     const value = await readLimitedJson(request, 1_900_000);
     const run = parseResearchBackup(value, owner);
-    await saveResearchRun(getDb(), run);
-    return Response.json({ id: run.id }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    const db = getDb();
+    await saveResearchRun(db, run);
+    let runs;
+    try { runs = await listResearchRuns(db, owner); } catch { /* The import succeeded; history can be reloaded later. */ }
+    return Response.json({ id: run.id, runs }, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof SyntaxError || (error instanceof Error && (error.message.includes("too large") || error.message.includes("Empty response")))) {
       return Response.json({ error: "Backup is invalid or exceeds the 1.9 MB limit." }, { status: 400 });

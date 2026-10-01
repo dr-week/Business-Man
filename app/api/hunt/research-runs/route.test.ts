@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  getDb: vi.fn(), ownerId: vi.fn(), apiError: vi.fn(), getResearchRun: vi.fn(),
+  getDb: vi.fn(), ownerId: vi.fn(), apiError: vi.fn(), getResearchRun: vi.fn(), listResearchRuns: vi.fn(),
   parseResearchBackup: vi.fn(), saveResearchRun: vi.fn(),
 }));
 
 vi.mock("@/db", () => ({ getDb: mocks.getDb }));
 vi.mock("@/lib/hunt-api", () => ({ apiError: mocks.apiError, isCrossOrigin: vi.fn(() => false), ownerId: mocks.ownerId }));
 vi.mock("@/lib/research-run-store", () => ({
-  getLatestResearchRun: vi.fn(), getResearchRun: mocks.getResearchRun, listResearchRuns: vi.fn(),
+  getLatestResearchRun: vi.fn(), getResearchRun: mocks.getResearchRun, listResearchRuns: mocks.listResearchRuns,
   parseResearchBackup: mocks.parseResearchBackup, saveResearchRun: mocks.saveResearchRun,
   RESEARCH_RUN_SCHEMA_VERSION: 1,
 }));
@@ -20,6 +20,7 @@ describe("saved research backup import", () => {
     vi.clearAllMocks();
     mocks.ownerId.mockResolvedValue("owner-1");
     mocks.getDb.mockReturnValue({ database: true });
+    mocks.listResearchRuns.mockResolvedValue([{ id: "new-run", schemaVersion: 1, topic: "Cafe demand", geography: "Goa, India", currency: "INR", createdAt: "2026-09-30T10:00:00.000Z" }]);
   });
 
   it("requires sign-in before parsing an uploaded backup", async () => {
@@ -39,8 +40,9 @@ describe("saved research backup import", () => {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(backup),
     }));
     expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ id: "new-run" });
+    expect(await response.json()).toEqual({ id: "new-run", runs: [{ id: "new-run", schemaVersion: 1, topic: "Cafe demand", geography: "Goa, India", currency: "INR", createdAt: "2026-09-30T10:00:00.000Z" }] });
     expect(mocks.parseResearchBackup).toHaveBeenCalledWith(backup, "owner-1");
     expect(mocks.saveResearchRun).toHaveBeenCalledWith({ database: true }, imported);
+    expect(mocks.listResearchRuns).toHaveBeenCalledWith({ database: true }, "owner-1");
   });
 });

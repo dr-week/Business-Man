@@ -30,6 +30,15 @@ const MarketInspection = dynamic(
 );
 
 const storageKey = "businessman.research.v2";
+type SavedRunSummary = { id: string; schemaVersion: number; topic: string; geography: string; currency: string; createdAt: string };
+
+function isSavedRunSummary(value: unknown): value is SavedRunSummary {
+  if (typeof value !== "object" || value === null) return false;
+  const run = value as Partial<SavedRunSummary>;
+  return typeof run.id === "string" && Number.isInteger(run.schemaVersion) && typeof run.topic === "string" &&
+    typeof run.geography === "string" && typeof run.currency === "string" && typeof run.createdAt === "string" &&
+    Number.isFinite(Date.parse(run.createdAt));
+}
 
 const money = (value: number | null | undefined, currency: string) => value == null ? "â€”" : new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
 
@@ -57,7 +66,7 @@ function exportCsv(items: ResearchOpportunity[], currency: string) {
 
 export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError, initialTopic, onOpenAnalysis, onOpenResearch = () => {} }: { view?: "research" | "analysis" | "economics" | "market" | "sources" | "starred" | "settings" | "profile"; onSaved: (lead: Lead) => void; onError: (message: string) => void; initialTopic?: string; onOpenAnalysis?: () => void; onOpenResearch?: () => void }) {
 
-  const [savedRuns, setSavedRuns] = useState<{ id: string; schemaVersion: number; topic: string; geography: string; currency: string; createdAt: string }[]>([]);
+  const [savedRuns, setSavedRuns] = useState<SavedRunSummary[]>([]);
   const [savedRunFilter, setSavedRunFilter] = useState("");
   const [importingBackup, setImportingBackup] = useState(false);
   const [preparedBackup, setPreparedBackup] = useState<{ id: string; file: File } | null>(null);
@@ -196,10 +205,14 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       if (!response.ok || typeof body !== "object" || body === null || !("id" in body) || typeof body.id !== "string") {
         throw new Error(typeof body === "object" && body !== null && "error" in body && typeof body.error === "string" ? body.error : "Could not import this backup.");
       }
-      const history = await fetch("/api/hunt/research-runs?list=1", { cache: "no-store" });
-      if (history.ok) {
-        const data: unknown = await history.json();
-        if (typeof data === "object" && data !== null && "runs" in data && Array.isArray(data.runs)) setSavedRuns(data.runs as typeof savedRuns);
+      const importedRuns = "runs" in body && Array.isArray(body.runs) && body.runs.length <= 20 && body.runs.every(isSavedRunSummary) ? body.runs : null;
+      if (importedRuns) setSavedRuns(importedRuns);
+      else {
+        const history = await fetch("/api/hunt/research-runs?list=1", { cache: "no-store" });
+        if (history.ok) {
+          const data: unknown = await history.json();
+          if (typeof data === "object" && data !== null && "runs" in data && Array.isArray(data.runs) && data.runs.length <= 20 && data.runs.every(isSavedRunSummary)) setSavedRuns(data.runs);
+        }
       }
       await restoreSavedRun(body.id);
     } catch (error) {
