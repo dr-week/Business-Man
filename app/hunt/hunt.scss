@@ -185,6 +185,10 @@
 .research-decision-strip span { color:#aaa99b; font-size:11px; }
 .research-decision-strip strong { color:#eeeae0; font-size:20px; font-variant-numeric:tabular-nums; }
 .research-decision-strip p { grid-column:1/-1; margin:0; color:#aaa99b; font-size:11px; }
+.research-validation-next-action { display:grid; gap:6px; margin:12px 0; padding:12px; border:1px solid #454936; border-left:3px solid var(--gold); border-radius:8px; background:#171a14; }
+.research-validation-next-action > small { color:var(--muted); font-size:11px; }
+.research-validation-next-action > strong { color:#eeeae0; font-size:14px; }
+.research-validation-next-action > p { margin:0; color:#c5c7ba; font-size:12px; line-height:1.5; }
 .research-results > header,.research-analysis > header { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:18px 20px; }
 .research-results { min-width:0; overflow:hidden; }
 .research-results .hunt-table-scroll { max-width:100%; overflow-x:auto; }

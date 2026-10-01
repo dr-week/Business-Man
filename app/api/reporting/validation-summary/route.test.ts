@@ -35,7 +35,7 @@ describe("validation reporting aggregates", () => {
 
   it("counts paid-pilot statuses separately from repeat purchases while summing both payments", async () => {
     const response = await GET();
-    const report = await response.json() as { buyerValidation: Record<string, unknown>; businessmanPaymentRecords: unknown[] };
+    const report = await response.json() as { buyerValidation: Record<string, unknown>; businessmanPaymentRecords: unknown[]; nextAction: { title: string; detail: string } };
 
     expect(response.status).toBe(200);
     expect(report.buyerValidation).toMatchObject({
@@ -45,5 +45,23 @@ describe("validation reporting aggregates", () => {
       recordedAmountsByCurrency: [{ currency: "INR", amount: 12500 }],
     });
     expect(report.businessmanPaymentRecords).toEqual([{ currency: "INR", capturedAmount: 99, records: 1 }]);
+    expect(report.nextAction.title).toBe("Review delivery economics before scaling");
+  });
+
+  it("prioritizes unresolved evidence before any scale-up action", async () => {
+    const db = mocks.getDb();
+    db.batch.mockResolvedValueOnce([
+      [{ total: 0 }],
+      [{ key: "open", total: 2 }, { key: "disconfirms", total: 1 }],
+      [], [], [], [],
+    ]);
+
+    const response = await GET();
+    const report = await response.json() as { nextAction: { title: string; detail: string } };
+
+    expect(report.nextAction).toMatchObject({
+      title: "Resolve open buyer checks",
+      detail: "Record the result, evidence type, and source for 2 open checks.",
+    });
   });
 });

@@ -2,6 +2,7 @@ import { and, count, eq, gt, inArray, sum } from "drizzle-orm";
 import { getDb } from "@/db";
 import { huntLeads, productRevenue, researchChecks, researchRuns } from "@/db/schema";
 import { apiError, ownerId } from "@/lib/hunt-api";
+import { validationNextAction } from "@/lib/validation-next-action";
 
 const OUTCOMES = ["open", "supports", "disconfirms", "inconclusive"] as const;
 const EVIDENCE_KINDS = ["sourced_fact", "user_report", "estimate", "hypothesis"] as const;
@@ -37,6 +38,10 @@ export async function GET() {
     const outcomes = aggregate(outcomeRows, OUTCOMES);
     const evidenceKinds = aggregate(evidenceRows, EVIDENCE_KINDS);
     const statuses = aggregate(leadStatuses, ["pilot_offered", "paid_pilot", "repeat_purchase"]);
+    const nextAction = validationNextAction({
+      openChecks: outcomes.open, disconfirmingChecks: outcomes.disconfirms,
+      paidPilotRecords: statuses.paid_pilot, repeatPurchases: statuses.repeat_purchase,
+    });
     return Response.json({
       savedResearchRuns: runCount[0]?.total ?? 0,
       checks: { total: Object.values(outcomes).reduce((sum, value) => sum + value, 0), outcomes, evidenceKinds },
@@ -47,6 +52,7 @@ export async function GET() {
         recordedAmountsByCurrency: paymentRows.map((row) => ({ currency: row.currency, amount: Number(row.amount ?? 0) })),
       },
       businessmanPaymentRecords: productPayments.map((row) => ({ currency: row.currency, capturedAmount: Number(row.amountMinor ?? 0) / 100, records: row.records })),
+      nextAction,
       generatedAt: new Date().toISOString(),
       note: "Opportunity payments are owner-reported and unverified. BUSINESSman receipts are counted only after a signed Razorpay payment-link webhook; captured amounts are before refunds and provider fees.",
     }, { headers: { "Cache-Control": "no-store" } });
