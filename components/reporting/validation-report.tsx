@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Share2 } from "lucide-react";
+import { RefreshCw, Share2 } from "lucide-react";
 import { z } from "zod";
 
 const reportSchema = z.object({
@@ -76,11 +76,12 @@ export function ValidationReport() {
   const [error, setError] = useState("");
   const [shareStatus, setShareStatus] = useState("");
   const [attempt, setAttempt] = useState(0);
+  const [refreshing, setRefreshing] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
-    setReport(null);
     setError("");
+    setRefreshing(true);
     fetch("/api/reporting/validation-summary", { signal: controller.signal, cache: "no-store" })
       .then(async (response) => {
         const data: unknown = await response.json().catch(() => null);
@@ -90,11 +91,12 @@ export function ValidationReport() {
         if (!parsed.success) throw new Error("The report returned an invalid response.");
         if (!controller.signal.aborted) setReport(parsed.data);
       })
-      .catch((cause) => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Could not load validation report."); });
+      .catch((cause) => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Could not load validation report."); })
+      .finally(() => { if (!controller.signal.aborted) setRefreshing(false); });
     return () => controller.abort();
   }, [attempt]);
 
-  if (error) return <section className="research-report-state" role="alert">
+  if (error && !report) return <section className="research-report-state" role="alert">
     <p>{error}</p>
     {error.includes("Sign in") && <a href="/signin-with-chatgpt?return_to=%2Fhunt">Sign in</a>}
     <button className="research-submit" type="button" onClick={() => setAttempt((value) => value + 1)}>Retry report</button>
@@ -127,9 +129,11 @@ export function ValidationReport() {
   }
 
   return <section aria-label="Validation reporting">
+    {error && <p className="research-report-state" role="alert">{error} Showing the last successfully loaded report.</p>}
     <div className="research-report-actions">
       <p>Share a compact snapshot of research activity, buyer checks, and payment signals. The export includes evidence limits.</p>
       <div>
+        <button className="research-submit" type="button" onClick={() => setAttempt((value) => value + 1)} disabled={refreshing}><RefreshCw size={15} /> {refreshing ? "Refreshing…" : "Refresh report"}</button>{" "}
         <button className="research-submit" type="button" onClick={shareBrief}><Share2 size={15} /> Share brief</button>{" "}
         <button className="research-submit" type="button" onClick={() => downloadValidationBrief(createValidationBrief(report))}>Download brief</button>
       </div>
