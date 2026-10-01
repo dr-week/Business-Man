@@ -7,6 +7,23 @@ const source = (id: string, title: string, url = `https://example.com/${id}`): S
   publishedAt: "2026-01-01", retrievedAt: "2026-09-29", comments: 1,
 });
 
+const referenceGrouping = (sources: SourceSignal[]) => {
+  const noise = new Set("about after again anyone best business can could does error errors find for from have help how into issue issues looking manage managed management managing need problem problems should solve solving solution solutions that the there these this track tracked tracking what when where which with would your".split(" "));
+  const terms = (title: string) => new Set((title.toLowerCase().replace(/^(?:ask hn|show hn)[:?\s-]*/i, "").match(/[a-z0-9]{4,}/g) ?? []).map((word) => word.length > 4 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word).filter((word) => !noise.has(word)));
+  const groups: SourceSignal[][] = [];
+  for (const item of sources.slice(0, 500)) {
+    const itemTerms = terms(item.title);
+    const group = groups.find((items) => {
+      const firstTerms = terms(items[0].title);
+      if (firstTerms.size < 2 || itemTerms.size < 2) return false;
+      const shared = [...firstTerms].filter((word) => itemTerms.has(word)).length;
+      return shared >= 2 && shared / Math.max(firstTerms.size, itemTerms.size) >= 0.6;
+    });
+    if (group) group.push(item); else groups.push([item]);
+  }
+  return groups;
+};
+
 describe("source grouping", () => {
   it("merges different wording for the same problem and retains independent links", () => {
     const groups = groupSources([
@@ -57,5 +74,15 @@ describe("source grouping", () => {
     const groups = groupSources(items);
     expect(groups.flat()).toHaveLength(500);
     expect(groups.flat().at(-1)?.id).toBe("499");
+  });
+  it("matches exhaustive grouping while blocking unrelated titles", () => {
+    const items = Array.from({ length: 500 }, (_, index) => {
+      const group = Math.floor(index / 5);
+      const letters = (value: number) => String.fromCharCode(97 + Math.floor(value / 26), 97 + value % 26);
+      return source(String(index), `segment${letters(group)} friction${letters(group)} case${letters(index)}`);
+    });
+    expect(groupSources(items).map((group) => group.map(({ id }) => id))).toEqual(
+      referenceGrouping(items).map((group) => group.map(({ id }) => id)),
+    );
   });
 });

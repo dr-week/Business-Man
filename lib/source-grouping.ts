@@ -6,8 +6,7 @@ function terms(title: string): Set<string> {
   return new Set((title.toLowerCase().replace(/^(?:ask hn|show hn)[:?\s-]*/i, "").match(/[a-z0-9]{4,}/g) ?? [])
     .map(singular).filter((word) => !noise.has(word)));
 }
-function sameProblem(left: SourceSignal, right: SourceSignal): boolean {
-  const a = terms(left.title), b = terms(right.title);
+function sameProblem(a: Set<string>, b: Set<string>): boolean {
   if (a.size < 2 || b.size < 2) return false;
   const shared = [...a].filter((word) => b.has(word)).length;
   return shared >= 2 && shared / Math.max(a.size, b.size) >= 0.6;
@@ -36,9 +35,26 @@ export function groupSources(sources: SourceSignal[]): SourceSignal[][] {
     if (!unique.has(key)) unique.set(key, source);
   }
   const groups: SourceSignal[][] = [];
+  const groupTerms: Set<string>[] = [];
+  const groupsByTerm = new Map<string, number[]>();
   for (const source of unique.values()) {
-    const group = groups.find((items) => sameProblem(items[0], source));
-    if (group) group.push(source); else groups.push([source]);
+    const sourceTerms = terms(source.title);
+    const candidates = new Set<number>();
+    for (const term of sourceTerms) for (const index of groupsByTerm.get(term) ?? []) candidates.add(index);
+    let match = -1;
+    for (const index of [...candidates].sort((a, b) => a - b)) {
+      if (sameProblem(groupTerms[index], sourceTerms)) { match = index; break; }
+    }
+    if (match >= 0) groups[match].push(source);
+    else {
+      const index = groups.length;
+      groups.push([source]);
+      groupTerms.push(sourceTerms);
+      for (const term of sourceTerms) {
+        const posting = groupsByTerm.get(term);
+        if (posting) posting.push(index); else groupsByTerm.set(term, [index]);
+      }
+    }
   }
   return groups;
 }
