@@ -5,6 +5,7 @@ const source = z.object({
   id: z.string().max(100), provider: z.string().max(100), kind: z.enum(["discussion", "official", "buyer", "supplier"]).optional(), authorId: z.string().max(200).optional(), title: z.string().max(240), excerpt: z.string().max(1200),
   url: z.string().url().refine((url) => new URL(url).protocol === "https:"), publishedAt: z.string().max(40),
   retrievedAt: z.string().datetime({ offset: true }),
+  locality: z.object({ place: z.string().trim().min(2).max(100), basis: z.literal("source-stated") }).strict().optional(),
   engagement: z.object({ metric: z.enum(["comments", "answers"]), count: z.number().int().nonnegative() }).optional(),
   comments: z.number().int().nonnegative().optional(),
   facts: z.object({ tables: z.array(z.array(z.string().max(180)).max(6)).max(30), products: z.array(z.object({ name: z.string().max(200), price: z.string().max(40), currency: z.string().max(8) })).max(50) }).optional(),

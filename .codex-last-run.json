@@ -1,7 +1,7 @@
 {
-  "type": "research",
-  "module": "competitor analysis",
-  "target": "duplication",
-  "source": "GitHub",
-  "validation": "comparison"
+  "type": "documentation",
+  "module": "market research",
+  "target": "poor data structure",
+  "source": "forum",
+  "validation": "real-data check"
 }

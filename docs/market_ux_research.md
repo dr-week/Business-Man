@@ -55,3 +55,7 @@ Next validation gate: 10 founder interviews, 3 advisor/accelerator interviews, a
 ## Reporting workflow
 
 Metabase offers configurable dashboards, filters, exports, and scheduled subscriptions; it monetizes hosted service, support, and commercial features while keeping a self-hosted AGPL edition ([plan comparison](https://www.metabase.com/pricing/compare-plans), [license terms](https://www.metabase.com/license)). BUSINESSman’s narrower report summarizes owner-scoped saved research, falsification checks, and buyer/payment signals. Opportunity payments remain user-reported; captured BUSINESSman receipts are tracked separately after signed payment webhooks. Treat both as workspace records, not market-wide demand proof. The live report is `/hunt` → Validation report; avoid synthetic score charts.
+
+## Source locality
+
+Forum posts can describe a problem without proving demand in the requested place. The budget/location factor now reads `source.locality.place` and its `basis`; web collectors may submit `source-stated`, while a top score requires separately verified local buyer or official evidence. Missing locality stays unknown. This prevents false matches such as “goals” in a [real Ask HN post](https://news.ycombinator.com/item?id=13855577) being counted as evidence for Goa. Indian founders also report difficulty collecting local city data ([discussion](https://www.reddit.com/r/indianstartups/comments/1u0zsyq/building_a_local_city_platform_in_india_stuck_on/)); that is a research need, not proof they will pay for BUSINESSman.

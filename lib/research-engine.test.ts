@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeResearch, blankFinancials, calculateFinancials, groupSources, researchInput } from "./research-engine";
+import { analyzeResearch, blankFinancials, calculateFinancials, groupSources, recalculateOpportunity, researchInput } from "./research-engine";
 import type { SourceSignal } from "./discovery";
 
 const input = researchInput.parse({ topic: "inventory", geography: "Goa, India", budget: 150000 });
@@ -67,5 +67,15 @@ describe("market research", () => {
     expect(item.claims.some((c) => c.sourceIds.includes("web:abc123"))).toBe(true);
     expect(item.assumptions.price.provenance).toBe("Missing");
     expect(item.strength).toBeNull();
+  });
+  it("requires structured locality before scoring location fit", () => {
+    const discussion = { ...source("13855577", "Align daily todos with long term goals?"), excerpt: "How do you keep long term goals in mind?" };
+    const [item] = analyzeResearch(input, [discussion]);
+    const values = { price: 1000, variableCost: 400, fixedCost: 20000, setupCost: 50000, equipmentCost: 25000, openingInventory: 15000, reserve: 10000, lowVolume: 50, baseVolume: 100, highVolume: 150 };
+    for (const [key, value] of Object.entries(values)) item.assumptions[key as keyof typeof values] = { ...item.assumptions[key as keyof typeof values], value, provenance: "User-entered", date: "2026-09-27" };
+    const locationScore = (signal: SourceSignal) => recalculateOpportunity({ ...item, sources: [signal] }, input.budget).factors.find((factor) => factor.name === "Budget and location")?.score;
+    expect(locationScore(discussion)).toBeNull();
+    expect(locationScore({ ...discussion, locality: { place: "Goa, India", basis: "source-stated" } })).toBe(5);
+    expect(locationScore({ ...discussion, kind: "official", locality: { place: "Goa, India", basis: "verified" } })).toBe(10);
   });
 });

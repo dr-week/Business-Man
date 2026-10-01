@@ -90,15 +90,16 @@ function confidence(sources: SourceSignal[], claims: Claim[]): "Low" | "Medium" 
   return providers.size >= 2 && independent >= 3 && recent ? "Medium" : "Low";
 }
 function factors(claims: Claim[], sources: SourceSignal[], financials: FinancialResult | null, budget: number | null, geography: string): Factor[] {
+  const requestedPlace = geography.split(",")[0].trim().toLowerCase();
   return (Object.keys(factorWeights) as FactorName[]).map((name) => {
     const matching = claims.filter((claim) => claim.direction === "supports" && claim.factor === name);
-    const local = sources.filter((source) => geography.toLowerCase().split(/[, ]+/).filter((part) => part.length > 3).some((part) => (source.title + " " + source.excerpt).toLowerCase().includes(part)));
+    const local = sources.filter((source) => source.locality?.place.split(",")[0].trim().toLowerCase() === requestedPlace);
     const count = independentClaimCount(matching, sources);
     const score = name === "Financial viability" ? financials ? financials.scenarios[1].profit <= 0 ? 0 : financials.scenarios[0].profit > 0 ? 10 : 5 : null
-      : name === "Budget and location" ? budget == null ? null : financials?.funding != null && financials.funding > budget ? 0 : financials && local.some((source) => source.kind === "official" || source.kind === "buyer") ? 10 : financials && local.length ? 5 : null
+      : name === "Budget and location" ? budget == null ? null : financials?.funding != null && financials.funding > budget ? 0 : financials && local.some((source) => source.locality?.basis === "verified" && (source.kind === "official" || source.kind === "buyer")) ? 10 : financials && local.length ? 5 : null
       : count ? Math.min(10, count * 5) : null;
     return { name, weight: factorWeights[name], score, evidenceIds: matching.map((claim) => claim.id),
-      rule: name === "Financial viability" ? "0: base loss; 5: base profit; 10: low and base profit." : name === "Budget and location" ? "0: funding over budget; 5: local discussion plus funding in budget; 10 requires verified local operating evidence." : "5: one explicit independent first-person source; 10: at least two. Missing evidence stays unknown." };
+      rule: name === "Financial viability" ? "0: base loss; 5: base profit; 10: low and base profit." : name === "Budget and location" ? "0: funding over budget; 5: source-stated locality plus funding in budget; 10 requires verified local buyer or official evidence." : "5: one explicit independent first-person source; 10: at least two. Missing evidence stays unknown." };
   });
 }
 export function recalculateOpportunity(item: ResearchOpportunity, budget: number | null): ResearchOpportunity {

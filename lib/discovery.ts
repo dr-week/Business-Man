@@ -7,6 +7,8 @@ export const discoveryInput = z.union([
 export type SourceSignal = {
   id: string; provider: string; kind?: "discussion" | "official" | "buyer" | "supplier"; authorId?: string;
   title: string; excerpt: string; url: string; publishedAt: string; retrievedAt: string;
+  /** Source location, distinct from the user's requested research geography. */
+  locality?: { place: string; basis: "source-stated" | "verified" };
   engagement?: { metric: "comments" | "answers"; count: number };
   /** Legacy saved research; new collectors use engagement. */ comments?: number;
   facts?: { tables: string[][]; products: { name: string; price: string; currency: string }[] };
