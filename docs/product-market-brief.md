@@ -39,9 +39,12 @@ The repository now uses **AGPL-3.0-only**. It requires modified network-served v
 
 The validation report now has an explicit refresh control. It avoids background polling, keeps the last good snapshot visible during refresh, and labels stale data if a refresh fails. Do not enable recurring email until recipients opt in and a real scheduler, data source, and delivery settings exist; the legacy email worker points at a separate SQLite file and is not scheduled.
 
+Metabase offers scheduled email/Slack dashboards with CSV, XLSX, and PDF attachments; custom subscription filters are paid-plan gated. Its published USD pricing includes a free self-hosted edition, Starter from $100/month plus seats, Pro from $575/month plus seats, and Enterprise from $20,000/year. BUSINESSman currently refreshes and shares an owner-scoped Markdown brief; scheduled delivery remains explicitly unimplemented and is tracked in issue #25. The useful wedge is a brief tied to buyer evidence and payment signals, while reports still need an opt-in scheduler before matching the delivery workflow.
+
 ## Sources
 
 - [Metabase subscriptions](https://www.metabase.com/docs/latest/dashboards/subscriptions) and [plan comparison](https://www.metabase.com/pricing/compare-plans)
+- [Metabase pricing](https://www.metabase.com/pricing)
 - [Dovetail pricing and tiers](https://dovetail.com/pricing/)
 - [LivePlan pricing](https://www.liveplan.com/pricing) and [sourced market research workflow](https://help.liveplan.com/liveplan-s-market-research-feature)
 - [IdeaBuddy pricing and collaboration plans](https://ideabuddy.com/pricing/)

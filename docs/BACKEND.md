@@ -6,7 +6,7 @@
 | `lib/bounded-cache.ts` | Owner-scoped research TTL/LRU and byte budget |
 | `app/api/hunt/research-runs/` | Owner-scoped archive of completed research runs |
 | `app/api/hunt/research-runs/[runId]/checks/` | Owner-scoped falsification questions and classified, dated outcomes |
-| `app/api/reporting/validation-summary/` | Owner-scoped validation/payment aggregates; six D1 reads in one batch, checked against `lib/reporting/validation-summary-schema.ts` before response |
+| `app/api/reporting/validation-summary/` | Owner-scoped validation/payment aggregates; six D1 reads in one batch, checked against the shared Zod 4 contract in `lib/reporting/validation-summary-schema.ts` |
 | `lib/counter-evidence.ts` | Validation and limits for counter-evidence records |
 | `lib/research-run-store.ts` | Owner-scoped run history, composite sort index, atomic save, and 20-run retention |
 | `lib/research-engine.ts` | Input schema, grouping, scoring |

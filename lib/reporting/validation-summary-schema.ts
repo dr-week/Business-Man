@@ -1,7 +1,7 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
-const count = z.number().int().nonnegative();
-const amount = z.number().finite().nonnegative();
+const count = z.int().nonnegative();
+const amount = z.number().nonnegative();
 
 export const validationSummarySchema = z.object({
   savedResearchRuns: count,
@@ -18,7 +18,7 @@ export const validationSummarySchema = z.object({
   }),
   businessmanPaymentRecords: z.array(z.object({ currency: z.string().length(3), capturedAmount: amount, records: count })),
   nextAction: z.object({ title: z.string(), detail: z.string() }),
-  generatedAt: z.string().datetime(),
+  generatedAt: z.iso.datetime(),
   note: z.string(),
 });
 
