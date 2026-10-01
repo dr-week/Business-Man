@@ -367,6 +367,11 @@
 .research-compare > header h3,.research-compare > header p { margin:0; }
 .research-compare > header p,.research-compare-hint { color:#aaa99b; font-size:12px; }
 .research-compare-clear { padding:6px 10px; border:1px solid #414735; border-radius:6px; color:#d1b476; font-size:12px; }
+.opportunity-comparison { overflow:auto; margin:12px 0; }
+.opportunity-comparison table { width:100%; min-width:620px; border-collapse:collapse; font-size:12px; }
+.opportunity-comparison th,.opportunity-comparison td { padding:8px 10px; border-bottom:1px solid #394032; text-align:left; }
+.opportunity-comparison td { font-variant-numeric:tabular-nums; white-space:nowrap; }
+.opportunity-comparison small { display:block; padding:8px 10px; color:#aaa99b; }
 @media(max-width:900px) { .research-filters > div { grid-template-columns:repeat(2,1fr); } }
 @media(max-width:650px) { .research-figures { grid-template-columns:repeat(2,minmax(0,1fr)); } .research-default-charts,.research-more-charts > div,.research-assumption-grid,.market-software-list { grid-template-columns:1fr; } .research-margin-of-safety { grid-template-columns:1fr; } .research-bar label { flex-basis:100%; } .research-bar select { flex:1; } .research-local-competition li { grid-template-columns:1fr auto; } .research-local-competition li div { grid-column:1/-1; } }
 @media(max-width:650px) { .research-figures-analysis,.research-figures-economics { grid-template-columns:1fr; } }
