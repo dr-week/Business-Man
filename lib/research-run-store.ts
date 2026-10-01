@@ -89,6 +89,11 @@ export function getResearchRun(db: ReturnType<typeof getDb>, ownerId: string, id
     .limit(1);
 }
 
+/** Delete one snapshot only when it belongs to the requesting owner. */
+export function deleteResearchRun(db: ReturnType<typeof getDb>, ownerId: string, id: string) {
+  return db.delete(researchRuns).where(and(eq(researchRuns.ownerId, ownerId), eq(researchRuns.id, id)));
+}
+
 /** Preserve the existing startup restore behavior. */
 export function getLatestResearchRun(db: ReturnType<typeof getDb>, ownerId: string) {
   return db.select().from(researchRuns)

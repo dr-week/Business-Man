@@ -61,6 +61,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
   const [preparedBackup, setPreparedBackup] = useState<{ id: string; file: File } | null>(null);
   const [preparingBackupId, setPreparingBackupId] = useState("");
   const [restoringRun, setRestoringRun] = useState("");
+  const [deletingRun, setDeletingRun] = useState("");
 
   const abort = useRef<AbortController | null>(null);
   const [stars, setStars] = useState<string[]>([]);
@@ -156,6 +157,23 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       onError("");
     } catch (error) { onError(error instanceof Error ? error.message : "Could not restore saved research."); }
     finally { setRestoringRun(""); }
+  }
+
+  async function deleteSavedRun(id: string) {
+    if (!window.confirm("Delete this saved research and its validation checks? This cannot be undone.")) return;
+    setDeletingRun(id);
+    try {
+      const response = await fetch(`/api/hunt/research-runs/${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("Could not delete saved research.");
+      setSavedRuns((runs) => runs.filter((run) => run.id !== id));
+      setPreparedBackup((backup) => backup?.id === id ? null : backup);
+      if (runId === id) {
+        setRunId(null);
+        persist(input, opportunities, null);
+      }
+      onError("");
+    } catch (error) { onError(error instanceof Error ? error.message : "Could not delete saved research."); }
+    finally { setDeletingRun(""); }
   }
 
   async function importResearchBackup(file: File | undefined) {
@@ -377,6 +395,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
           {saved.schemaVersion === 1 && <button type="button" disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</button>}
           {saved.schemaVersion === 1 && <a href={`/api/hunt/research-runs/export?id=${encodeURIComponent(saved.id)}`}>Download backup</a>}
           {saved.schemaVersion === 1 && <button type="button" disabled={preparingBackupId === saved.id || preparedBackup?.id !== saved.id} onClick={() => void shareResearchBackup(saved.id)}>{preparingBackupId === saved.id ? "Preparing share…" : "Share with another app"}</button>}
+          <button type="button" disabled={!!deletingRun || !!restoringRun || busy} onClick={() => void deleteSavedRun(saved.id)}>{deletingRun === saved.id ? "Deleting…" : "Delete saved research"}</button>
         </div></details>
       </li>)}</ul> : <p>Run research while signed in to build your history.</p>}
     </details>
