@@ -21,6 +21,7 @@ import type { ResearchFocus, ResearchFocusSource } from "@/lib/research-focus";
 import type { WebResearchResult } from "@/lib/collectors/brave-search";
 import { independentSourceCount } from "@/lib/evidence-lineage";
 import { parseFirstImpressions, recordFirstImpression, type FirstImpression } from "@/lib/first-impressions";
+import { RESEARCH_RUN_SCHEMA_VERSION } from "@/lib/research-run-version";
 
 const Charts = dynamic(() => import("./research-charts"), { ssr: false });
 const MarketInspection = dynamic(
@@ -125,7 +126,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; schemaVersion?: number; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation>; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean } }[] }> : null)
       .then((data) => {
         const latest = data?.runs?.[0];
-        if (!active || latest?.schemaVersion !== 1 || !latest.input || !Array.isArray(latest.result?.opportunities)) return;
+        if (!active || latest?.schemaVersion !== RESEARCH_RUN_SCHEMA_VERSION || !latest.input || !Array.isArray(latest.result?.opportunities)) return;
         setRunId(latest.id ?? null); setInput(latest.input); setOpportunities(latest.result.opportunities);
         setWebResearch(latest.result.webResearch ?? []); setWebSearchConfigured(!!latest.result.webSearchConfigured);
         setTopic(latest.input.topic); setGeography(latest.input.geography); setBudget(latest.input.budget == null ? "" : String(latest.input.budget));
@@ -151,7 +152,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       const body: unknown = await response.json();
       if (!response.ok || typeof body !== "object" || body === null || !("run" in body)) throw new Error("Could not restore saved research.");
       const run = body.run as { id: string; schemaVersion: number; input: ResearchInput; result: { opportunities: ResearchOpportunity[]; query?: typeof interpretation; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean } };
-      if (run.schemaVersion !== 1 || !run.input || !Array.isArray(run.result?.opportunities)) throw new Error("Saved research has an unsupported format.");
+      if (run.schemaVersion !== RESEARCH_RUN_SCHEMA_VERSION || !run.input || !Array.isArray(run.result?.opportunities)) throw new Error("Saved research has an unsupported format.");
       setRunId(run.id); setInput(run.input); setOpportunities(run.result.opportunities);
       setWebResearch(run.result.webResearch ?? []); setWebSearchConfigured(!!run.result.webSearchConfigured);
       setTopic(run.input.topic); setGeography(run.input.geography); setBudget(run.input.budget == null ? "" : String(run.input.budget));
@@ -395,11 +396,11 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
       {savedRuns.length > 0 && filteredSavedRuns.length === 0 && <p>No saved research matches “{savedRunFilter}”.</p>}
       {filteredSavedRuns.length > 0 && <ul>{filteredSavedRuns.map((saved) => <li key={saved.id}>
         <span><strong>{saved.topic}</strong><small>{saved.geography} · {new Date(saved.createdAt).toLocaleString()}</small></span>
-        <button type="button" disabled={!!restoringRun || busy || saved.schemaVersion !== 1} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === 1 ? "Restore" : "Update needed"}</button>
-        <details className="saved-research-actions" onToggle={(event) => { if (saved.schemaVersion === 1 && event.currentTarget.open && preparedBackup?.id !== saved.id && preparingBackupId !== saved.id) void prepareResearchBackup(saved.id); }}><summary>More</summary><div>
-          {saved.schemaVersion === 1 && <button type="button" disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</button>}
-          {saved.schemaVersion === 1 && <a href={`/api/hunt/research-runs/export?id=${encodeURIComponent(saved.id)}`}>Download backup</a>}
-          {saved.schemaVersion === 1 && <button type="button" disabled={preparingBackupId === saved.id || preparedBackup?.id !== saved.id} onClick={() => void shareResearchBackup(saved.id)}>{preparingBackupId === saved.id ? "Preparing share…" : "Share with another app"}</button>}
+        <button type="button" disabled={!!restoringRun || busy || saved.schemaVersion !== RESEARCH_RUN_SCHEMA_VERSION} onClick={() => void restoreSavedRun(saved.id)}>{restoringRun === saved.id ? "Restoring…" : saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION ? "Restore" : "Update needed"}</button>
+        <details className="saved-research-actions" onToggle={(event) => { if (saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && event.currentTarget.open && preparedBackup?.id !== saved.id && preparingBackupId !== saved.id) void prepareResearchBackup(saved.id); }}><summary>More</summary><div>
+          {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={!!restoringRun || busy} onClick={() => void refreshSavedRun(saved.id)}>{restoringRun === saved.id ? "Refreshing…" : "Refresh sources"}</button>}
+          {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <a href={`/api/hunt/research-runs/export?id=${encodeURIComponent(saved.id)}`}>Download backup</a>}
+          {saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION && <button type="button" disabled={preparingBackupId === saved.id || preparedBackup?.id !== saved.id} onClick={() => void shareResearchBackup(saved.id)}>{preparingBackupId === saved.id ? "Preparing share…" : "Share with another app"}</button>}
           <button type="button" disabled={!!deletingRun || !!restoringRun || busy} onClick={() => void deleteSavedRun(saved.id)}>{deletingRun === saved.id ? "Deleting…" : "Delete saved research"}</button>
         </div></details>
       </li>)}</ul>}

@@ -24,7 +24,7 @@
 | `db/schema.ts`, `drizzle/` | D1 schema/migrations |
 | `app/api/news/route.ts` | Independent RSS endpoint |
 
-Saved research stores `schema_version`; bump it only with a reader or migration for older snapshots.
+Saved research uses the shared `lib/research-run-version.ts` version in client and server readers; bump it only with a reader or migration for older snapshots.
 
 `GET /api/reporting/validation-summary` returns `{ savedResearchRuns, checks, buyerValidation, businessmanPaymentRecords, nextAction, generatedAt, note }`. The shared Zod schema validates both the API output and client input. Counts are owner-scoped saved records. Opportunity payment amounts are owner-reported and grouped by currency; BUSINESSman receipts come only from paid/fulfilled records, convert minor units to currency units, and are before refunds/provider fees. These records are directional evidence, not a market-demand estimate. Unauthenticated requests return `{ error }` with 401; database readiness errors return the same shape with 503.
 

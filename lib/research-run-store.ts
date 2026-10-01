@@ -3,10 +3,12 @@ import { z } from "zod";
 import type { getDb } from "@/db";
 import { researchRuns } from "@/db/schema";
 import { researchInput } from "@/lib/research-engine";
+import { RESEARCH_RUN_SCHEMA_VERSION } from "@/lib/research-run-version";
+
+export { RESEARCH_RUN_SCHEMA_VERSION } from "@/lib/research-run-version";
 
 const MAX_RETAINED_RUNS = 20;
 const MAX_RUN_BYTES = 1_900_000;
-export const RESEARCH_RUN_SCHEMA_VERSION = 1;
 const evidenceId = z.string().min(1).max(200);
 const externalWebUrl = z.string().url().max(2000).refine((value) => {
   try { return ["http:", "https:"].includes(new URL(value).protocol); }
