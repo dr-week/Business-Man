@@ -59,3 +59,7 @@ Metabase offers configurable dashboards, filters, exports, and scheduled subscri
 ## Source locality
 
 Forum posts can describe a problem without proving demand in the requested place. The budget/location factor now reads `source.locality.place` and its `basis`; web collectors may submit `source-stated`, while a top score requires separately verified local buyer or official evidence. Missing locality stays unknown. This prevents false matches such as “goals” in a [real Ask HN post](https://news.ycombinator.com/item?id=13855577) being counted as evidence for Goa. Indian founders also report difficulty collecting local city data ([discussion](https://www.reddit.com/r/indianstartups/comments/1u0zsyq/building_a_local_city_platform_in_india_stuck_on/)); that is a research need, not proof they will pay for BUSINESSman.
+
+## Saved research recovery
+
+[Dovetail](https://dovetail.com/pricing/) sells a searchable research repository (one project free; enterprise pricing by quote). [Airtable](https://support.airtable.com/articles/2277136852-airtable-plans-overview) sells shared record workflows (free tier; paid Team seats). Their offers show that retrieval and collaboration matter, but do not establish demand for this app. BUSINESSman now labels archive loading, sign-in, and request failure separately from a truly empty history, with a retry for failures. The bounded summary API remains the recovery path; full snapshots load when selected.

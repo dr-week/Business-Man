@@ -78,6 +78,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
   const [savedRuns, setSavedRuns] = useState<SavedRunSummary[]>([]);
   const [savedRunFilter, setSavedRunFilter] = useState("");
+  const [savedRunsStatus, setSavedRunsStatus] = useState<"loading" | "ready" | "signed-out" | "error">("loading");
   const [importingBackup, setImportingBackup] = useState(false);
   const [preparedBackup, setPreparedBackup] = useState<{ id: string; file: File } | null>(null);
   const [preparingBackupId, setPreparingBackupId] = useState("");
@@ -149,11 +150,23 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
     } catch { /* Fall back to the saved server snapshot. */ }
     const url = hasLocalSnapshot ? "/api/hunt/research-runs?list=1" : "/api/hunt/research-runs";
     fetch(url, { cache: "no-store" })
-      .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; schemaVersion?: number; topic?: string; geography?: string; currency?: string; createdAt?: string; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation>; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean } }[]; history?: unknown }> : null)
+      .then(async (response) => {
+        if (!response.ok) {
+          if (active) {
+            if (response.status === 401) setSavedRuns([]);
+            setSavedRunsStatus(response.status === 401 ? "signed-out" : "error");
+          }
+          return null;
+        }
+        return response.json() as Promise<{ runs?: { id?: string; schemaVersion?: number; topic?: string; geography?: string; currency?: string; createdAt?: string; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation>; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean } }[]; history?: unknown }>;
+      })
       .then((data) => {
         if (!active || !data) return;
         const history = hasLocalSnapshot ? data.runs : data.history;
-        if (Array.isArray(history) && history.length <= 20 && history.every(isSavedRunSummary)) setSavedRuns(history);
+        if (Array.isArray(history) && history.length <= 20 && history.every(isSavedRunSummary)) {
+          setSavedRuns(history);
+          setSavedRunsStatus("ready");
+        } else setSavedRunsStatus("error");
         if (hasLocalSnapshot) return;
         const latest = data?.runs?.[0];
         if (latest?.schemaVersion !== RESEARCH_RUN_SCHEMA_VERSION || !latest.input || !Array.isArray(latest.result?.opportunities)) return;
@@ -162,9 +175,26 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
         setTopic(latest.input.topic); setGeography(latest.input.geography); setBudget(latest.input.budget == null ? "" : String(latest.input.budget));
         setPreparedBrief(latest.result.query?.brief ?? ""); setInterpretation(latest.result.query ?? null);
       })
-      .catch(() => { /* Local snapshot remains available when archive is unavailable. */ });
+      .catch(() => { if (active) setSavedRunsStatus("error"); });
     return () => { active = false; };
   }, []);
+
+  async function retrySavedRuns() {
+    setSavedRunsStatus("loading");
+    try {
+      const response = await fetch("/api/hunt/research-runs?list=1", { cache: "no-store" });
+      if (!response.ok) {
+        if (response.status === 401) setSavedRuns([]);
+        setSavedRunsStatus(response.status === 401 ? "signed-out" : "error");
+        return;
+      }
+      const body: unknown = await response.json();
+      const runs = typeof body === "object" && body !== null && "runs" in body ? body.runs : null;
+      if (!Array.isArray(runs) || runs.length > 20 || !runs.every(isSavedRunSummary)) throw new Error("Invalid saved research history.");
+      setSavedRuns(runs);
+      setSavedRunsStatus("ready");
+    } catch { setSavedRunsStatus("error"); }
+  }
 
   async function restoreSavedRun(id: string) {
     setRestoringRun(id);
@@ -455,9 +485,12 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
               </Button>
               {savedRuns.length > 3 && <TextInput className={savedResearchStyles.filter} type="search" aria-label="Filter saved research by topic or location" value={savedRunFilter} onChange={(event) => setSavedRunFilter(event.currentTarget.value)} placeholder="Filter topic or location" leftSection={<Search size={14} />} />}
             </Group>
-            {savedRuns.length === 0 && <Text className={savedResearchStyles.empty} component="p">Run research while signed in to build your history.</Text>}
-            {savedRuns.length > 0 && filteredSavedRuns.length === 0 && <Text className={savedResearchStyles.empty} component="p">No saved research matches “{savedRunFilter}”.</Text>}
-            {filteredSavedRuns.length > 0 && <ul className={savedResearchStyles.runList}>{filteredSavedRuns.map((saved) => {
+            {savedRunsStatus === "loading" && <Text className={savedResearchStyles.empty} component="p" role="status">Loading saved research…</Text>}
+            {savedRunsStatus === "signed-out" && <Text className={savedResearchStyles.empty} component="p">Sign in to load saved research.</Text>}
+            {savedRunsStatus === "error" && <Group gap="xs"><Text className={savedResearchStyles.empty} component="p" role="alert">Could not load saved research. History may still be available.</Text><Button type="button" size="compact-sm" variant="light" onClick={() => void retrySavedRuns()}>Try again</Button></Group>}
+            {savedRunsStatus === "ready" && savedRuns.length === 0 && <Text className={savedResearchStyles.empty} component="p">Run research while signed in to build your history.</Text>}
+            {savedRunsStatus === "ready" && savedRuns.length > 0 && filteredSavedRuns.length === 0 && <Text className={savedResearchStyles.empty} component="p">No saved research matches “{savedRunFilter}”.</Text>}
+            {savedRunsStatus === "ready" && filteredSavedRuns.length > 0 && <ul className={savedResearchStyles.runList}>{filteredSavedRuns.map((saved) => {
               const supported = saved.schemaVersion === RESEARCH_RUN_SCHEMA_VERSION;
               return <Paper component="li" key={saved.id} radius="sm" className={savedResearchStyles.run}>
                 <Stack className={savedResearchStyles.runInfo} gap={2}>
