@@ -55,7 +55,7 @@ const researchBackup = z.object({
     result: z.object({
       opportunities: z.array(importedOpportunity).max(200), query: z.record(z.string(), z.unknown()).optional(),
       providerErrors: z.array(z.string().max(300)).optional(),
-      webResearch: z.array(z.object({ title: z.string().max(240), url: externalWebUrl, snippet: z.string().max(600) })).max(8).optional(),
+      webResearch: z.array(z.object({ title: z.string().max(240), url: externalWebUrl, snippet: z.string().max(600), kind: z.enum(["web", "academic"]).optional() })).max(11).optional(),
       webSearchConfigured: z.boolean().optional(),
     }).passthrough(),
   }).passthrough(),

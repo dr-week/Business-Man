@@ -10,6 +10,7 @@ vi.mock("@/lib/discovery", () => ({
   collectStackOverflow: vi.fn(async () => [{ id: "so:2", provider: "Stack Overflow", title: "How to track restaurant inventory?", excerpt: "", url: "https://stackoverflow.com/questions/2", publishedAt: "2026-02-01T00:00:00.000Z", retrievedAt: "2026-09-27T00:00:00.000Z", comments: 1 }]),
 }));
 vi.mock("@/lib/collectors/brave-search", () => ({ collectBraveWebResults: vi.fn(async () => [{ title: "Market result", url: "https://example.com/market", snippet: "Candidate result" }]) }));
+vi.mock("@/lib/collectors/openalex", () => ({ collectOpenAlexWorks: vi.fn(async () => [{ title: "Research paper", url: "https://doi.org/10.1234/paper", year: 2024, citedByCount: 3 }]) }));
 import { collectSignals } from "@/lib/discovery";
 import { collectBraveWebResults } from "@/lib/collectors/brave-search";
 import { saveResearchRun } from "@/lib/research-run-store";
@@ -19,13 +20,16 @@ describe("research route", () => {
   it("returns one grouped finding with both sources and no fabricated score or profit", async () => {
     const request = new Request("http://localhost/api/hunt/research", { method: "POST", body: JSON.stringify({ topic: "inventory", geography: "Goa, India", budget: 100000 }) });
     const response = await POST(request);
-    const data = await response.json() as { opportunities: { sources: unknown[]; strength: number | null; financials: unknown }[]; webResearch: { title: string; url: string; snippet: string }[] };
+    const data = await response.json() as { opportunities: { sources: unknown[]; strength: number | null; financials: unknown }[]; webResearch: { title: string; url: string; snippet: string; kind?: string }[] };
     expect(response.status).toBe(200);
     expect(data.opportunities).toHaveLength(1);
     expect(data.opportunities[0].sources).toHaveLength(2);
     expect(data.opportunities[0].strength).toBeNull();
     expect(data.opportunities[0].financials).toBeNull();
-    expect(data.webResearch).toEqual([{ title: "Market result", url: "https://example.com/market", snippet: "Candidate result" }]);
+    expect(data.webResearch).toEqual([
+      { title: "Research paper", url: "https://doi.org/10.1234/paper", kind: "academic", snippet: "Academic literature · 2024 · 3 citations" },
+      { title: "Market result", url: "https://example.com/market", snippet: "Candidate result" },
+    ]);
     expect(saveResearchRun).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
       result: expect.objectContaining({
         webResearch: data.webResearch,

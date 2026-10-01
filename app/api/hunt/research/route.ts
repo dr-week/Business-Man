@@ -9,6 +9,7 @@ import { collectGitHubAlternatives } from "@/lib/collectors/github-alternatives"
 import { attachCandidateAlternatives } from "@/lib/market-alternatives";
 import { collectBraveWebResults } from "@/lib/collectors/brave-search";
 import type { WebResearchResult } from "@/lib/collectors/brave-search";
+import { collectOpenAlexWorks } from "@/lib/collectors/openalex";
 import { env } from "cloudflare:workers";
 import { getDb } from "@/db";
 import { RESEARCH_RUN_SCHEMA_VERSION, saveResearchRun } from "@/lib/research-run-store";
@@ -55,12 +56,13 @@ export async function POST(request: Request) {
   if (!input.useOriginalQuery) query = await classifyQuery(query, { url: env.LAYA_URL, key: env.LAYA_API_KEY }, request.signal);
   if (request.signal.aborted) return Response.json({ error: "Research cancelled." }, { status: 499 });
   const urls = [...new Set([...(input.sourceUrls ?? []), ...(/^https:\/\//i.test(input.topic) ? [input.topic] : [])])].slice(0, 3);
-  const [results, web, github, webSearch] = await Promise.all([Promise.allSettled([
+  const [results, web, github, webSearch, literature] = await Promise.all([Promise.allSettled([
     collectSignals(query.searchTerms, undefined, request.signal),
     collectStackOverflow(query.searchTerms, request.signal),
   ]), collectWebPages(urls, { url: env.COLLECTOR_URL, key: env.COLLECTOR_KEY }, request.signal),
     collectGitHubAlternatives(query.searchTerms, request.signal).then((value) => ({ value, error: null })).catch(() => ({ value: [], error: "GitHub alternatives unavailable" })),
-    collectBraveWebResults(query.searchTerms, input.geography, env.BRAVE_SEARCH_API_KEY, request.signal).then((value) => ({ value, error: null })).catch(() => ({ value: [], error: "Web search unavailable" }))]);
+    collectBraveWebResults(query.searchTerms, input.geography, env.BRAVE_SEARCH_API_KEY, request.signal).then((value) => ({ value, error: null })).catch(() => ({ value: [], error: "Web search unavailable" })),
+    collectOpenAlexWorks(query.searchTerms, request.signal).then((value) => ({ value, error: null })).catch(() => ({ value: [], error: "Academic literature unavailable" }))]);
   if (request.signal.aborted) return Response.json({ error: "Research cancelled." }, { status: 499 });
   const sources = [...web.sources, ...results.flatMap((item) => item.status === "fulfilled" ? item.value : []).filter((source) => {
     return matchesResearchTopic(source.title, query.searchTerms, input.geography);
@@ -70,19 +72,24 @@ export async function POST(request: Request) {
   providerErrors.push(...web.errors);
   if (github.error) providerErrors.push(github.error);
   if (webSearch.error) providerErrors.push(webSearch.error);
-  if (communitiesFailed && !web.sources.length && !webSearch.value.length) return Response.json({ error: "Research sources unavailable. Retry later." }, { status: 502 });
+  if (literature.error) providerErrors.push(literature.error);
+  if (communitiesFailed && !web.sources.length && !webSearch.value.length && !literature.value.length) return Response.json({ error: "Research sources unavailable. Retry later." }, { status: 502 });
+  const webResearch: WebResearchResult[] = [
+    ...literature.value.map((work) => ({ title: work.title, url: work.url, kind: "academic" as const, snippet: `Academic literature · ${work.year ?? "year unavailable"} · ${work.citedByCount.toLocaleString()} citations` })),
+    ...webSearch.value,
+  ];
   const opportunities = attachCandidateAlternatives(analyzeResearch(input, sources), github.value);
   const runId = crypto.randomUUID();
   try {
     await saveResearchRun(getDb(), {
       id: runId, ownerId: owner, schemaVersion: RESEARCH_RUN_SCHEMA_VERSION, topic: input.topic, geography: input.geography, currency: input.currency, createdAt: new Date().toISOString(),
       input: input as Record<string, unknown>,
-      result: { query, opportunities, providerErrors, webResearch: webSearch.value, webSearchConfigured: !!env.BRAVE_SEARCH_API_KEY },
+      result: { query, opportunities, providerErrors, webResearch, webSearchConfigured: !!env.BRAVE_SEARCH_API_KEY },
     });
   } catch {
     providerErrors.push("Research completed, but saving to your archive failed.");
   }
-  cache.set(key, { query, result: opportunities, errors: providerErrors, webResearch: webSearch.value }, 10 * 60_000);
-  return Response.json({ query, opportunities, providerErrors, webResearch: webSearch.value, webSearchConfigured: !!env.BRAVE_SEARCH_API_KEY, cached: false, runId }, { headers: { "Cache-Control": "no-store" } });
+  cache.set(key, { query, result: opportunities, errors: providerErrors, webResearch, }, 10 * 60_000);
+  return Response.json({ query, opportunities, providerErrors, webResearch, webSearchConfigured: !!env.BRAVE_SEARCH_API_KEY, cached: false, runId }, { headers: { "Cache-Control": "no-store" } });
   } finally { release?.(); }
 }

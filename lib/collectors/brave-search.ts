@@ -16,7 +16,7 @@ const countries: Record<string, string> = {
   japan: "JP", "united kingdom": "GB", uk: "GB", "united states": "US", usa: "US",
 };
 
-export type WebResearchResult = { title: string; url: string; snippet: string };
+export type WebResearchResult = { title: string; url: string; snippet: string; kind?: "web" | "academic" };
 
 /** Search candidates only. Snapshots may retain them, but they never count as evidence or score inputs. */
 export async function collectBraveWebResults(topic: string, geography: string, apiKey?: string, signal?: AbortSignal): Promise<WebResearchResult[]> {
