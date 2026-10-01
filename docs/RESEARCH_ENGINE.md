@@ -8,6 +8,12 @@ Use **Saved research → Download backup** for a portable JSON snapshot. **Impor
 
 `lib/economics.ts` reports arithmetic break-even thresholds for price, variable cost, fixed cost, and units. The Economics view keeps them collapsed and labels them as targets, not forecasts. Users must verify inputs with dated buyer and supplier evidence.
 
+## Investment-analysis data boundary
+
+`lib/economics.ts` is the investment model. Its nullable price, variable cost, monthly units, fixed cost, and investment inputs share one free-text `basis`; they do not yet carry per-input source, date, geography, currency, or unit. Do not label every estimate as sourced. The two-row `data/investment_data.csv` sample is synthetic, lacks provenance/currency, and is not an open investment dataset. The separate `/api/investment-analysis` prototype expects a different, absent `data/investments.csv` schema (`date, company, sector, amount`); it is not a working real-data source.
+
+The [World Bank Indicators API](https://datahelpdesk.worldbank.org/knowledgebase/articles/889392-about-the-indicators-api-documentation) exposes country-level macroeconomic series without API keys. Use indicators only as dated country context—not local buyer demand, startup deal flow, or business unit economics. Store indicator code, country, period, value, unit, retrieval date, and source URL; check dataset-specific terms and attribution before redistribution. Financial assumptions still need an explicit provenance record per value before they can count as sourced evidence.
+
 `lib/source-grouping.ts` deduplicates canonical HTTP(S) URLs (tracking parameters, query order, fragment, and `www` ignored) and merges similar titles. Invalid or credentialed URLs retain records by provider/id rather than colliding. Source caps bound CPU and memory; grouping is heuristic, not proof two reports share an origin.
 
 Evidence independence uses normalized full text when available and canonical URLs for short records. URL fragments, `www`, and common tracking parameters do not create additional sources. Similar but non-identical reports remain separate; this conservative rule avoids semantic false merges.
