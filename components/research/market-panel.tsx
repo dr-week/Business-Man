@@ -5,6 +5,22 @@ import { MarketFootprint } from "./market-footprint";
 import { IndiaMarketContext } from "./india-market-context";
 import { MarketSoftwareComparison } from "./market-software-comparison";
 
+const priceLabels = {
+  PRICE_LEVEL_UNSPECIFIED: "Price unavailable",
+  PRICE_LEVEL_FREE: "Free",
+  PRICE_LEVEL_INEXPENSIVE: "Inexpensive",
+  PRICE_LEVEL_MODERATE: "Moderate",
+  PRICE_LEVEL_EXPENSIVE: "Expensive",
+  PRICE_LEVEL_VERY_EXPENSIVE: "Very expensive",
+} as const;
+const statusLabels = {
+  BUSINESS_STATUS_UNSPECIFIED: "Status unavailable",
+  OPERATIONAL: "Operational",
+  CLOSED_TEMPORARILY: "Temporarily closed",
+  CLOSED_PERMANENTLY: "Permanently closed",
+  FUTURE_OPENING: "Future opening",
+} as const;
+
 export function MarketPanel({ opportunity, competitors, placesConfigured, footprint }: {
   opportunity: ResearchOpportunity;
   competitors: LocalCompetitor[];
@@ -15,8 +31,8 @@ export function MarketPanel({ opportunity, competitors, placesConfigured, footpr
     <section className="research-detail-card research-local-competition" aria-label="Local competitors">
       <h3>{competitors.length} place candidates</h3>
       {competitors.length ? <><ul>{competitors.map((place) => <li key={place.id}>
-        <div><strong>{place.name}</strong><small>{place.category} · {place.address}</small></div>
-        <span>{place.rating == null ? "No rating" : `${place.rating.toFixed(1)} ★ (${place.ratingCount ?? 0})`}</span>
+        <div><strong>{place.name}</strong><small>{place.category} · {place.address}</small>{place.priceLevel && <small>Google price level · {priceLabels[place.priceLevel]}</small>}</div>
+        <span>{place.businessStatus ? statusLabels[place.businessStatus] : "Status unavailable"} · {place.rating == null ? "No rating" : `${place.rating.toFixed(1)} ★ (${place.ratingCount ?? 0})`}</span>
         {place.mapUrl && <a href={place.mapUrl} target="_blank" rel="noopener noreferrer" title={`Open ${place.name} on Google Maps`}>Map</a>}
       </li>)}</ul><small translate="no">Google Maps · candidate listings, not a market census</small></> :
         <p>{placesConfigured ? "No matching listings returned." : "Google Places is not configured."}</p>}
