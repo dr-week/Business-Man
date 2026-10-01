@@ -1,5 +1,9 @@
 # Integrations
 
+## Schema validation runtime
+
+Research and API schemas currently use Zod 3.25.76. Cloudflare now recommends Zod 4.5+ for lower per-schema memory use. Do not switch individual files to the `zod/v4` subpath in 3.25.76: that package embeds Zod 4.0. Upgrade the shared dependency in one reviewed change, then run parser, route, and build checks; Zod 4 includes breaking type and validation changes.
+
 | Path | Role |
 |---|---|
 | `lib/discovery.ts` | Ask HN / Stack Overflow |
