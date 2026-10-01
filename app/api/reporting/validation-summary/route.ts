@@ -31,8 +31,11 @@ export async function GET() {
     ]);
 
     const aggregate = (rows: { key: string | null; total: number }[], keys: readonly string[]) => {
-      const result = Object.fromEntries(keys.map((key) => [key, 0])) as Record<string, number>;
-      for (const row of rows) if (row.key && keyIsAllowed(row.key, keys)) result[row.key] = row.total;
+      const result = Object.fromEntries([...keys, "other"].map((key) => [key, 0])) as Record<string, number>;
+      for (const row of rows) {
+        const key = row.key && keyIsAllowed(row.key, keys) ? row.key : "other";
+        result[key] += row.total;
+      }
       return result;
     };
 
@@ -50,6 +53,7 @@ export async function GET() {
         pilotOffers: statuses.pilot_offered,
         paidPilotRecords: statuses.paid_pilot,
         repeatPurchases: statuses.repeat_purchase,
+        otherStatusRecords: statuses.other,
         recordedAmountsByCurrency: paymentRows.map((row) => ({ currency: row.currency, amount: Number(row.amount ?? 0) })),
       },
       businessmanPaymentRecords: productPayments.map((row) => ({ currency: row.currency, capturedAmount: Number(row.amountMinor ?? 0) / 100, records: row.records })),

@@ -23,12 +23,15 @@ function createValidationBrief(report: ValidationSummary) {
     `- Buyer checks recorded: ${report.checks.total}`,
     `- Supporting checks: ${report.checks.outcomes.supports}`,
     `- Disconfirming checks: ${report.checks.outcomes.disconfirms}`,
+    `- Other check outcomes: ${report.checks.outcomes.other}`,
+    `- Other evidence types: ${report.checks.evidenceKinds.other}`,
     `- Sourced facts: ${report.checks.evidenceKinds.sourced_fact}`,
     "",
     "## Buyer and payment signals",
     `- Pilot offers: ${report.buyerValidation.pilotOffers}`,
     `- Paid pilot records: ${report.buyerValidation.paidPilotRecords}`,
     `- Repeat purchase records: ${report.buyerValidation.repeatPurchases}`,
+    `- Other lead statuses: ${report.buyerValidation.otherStatusRecords}`,
     `- Owner-reported opportunity payments: ${amounts(report.buyerValidation.recordedAmountsByCurrency)}`,
     `- BUSINESSman captured receipts: ${amounts(receipts)}`,
     "",
@@ -121,6 +124,10 @@ export function ValidationReport() {
       </div>
     </div>
     {shareStatus && <p role="status" aria-live="polite">{shareStatus}</p>}
+    {(report.checks.outcomes.other > 0 || report.checks.evidenceKinds.other > 0 || report.buyerValidation.otherStatusRecords > 0) && <details className="research-report-payment">
+      <summary>Unclassified records</summary>
+      <p>Check outcomes: {report.checks.outcomes.other} · Evidence types: {report.checks.evidenceKinds.other} · Lead statuses: {report.buyerValidation.otherStatusRecords}</p>
+    </details>}
     <div className="research-decision-strip">
       {metrics.map(([label, value]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}
       <p>{report.note}</p>

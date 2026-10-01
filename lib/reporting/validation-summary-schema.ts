@@ -7,13 +7,14 @@ export const validationSummarySchema = z.object({
   savedResearchRuns: count,
   checks: z.object({
     total: count,
-    outcomes: z.object({ open: count, supports: count, disconfirms: count, inconclusive: count }),
-    evidenceKinds: z.object({ sourced_fact: count, user_report: count, estimate: count, hypothesis: count }),
+    outcomes: z.object({ open: count, supports: count, disconfirms: count, inconclusive: count, other: count }),
+    evidenceKinds: z.object({ sourced_fact: count, user_report: count, estimate: count, hypothesis: count, other: count }),
   }),
   buyerValidation: z.object({
     pilotOffers: count,
     paidPilotRecords: count,
     repeatPurchases: count,
+    otherStatusRecords: count,
     recordedAmountsByCurrency: z.array(z.object({ currency: z.string().length(3), amount })),
   }),
   businessmanPaymentRecords: z.array(z.object({ currency: z.string().length(3), capturedAmount: amount, records: count })),

@@ -20,12 +20,13 @@ describe("validation reporting aggregates", () => {
       select: vi.fn(() => query),
       batch: vi.fn().mockResolvedValue([
         [{ total: 3 }],
-        [],
-        [],
+        [{ key: "future_outcome", total: 2 }],
+        [{ key: "future_evidence_kind", total: 3 }],
         [
           { key: "pilot_offered", total: 1 },
           { key: "paid_pilot", total: 1 },
           { key: "repeat_purchase", total: 1 },
+          { key: "new_lead_status", total: 4 },
         ],
         [{ currency: "INR", amount: "12500", records: 2 }],
         [{ currency: "INR", amountMinor: 9900, records: 1 }],
@@ -42,7 +43,13 @@ describe("validation reporting aggregates", () => {
       pilotOffers: 1,
       paidPilotRecords: 1,
       repeatPurchases: 1,
+      otherStatusRecords: 4,
       recordedAmountsByCurrency: [{ currency: "INR", amount: 12500 }],
+    });
+    expect(report.checks).toMatchObject({
+      total: 2,
+      outcomes: { other: 2 },
+      evidenceKinds: { other: 3 },
     });
     expect(report.businessmanPaymentRecords).toEqual([{ currency: "INR", capturedAmount: 99, records: 1 }]);
     expect(report.nextAction.title).toBe("Review delivery economics before scaling");
