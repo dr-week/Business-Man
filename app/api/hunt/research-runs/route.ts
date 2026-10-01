@@ -1,6 +1,6 @@
 import { getDb } from "@/db";
 import { apiError, isCrossOrigin, ownerId } from "@/lib/hunt-api";
-import { getLatestResearchRun, getResearchRun, listResearchRuns, parseResearchBackup, RESEARCH_RUN_SCHEMA_VERSION, saveResearchRun } from "@/lib/research-run-store";
+import { findDuplicateResearchRun, getLatestResearchRun, getResearchRun, listResearchRuns, parseResearchBackup, RESEARCH_RUN_SCHEMA_VERSION, saveResearchRun } from "@/lib/research-run-store";
 import { readLimitedJson } from "@/lib/read-limited-json";
 import { z } from "zod";
 
@@ -12,6 +12,12 @@ export async function POST(request: Request) {
     const value = await readLimitedJson(request, 1_900_000);
     const run = parseResearchBackup(value, owner);
     const db = getDb();
+    const [duplicate] = await findDuplicateResearchRun(db, run);
+    if (duplicate) {
+      let runs;
+      try { runs = await listResearchRuns(db, owner); } catch { /* The archive match is still usable. */ }
+      return Response.json({ id: duplicate.id, runs }, { headers: { "Cache-Control": "no-store" } });
+    }
     await saveResearchRun(db, run);
     let runs;
     try { runs = await listResearchRuns(db, owner); } catch { /* The import succeeded; history can be reloaded later. */ }

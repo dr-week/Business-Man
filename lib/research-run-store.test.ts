@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { drizzle } from "drizzle-orm/d1";
 import { getTableConfig } from "drizzle-orm/sqlite-core";
 import * as schema from "@/db/schema";
-import { listResearchRuns, parseResearchBackup, saveResearchRun } from "./research-run-store";
+import { findDuplicateResearchRun, listResearchRuns, parseResearchBackup, saveResearchRun } from "./research-run-store";
 
 describe("research run storage", () => {
   it("indexes owner history in the same order used by list queries", () => {
@@ -79,6 +79,16 @@ describe("research run storage", () => {
     expect(query.sql).toContain('order by "research_runs"."created_at" desc, "research_runs"."id" desc');
     expect(query.sql).toContain("limit ?");
     expect(query.params).toEqual(["owner-1", 20]);
+  });
+
+  it("matches identical imported results despite JSON object key order", async () => {
+    const input = { topic: "Cafe demand", geography: "Goa, India", currency: "INR" };
+    const result = { opportunities: [], webResearch: [] };
+    const db = { select: () => ({ from: () => ({ where: () => ({ limit: async () => [{ id: "existing-run", result: { webResearch: [], opportunities: [] } }] }) }) }) } as never;
+    await expect(findDuplicateResearchRun(db, {
+      ownerId: "owner-1", schemaVersion: 1, topic: input.topic, geography: input.geography, currency: input.currency,
+      createdAt: "2026-09-30T10:00:00.000Z", input, result,
+    })).resolves.toEqual([{ id: "existing-run" }]);
   });
 
   it("retains the inserted run and the 19 newest prior runs", async () => {

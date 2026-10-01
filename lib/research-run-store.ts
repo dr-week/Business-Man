@@ -91,6 +91,26 @@ export function getResearchRun(db: ReturnType<typeof getDb>, ownerId: string, id
     .limit(1);
 }
 
+/** Match an exact imported snapshot without conflating separate runs of one query. */
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value !== null && typeof value === "object") return `{${Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(",")}}`;
+  return JSON.stringify(value) ?? "null";
+}
+
+export async function findDuplicateResearchRun(db: ReturnType<typeof getDb>, run: Pick<typeof researchRuns.$inferSelect, "ownerId" | "schemaVersion" | "topic" | "geography" | "currency" | "createdAt" | "input" | "result">) {
+  const candidates = await db.select({ id: researchRuns.id, result: researchRuns.result }).from(researchRuns)
+    .where(and(
+      eq(researchRuns.ownerId, run.ownerId), eq(researchRuns.schemaVersion, run.schemaVersion),
+      eq(researchRuns.topic, run.topic), eq(researchRuns.geography, run.geography),
+      eq(researchRuns.currency, run.currency), eq(researchRuns.createdAt, run.createdAt),
+      eq(researchRuns.input, run.input),
+    ))
+    .limit(MAX_RETAINED_RUNS);
+  const duplicate = candidates.find((candidate) => canonicalJson(candidate.result) === canonicalJson(run.result));
+  return duplicate ? [{ id: duplicate.id }] : [];
+}
+
 /** Delete one snapshot only when it belongs to the requesting owner. */
 export function deleteResearchRun(db: ReturnType<typeof getDb>, ownerId: string, id: string) {
   return db.delete(researchRuns).where(and(eq(researchRuns.ownerId, ownerId), eq(researchRuns.id, id)));
