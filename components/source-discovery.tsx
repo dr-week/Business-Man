@@ -122,6 +122,10 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
 
   useEffect(() => {
     let active = true;
+    try {
+      const local: unknown = JSON.parse(localStorage.getItem(storageKey) ?? "null");
+      if (typeof local === "object" && local !== null && "input" in local && researchInput.safeParse(local.input).success && "opportunities" in local && Array.isArray(local.opportunities)) return;
+    } catch { /* Fall back to the saved server snapshot. */ }
     fetch("/api/hunt/research-runs", { cache: "no-store" })
       .then(async (response) => response.ok ? response.json() as Promise<{ runs?: { id?: string; schemaVersion?: number; input?: ResearchInput; result?: { opportunities?: ResearchOpportunity[]; query?: NonNullable<typeof interpretation>; webResearch?: WebResearchResult[]; webSearchConfigured?: boolean } }[] }> : null)
       .then((data) => {
