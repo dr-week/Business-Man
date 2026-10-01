@@ -21,6 +21,7 @@ Target: quiet, Japanese-inspired minimalism; whitespace, restrained colour, clea
 - Competitor comparison stays a compact table for up to four opportunities, with charts as a separate view. Research comparing list, matrix, and network layouts found decision performance depends on task and data complexity; avoid adding a network view without a demonstrated task need ([study](https://doi.org/10.1016/j.eswa.2016.08.041)).
 - Market view keeps local listings visible; secondary alternatives stay collapsed until requested. Do not cache Google Places content between views ([policy](https://developers.google.com/maps/documentation/places/web-service/policies)).
 - Migrate utility-styled feature components to scoped SCSS when touched; keep Tailwind for remaining screens until each has a scoped replacement and visual verification. Do not add a second component framework for styling alone.
+- Coalesce local research snapshot writes during slider edits; keep saved history indexed and load full records only on selection.
 
 ## Files
 
@@ -34,4 +35,5 @@ Target: quiet, Japanese-inspired minimalism; whitespace, restrained colour, clea
 - `components/research/source-ledger.tsx`, `source-ledger.module.scss`: source search and evidence-type filters.
 - `components/research/market-panel.tsx`: competitor and alternative view.
 - `components/EconomicsSlider.tsx`, `EconomicsSlider.module.scss`: economics assumptions and outputs.
+- `lib/research-snapshot-cache.ts`: coalesced offline snapshot writes.
 - `components/research/validation-checklist.tsx`, `.module.scss`: collapsed field-work log; completion requires a note and HTTPS evidence link. Browser-local, user-reported progress.

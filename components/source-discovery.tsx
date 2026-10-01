@@ -24,6 +24,7 @@ import { independentSourceCount } from "@/lib/evidence-lineage";
 import { OpportunityComparison } from "@/components/research/opportunity-comparison";
 import { parseFirstImpressions, recordFirstImpression, type FirstImpression } from "@/lib/first-impressions";
 import { RESEARCH_RUN_SCHEMA_VERSION } from "@/lib/research-run-version";
+import { scheduleResearchSnapshot } from "@/lib/research-snapshot-cache";
 
 const Charts = dynamic(() => import("./research-charts"), { ssr: false });
 const MarketInspection = dynamic(
@@ -45,9 +46,7 @@ function isSavedRunSummary(value: unknown): value is SavedRunSummary {
 const money = (value: number | null | undefined, currency: string) => value == null ? "â€”" : new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
 
 function persist(input: ResearchInput, opportunities: ResearchOpportunity[], runId: string | null) {
-
-  try { localStorage.setItem(storageKey, JSON.stringify({ input, opportunities, runId })); } catch { /* storage unavailable */ }
-
+  scheduleResearchSnapshot(storageKey, { input, opportunities, runId });
 }
 
 function exportCsv(items: ResearchOpportunity[], currency: string) {
