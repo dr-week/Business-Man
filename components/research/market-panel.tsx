@@ -52,7 +52,8 @@ export function MarketPanel({ opportunity, competitors, placesConfigured, footpr
         <dt>Current</dt><dd>{opportunity.alternatives.length ? opportunity.alternatives.join(", ") : "Unknown"}</dd>
         <dt>Gap</dt><dd>{opportunity.gap ?? "Unknown"}</dd>
         <dt>Possible software alternatives (GitHub)</dt><dd>{opportunity.candidateAlternatives?.length ? <ul>{opportunity.candidateAlternatives.map((candidate) => <li key={candidate.url}>
-          <a href={candidate.url} target="_blank" rel="noopener noreferrer">{candidate.name}</a> · {candidate.stars.toLocaleString()} stars · {candidate.license ?? "License not detected"}<br />
+          <a href={candidate.url} target="_blank" rel="noopener noreferrer">{candidate.name}</a> · {candidate.stars.toLocaleString()} stars<br />
+          {candidate.license ? <small className="github-alternative-license">License detected: <a href={`${candidate.url}/community/license`} target="_blank" rel="noopener noreferrer">{candidate.license}</a> · review its terms before reuse.</small> : <small className="github-alternative-license github-alternative-license--unknown">No license detected. Treat as research only; do not assume code can be reused.</small>}<br />
           <small>{candidate.matchedTerms?.length ? `Matched: ${candidate.matchedTerms.join(", ")} · ${candidate.relevance}% text overlap · ` : ""}Last code push {candidate.pushedAt.slice(0, 10)}</small>
         </li>)}</ul> : "No candidates found"}</dd>
       </dl><small>Listings and stars do not measure buyer demand.</small></section>

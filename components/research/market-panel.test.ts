@@ -15,7 +15,10 @@ const opportunity = {
   alternatives: ["Independent repair shops"],
   gap: "Unknown",
   risks: [],
-  candidateAlternatives: [{ name: "example/repair-tool", url: "https://github.com/example/repair-tool", description: "Tool", stars: 12, pushedAt: "2026-01-01T00:00:00Z", license: "MIT" }],
+  candidateAlternatives: [
+    { name: "example/repair-tool", url: "https://github.com/example/repair-tool", description: "Tool", stars: 12, pushedAt: "2026-01-01T00:00:00Z", license: "MIT" },
+    { name: "example/no-license", url: "https://github.com/example/no-license", description: "Reference only", stars: 4, pushedAt: "2026-02-01T00:00:00Z", license: null },
+  ],
   sources: [],
   claims: [],
   assumptions: {},
@@ -45,4 +48,7 @@ it("keeps local candidates visible and collapses secondary alternatives by defau
   expect(markup).toContain("Local competitors");
   expect(markup).toContain("Independent repair shops");
   expect(markup).toContain("example/repair-tool");
+  expect(markup).toContain("License detected:");
+  expect(markup).toContain("https://github.com/example/repair-tool/community/license");
+  expect(markup).toContain("Treat as research only; do not assume code can be reused.");
 });
