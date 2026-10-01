@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({ ownerId: vi.fn(), getDb: vi.fn(), apiError: vi
 vi.mock("@/db", () => ({ getDb: mocks.getDb }));
 vi.mock("@/lib/hunt-api", () => ({ ownerId: mocks.ownerId, apiError: mocks.apiError }));
 
+import type { ValidationSummary } from "@/lib/reporting/validation-summary-schema";
 import { GET } from "./route";
 
 describe("validation reporting aggregates", () => {
@@ -36,7 +37,7 @@ describe("validation reporting aggregates", () => {
 
   it("counts paid-pilot statuses separately from repeat purchases while summing both payments", async () => {
     const response = await GET();
-    const report = await response.json() as { buyerValidation: Record<string, unknown>; businessmanPaymentRecords: unknown[]; nextAction: { title: string; detail: string } };
+    const report = (await response.json()) as ValidationSummary;
 
     expect(response.status).toBe(200);
     expect(report.buyerValidation).toMatchObject({

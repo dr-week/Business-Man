@@ -23,6 +23,7 @@ import type { ResearchFocus, ResearchFocusSource } from "@/lib/research-focus";
 import type { WebResearchResult } from "@/lib/collectors/brave-search";
 import { independentSourceCount } from "@/lib/evidence-lineage";
 import { OpportunityComparison } from "@/components/research/opportunity-comparison";
+import { SavedRunComparison } from "@/components/research/saved-run-comparison";
 import { parseFirstImpressions, recordFirstImpression, type FirstImpression } from "@/lib/first-impressions";
 import { RESEARCH_RUN_SCHEMA_VERSION } from "@/lib/research-run-version";
 import savedResearchStyles from "@/components/research/saved-research.module.scss";
@@ -486,6 +487,7 @@ export function SourceDiscovery({ view = "research", onSaved: _onSaved, onError,
               </Button>
               {savedRuns.length > 3 && <TextInput className={savedResearchStyles.filter} type="search" aria-label="Filter saved research by topic or location" value={savedRunFilter} onChange={(event) => setSavedRunFilter(event.currentTarget.value)} placeholder="Filter topic or location" leftSection={<Search size={14} />} />}
             </Group>
+            {savedRunsStatus === "ready" && <SavedRunComparison runs={savedRuns} />}
             {savedRunsStatus === "loading" && <Text className={savedResearchStyles.empty} component="p" role="status">Loading saved research…</Text>}
             {savedRunsStatus === "signed-out" && <Text className={savedResearchStyles.empty} component="p">Sign in to load saved research.</Text>}
             {savedRunsStatus === "error" && <Group gap="xs"><Text className={savedResearchStyles.empty} component="p" role="alert">Could not load saved research. History may still be available.</Text><Button type="button" size="compact-sm" variant="light" onClick={() => void retrySavedRuns()}>Try again</Button></Group>}

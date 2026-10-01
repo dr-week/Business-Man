@@ -1,0 +1,7 @@
+{
+  "workType": "backend",
+  "productModule": "auth",
+  "improvementTarget": "missing feature",
+  "researchSource": "OSS",
+  "validationMethod": "test"
+}
