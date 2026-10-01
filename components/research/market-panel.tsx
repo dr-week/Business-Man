@@ -21,15 +21,17 @@ const statusLabels = {
   FUTURE_OPENING: "Future opening",
 } as const;
 
-export function MarketPanel({ opportunity, competitors, placesConfigured, footprint, checkedAt, onRefresh }: {
+export function MarketPanel({ opportunity, competitors, placesConfigured, footprint, checkedAt, refreshing, onRefresh }: {
   opportunity: ResearchOpportunity;
   competitors: LocalCompetitor[];
   placesConfigured: boolean;
   footprint: CensusMarketSignal | null;
   checkedAt: string;
+  refreshing: boolean;
   onRefresh: () => void;
 }) {
   return <div className="research-detail-modules">
+    {refreshing && <p role="status">Refreshing local market data; showing last checked results.</p>}
     <section className="research-detail-card research-local-competition" aria-label="Local competitors">
       <h3>{competitors.length} place candidates</h3>
       {competitors.length ? <><ul>{competitors.map((place) => <li key={place.id}>
@@ -39,7 +41,7 @@ export function MarketPanel({ opportunity, competitors, placesConfigured, footpr
       </li>)}</ul><small translate="no">Google Maps · candidate listings, not a market census</small></> :
         <p>{placesConfigured ? "No matching listings returned." : "Google Places is not configured."}</p>}
       <small>Checked {new Date(checkedAt).toLocaleString()}</small>
-      <button className="research-submit" type="button" onClick={onRefresh}>Refresh listings</button>
+      <button className="research-submit" type="button" disabled={refreshing} onClick={onRefresh}>{refreshing ? "Refreshing listings…" : "Refresh listings"}</button>
       {footprint && <MarketFootprint value={footprint} />}
     </section>
     {/\bindia\b/i.test(opportunity.geography) && <IndiaMarketContext />}

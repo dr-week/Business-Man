@@ -35,10 +35,10 @@ export function MarketInspection({ opportunity }: { opportunity: ResearchOpportu
     <p><a href="https://developers.google.com/maps/documentation/places/web-service/usage-and-billing" target="_blank" rel="noreferrer">Review Google Places billing and field-mask rules</a></p>
     <button className="research-submit" type="button" onClick={() => { setLoading(true); setError(""); setAttempt(0); }}>Check local listings</button>
   </div>;
-  if (loading) return <div className="research-empty" role="status">Checking local market…</div>;
+  if (loading && !result) return <div className="research-empty" role="status">Checking local market…</div>;
   if (!result) return <div className="research-empty" role="status">
     <p>{error || "Market lookup unavailable."}</p>
     <button className="research-submit" type="button" onClick={() => { setLoading(true); setError(""); setAttempt((value) => (value ?? 0) + 1); }}>Retry market check</button>
   </div>;
-  return <>{error && <p role="status">{error}</p>}<MarketPanel opportunity={opportunity} competitors={result.competitors} placesConfigured={result.placesConfigured} footprint={result.footprint} checkedAt={result.checkedAt} onRefresh={() => { setError(""); setAttempt((value) => (value ?? 0) + 1); }} /></>;
+  return <>{error && <p role="status">{error}</p>}<MarketPanel opportunity={opportunity} competitors={result.competitors} placesConfigured={result.placesConfigured} footprint={result.footprint} checkedAt={result.checkedAt} refreshing={loading} onRefresh={() => { setError(""); setAttempt((value) => (value ?? 0) + 1); }} /></>;
 }
