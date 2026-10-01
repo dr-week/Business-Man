@@ -19,6 +19,7 @@ Target: quiet, Japanese-inspired minimalism; whitespace, restrained colour, clea
 - Reuse `components/ui/` (Radix/shadcn), Sass modules, and existing chart components. Write new feature styling in `.module.scss`; shared shadcn wrappers still use Tailwind classes and should be migrated when their styling is next changed. Do not describe the whole UI as SCSS-based yet.
 - Do not add a second component suite for the same controls. Stitches is marked not actively maintained; Mantine recommends CSS Modules and does not require Sass. Reconsider only for a concrete component gap and scoped migration.
 - Competitor comparison stays a compact table for up to four opportunities, with charts as a separate view. Research comparing list, matrix, and network layouts found decision performance depends on task and data complexity; avoid adding a network view without a demonstrated task need ([study](https://doi.org/10.1016/j.eswa.2016.08.041)).
+- Market view keeps local listings visible; secondary alternatives stay collapsed until requested. Do not cache Google Places content between views ([policy](https://developers.google.com/maps/documentation/places/web-service/policies)).
 
 ## Files
 

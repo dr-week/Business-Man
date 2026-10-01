@@ -46,13 +46,16 @@ export function MarketPanel({ opportunity, competitors, placesConfigured, footpr
     </section>
     {/\bindia\b/i.test(opportunity.geography) && <IndiaMarketContext />}
     <MarketSoftwareComparison />
-    <section className="research-detail-card"><h3>Alternatives</h3><dl>
-      <dt>Current</dt><dd>{opportunity.alternatives.length ? opportunity.alternatives.join(", ") : "Unknown"}</dd>
-      <dt>Gap</dt><dd>{opportunity.gap ?? "Unknown"}</dd>
-      <dt>Possible software alternatives (GitHub)</dt><dd>{opportunity.candidateAlternatives?.length ? <ul>{opportunity.candidateAlternatives.map((candidate) => <li key={candidate.url}>
-        <a href={candidate.url} target="_blank" rel="noopener noreferrer">{candidate.name}</a> · {candidate.stars.toLocaleString()} stars · {candidate.license ?? "License not detected"}<br />
-        <small>{candidate.matchedTerms?.length ? `Matched: ${candidate.matchedTerms.join(", ")} · ${candidate.relevance}% text overlap · ` : ""}Last code push {candidate.pushedAt.slice(0, 10)}</small>
-      </li>)}</ul> : "No candidates found"}</dd>
-    </dl><small>Listings and stars do not measure buyer demand.</small></section>
+    <details className="research-module">
+      <summary>Alternatives</summary>
+      <section className="research-detail-card"><dl>
+        <dt>Current</dt><dd>{opportunity.alternatives.length ? opportunity.alternatives.join(", ") : "Unknown"}</dd>
+        <dt>Gap</dt><dd>{opportunity.gap ?? "Unknown"}</dd>
+        <dt>Possible software alternatives (GitHub)</dt><dd>{opportunity.candidateAlternatives?.length ? <ul>{opportunity.candidateAlternatives.map((candidate) => <li key={candidate.url}>
+          <a href={candidate.url} target="_blank" rel="noopener noreferrer">{candidate.name}</a> · {candidate.stars.toLocaleString()} stars · {candidate.license ?? "License not detected"}<br />
+          <small>{candidate.matchedTerms?.length ? `Matched: ${candidate.matchedTerms.join(", ")} · ${candidate.relevance}% text overlap · ` : ""}Last code push {candidate.pushedAt.slice(0, 10)}</small>
+        </li>)}</ul> : "No candidates found"}</dd>
+      </dl><small>Listings and stars do not measure buyer demand.</small></section>
+    </details>
   </div>;
 }
