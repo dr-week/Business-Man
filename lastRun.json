@@ -1,7 +1,7 @@
 {
-  "workType": "backend",
+  "workType": "UI",
   "productModule": "auth",
   "improvementTarget": "missing feature",
-  "researchSource": "OSS",
-  "validationMethod": "test"
+  "researchSource": "API/SDK",
+  "validationMethod": "workflow"
 }
