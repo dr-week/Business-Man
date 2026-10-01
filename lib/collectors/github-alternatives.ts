@@ -2,7 +2,7 @@ import { z } from "zod";
 import { readLimitedJson } from "@/lib/read-limited-json";
 
 const repository = z.object({
-  full_name: z.string().max(200), html_url: z.string().url().max(300), description: z.string().max(2000).nullable(),
+  full_name: z.string().max(200), html_url: z.string().url().max(300), description: z.string().nullable().transform((value) => value?.slice(0, 300) ?? null),
   stargazers_count: z.number().int().nonnegative(), pushed_at: z.string().max(40), archived: z.boolean(), fork: z.boolean(),
   license: z.object({ spdx_id: z.string().nullable() }).nullable(),
 });
