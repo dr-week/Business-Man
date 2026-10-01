@@ -10,9 +10,10 @@ vi.mock("@/lib/discovery", () => ({
   collectStackOverflow: vi.fn(async () => [{ id: "so:2", provider: "Stack Overflow", title: "How to track restaurant inventory?", excerpt: "", url: "https://stackoverflow.com/questions/2", publishedAt: "2026-02-01T00:00:00.000Z", retrievedAt: "2026-09-27T00:00:00.000Z", comments: 1 }]),
 }));
 vi.mock("@/lib/collectors/brave-search", () => ({ collectBraveWebResults: vi.fn(async () => [{ title: "Market result", url: "https://example.com/market", snippet: "Candidate result" }]) }));
-vi.mock("@/lib/collectors/openalex", () => ({ collectOpenAlexWorks: vi.fn(async () => [{ title: "Research paper", url: "https://doi.org/10.1234/paper", year: 2024, citedByCount: 3 }]) }));
+vi.mock("@/lib/collectors/openalex", () => ({ collectOpenAlexWorks: vi.fn(async () => [{ title: "Inventory research paper", url: "https://doi.org/10.1234/paper", year: 2024, citedByCount: 3 }]) }));
 import { collectSignals } from "@/lib/discovery";
 import { collectBraveWebResults } from "@/lib/collectors/brave-search";
+import { collectOpenAlexWorks } from "@/lib/collectors/openalex";
 import { saveResearchRun } from "@/lib/research-run-store";
 import { POST } from "./route";
 
@@ -27,7 +28,7 @@ describe("research route", () => {
     expect(data.opportunities[0].strength).toBeNull();
     expect(data.opportunities[0].financials).toBeNull();
     expect(data.webResearch).toEqual([
-      { title: "Research paper", url: "https://doi.org/10.1234/paper", kind: "academic", snippet: "Academic literature · 2024 · 3 citations" },
+      { title: "Inventory research paper", url: "https://doi.org/10.1234/paper", kind: "academic", snippet: "Academic literature · 2024 · 3 citations" },
       { title: "Market result", url: "https://example.com/market", snippet: "Candidate result" },
     ]);
     expect(saveResearchRun).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({

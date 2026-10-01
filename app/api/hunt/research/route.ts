@@ -20,7 +20,7 @@ import { createBoundedCache } from "@/lib/bounded-cache";
 const researchGate = createResearchGate(2, 6);
 const cache = createBoundedCache<{ query: ReturnType<typeof prepareResearchQuery>; result: ReturnType<typeof analyzeResearch>; errors: string[]; webResearch: WebResearchResult[] }>(8, 1_048_576);
 
-const queryStopWords = new Set("a an and are as at be before by can could do does for from get give go how i in into is it make my of on or sell start the their them there they this to want was what when where which who why with would you your business opportunity opportunities idea ideas".split(" "));
+const queryStopWords = new Set("a an and are as at be before by can could demand do does for from get give go how i in into is it large local make market markets my of on or sell service services small start the their them there they this to want was what when where which who why with would you your business opportunity opportunities idea ideas".split(" "));
 const normalizeWord = (word: string) => word.toLowerCase().replace(/ies$/, "y").replace(/s$/, "");
 function matchesResearchTopic(text: string, topic: string, geography: string) {
   const locationWords = new Set(geography.toLowerCase().match(/[a-z0-9]+/g) ?? []);
@@ -29,7 +29,8 @@ function matchesResearchTopic(text: string, topic: string, geography: string) {
     .map(normalizeWord);
   if (!anchors.length) return false;
   const sourceWords = new Set((text.toLowerCase().match(/[a-z0-9]+/g) ?? []).map(normalizeWord));
-  return anchors.some((word) => sourceWords.has(word));
+  const matchedAnchors = anchors.filter((word) => sourceWords.has(word)).length;
+  return matchedAnchors >= Math.min(2, anchors.length);
 }
 
 export async function POST(request: Request) {
@@ -75,7 +76,8 @@ export async function POST(request: Request) {
   if (literature.error) providerErrors.push(literature.error);
   if (communitiesFailed && !web.sources.length && !webSearch.value.length && !literature.value.length) return Response.json({ error: "Research sources unavailable. Retry later." }, { status: 502 });
   const webResearch: WebResearchResult[] = [
-    ...literature.value.map((work) => ({ title: work.title, url: work.url, kind: "academic" as const, snippet: `Academic literature · ${work.year ?? "year unavailable"} · ${work.citedByCount.toLocaleString()} citations` })),
+    ...literature.value.filter((work) => matchesResearchTopic(work.title, query.searchTerms, input.geography))
+      .map((work) => ({ title: work.title, url: work.url, kind: "academic" as const, snippet: `Academic literature · ${work.year ?? "year unavailable"} · ${work.citedByCount.toLocaleString()} citations` })),
     ...webSearch.value,
   ];
   const opportunities = attachCandidateAlternatives(analyzeResearch(input, sources), github.value);
