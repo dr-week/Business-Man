@@ -10,6 +10,8 @@ The [TypeScript ONNX SDK](https://github.com/receptron/laya) avoids Python at ru
 
 The [released-model study](https://arxiv.org/abs/2609.33843) reports calibration and transfer limits on its tested checkpoint and benchmark. Treat model confidence as unverified for this product; evaluate against labeled business-research cases before using it to route decisions.
 
+The shipped evaluator is synchronous rules-based triage. Do not describe it as token streaming or model inference. The former streaming adapter only forwarded to the same evaluator and had no production callers; it was removed. No Laya SDK is installed or required on the fast path.
+
 ## Benchmark
 
 Run: `npx vitest bench lib/system1-decision-engine.bench.ts --reporter=verbose`
