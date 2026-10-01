@@ -7,6 +7,8 @@ const metricSchema = z.object({
   label: z.string(), value: z.number().finite().nullable(), year: z.number().int().nullable(), sourceUrl: z.string().url(),
 });
 const contextSchema = z.object({
+  retrievedAt: z.string().datetime(),
+  cacheStatus: z.enum(["fresh", "stale"]),
   metrics: z.object({ gdpCurrentUsd: metricSchema, internetUsersPercent: metricSchema, fdiNetInflowsUsd: metricSchema, lendingRatePercent: metricSchema }),
   caveat: z.string(),
 });
@@ -48,6 +50,6 @@ export function IndiaMarketContext({ mode = "all" }: { mode?: "all" | "lending" 
       <a href={fdi.sourceUrl} target="_blank" rel="noreferrer"><strong>{fdi.value == null ? "No current value" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 2 }).format(fdi.value)}</strong><span>Net FDI inflows · {fdi.year ?? "year unavailable"} ↗</span></a>
       <a href={lendingRate.sourceUrl} target="_blank" rel="noreferrer"><strong>{lendingRate.value == null ? "No current value" : `${lendingRate.value}%`}</strong><span>Bank lending rate · {lendingRate.year ?? "year unavailable"} ↗</span></a>
     </div>}
-    <small>{context.caveat}</small>
+    <small>{context.cacheStatus === "stale" ? "World Bank unavailable · showing last successful snapshot from " : "World Bank data retrieved "}{new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short" }).format(new Date(context.retrievedAt))}. {context.caveat}</small>
   </aside>;
 }

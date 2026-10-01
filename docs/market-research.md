@@ -10,7 +10,7 @@ Three live paired checks returned matching latest values and years for the old t
 
 These national indicators are context only. They do not measure analytics-product demand, addressable customers, willingness to pay, or revenue. Use founder interviews and paid pilots for those questions.
 
-The API requires no key. See the [World Bank API guide](https://datahelpdesk.worldbank.org/knowledgebase/articles/889392).
+The API requires no key. On a provider outage, the backend serves its last successful in-memory snapshot as stale for one retry-cooldown interval; the response disables shared caching and the UI labels the original retrieval time. A cold Worker with no prior snapshot returns unavailable. See the [World Bank API guide](https://datahelpdesk.worldbank.org/knowledgebase/articles/889392).
 
 ## Product gap to test
 

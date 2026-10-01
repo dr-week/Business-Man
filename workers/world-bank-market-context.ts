@@ -9,6 +9,7 @@ const indicators = {
   lendingRatePercent: { code: "FR.INR.LEND", label: "Lending interest rate (%)" },
 } as const;
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const RETRY_COOLDOWN_MS = 60 * 1000;
 
 const observationSchema = z.object({
   date: z.string().regex(/^\d{4}$/),
@@ -57,16 +58,25 @@ async function fetchIndiaMarketContext() {
 }
 
 type IndiaMarketContext = Awaited<ReturnType<typeof fetchIndiaMarketContext>>;
+type IndiaMarketContextResponse = IndiaMarketContext & { cacheStatus: "fresh" | "stale" };
 let cachedContext: { data: IndiaMarketContext; expiresAt: number } | null = null;
-let pendingRequest: Promise<IndiaMarketContext> | null = null;
+let retryAfterAt = 0;
+let pendingRequest: Promise<IndiaMarketContextResponse> | null = null;
 
 export function collectIndiaMarketContext() {
-  if (cachedContext && cachedContext.expiresAt > Date.now()) return Promise.resolve(cachedContext.data);
+  if (cachedContext && cachedContext.expiresAt > Date.now()) return Promise.resolve({ ...cachedContext.data, cacheStatus: "fresh" });
+  if (cachedContext && retryAfterAt > Date.now()) return Promise.resolve({ ...cachedContext.data, cacheStatus: "stale" });
   if (pendingRequest) return pendingRequest;
   pendingRequest = fetchIndiaMarketContext()
     .then((data) => {
       cachedContext = { data, expiresAt: Date.now() + CACHE_TTL_MS };
-      return data;
+      retryAfterAt = 0;
+      return { ...data, cacheStatus: "fresh" as const };
+    })
+    .catch((error: unknown) => {
+      retryAfterAt = Date.now() + RETRY_COOLDOWN_MS;
+      if (cachedContext) return { ...cachedContext.data, cacheStatus: "stale" as const };
+      throw error;
     })
     .finally(() => { pendingRequest = null; });
   return pendingRequest;
