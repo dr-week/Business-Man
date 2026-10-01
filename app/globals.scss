@@ -1,6 +1,8 @@
+@use "sass:meta";
+
 @import url("tailwindcss");
 @import url("tw-animate-css");
-@import url("../vendor/shadcn-tailwind-4.13.0.css");
+@include meta.load-css("../vendor/shadcn-tailwind-4.13.0");
 
 /* ── Tokens ─────────────────────────────────────────── */
 :root {
